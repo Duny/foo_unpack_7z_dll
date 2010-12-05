@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "foo_unpack_7z", "foo_unpack_7z.vcproj", "{F90D3BA3-B27B-4DFA-AD8A-83CAA7C2A304}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F90D3BA3-B27B-4DFA-AD8A-83CAA7C2A304}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F90D3BA3-B27B-4DFA-AD8A-83CAA7C2A304}.Debug|Win32.Build.0 = Debug|Win32
+		{F90D3BA3-B27B-4DFA-AD8A-83CAA7C2A304}.Release|Win32.ActiveCfg = Release|Win32
+		{F90D3BA3-B27B-4DFA-AD8A-83CAA7C2A304}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
