@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,14,15,92
- PRODUCTVERSION 2,71,82,8
+ FILEVERSION 2,0,0,0
+ PRODUCTVERSION 2,0,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x5L
@@ -69,13 +69,9 @@ BEGIN
     BEGIN
         BLOCK "041904b0"
         BEGIN
-            VALUE "Comments", "Supports unpacking of rar, zip, 7z, iso, cab and arj archives"
-            VALUE "CompanyName", "Dmitry Major(Duny) Efimenko"
-            VALUE "FileDescription", "Unpacker plugin for foobar2000"
-            VALUE "FileVersion", "3.1415926535897932384626"
-            VALUE "LegalCopyright", "Copyright (C) 2009 Duny"
-            VALUE "ProductName", "foo_unpack_7z"
-            VALUE "ProductVersion", "2.7182818284590452353602"
+            VALUE "FileDescription", "7z archive support for foobar2000"
+            VALUE "FileVersion", "2"
+            VALUE "LegalCopyright", "Copyright (c) 2009-2011 Efimenko Dmitry"
         END
     END
     BLOCK "VarFileInfo"

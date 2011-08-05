@@ -18,8 +18,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="..\..\..\bin\$(ProjectName)\$(ConfigurationName)"
+			IntermediateDirectory="$(OutDir)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			>
@@ -44,12 +44,12 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="0"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories=".\7z;.\7z\Common;.\foobar2000_sdk\foobar2000\Sdk"
+				AdditionalIncludeDirectories="..\..\..\SDK\fb2k\;..\..\..\SDK\7z\CPP"
 				PreprocessorDefinitions="WIN32;_DEBUG_;_WINDOWS;_USRDLL;FOO_UNPACK_7Z_EXPORTS"
 				MinimalRebuild="true"
-				BasicRuntimeChecks="0"
+				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -64,11 +64,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="foobar2000_component_client.lib foobar2000_SDK.lib foobar2000_sdk_helpers.lib pfc.lib shared.lib"
-				OutputFile="C:\Program Files\foobar2000\components\foo_unpack_7z.dll"
+				AdditionalDependencies="..\..\..\SDK\fb2k\foobar2000\shared\shared.lib shlwapi.lib user32.lib"
+				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="2"
+				GenerateManifest="false"
 				GenerateDebugInformation="true"
+				ProgramDatabaseFile="$(OutDir)\$(TargetName).pdb"
 				SubSystem="2"
+				ImportLibrary="$(OutDir)\$(TargetName).lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -92,12 +95,13 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="..\..\..\extras\$(ProjectName)\$(ConfigurationName)\cmd_$(RemoteMachine)_$(PlatformName).bat $(TargetFileName) $(TargetPath)"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			OutputDirectory="..\..\..\bin\$(ProjectName)\$(ConfigurationName)"
+			IntermediateDirectory="$(OutDir)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -123,11 +127,11 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="2"
-				AdditionalIncludeDirectories=".\7z;.\7z\Common;.\foobar2000_sdk\foobar2000\Sdk"
+				AdditionalIncludeDirectories="..\..\..\SDK\fb2k\;..\..\..\SDK\7z\CPP"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;FOO_UNPACK_7Z_EXPORTS"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="0"
 			/>
@@ -142,12 +146,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="foobar2000_component_client.lib foobar2000_SDK.lib foobar2000_sdk_helpers.lib pfc.lib shared.lib"
+				AdditionalDependencies="..\..\..\SDK\fb2k\foobar2000\shared\shared.lib shlwapi.lib user32.lib"
 				LinkIncremental="1"
+				GenerateManifest="false"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				ImportLibrary="$(OutDir)\$(TargetName).lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -171,6 +177,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="..\..\..\extras\$(ProjectName)\$(ConfigurationName)\cmd_$(RemoteMachine)_$(PlatformName).bat $(TargetFileName) $(TargetPath)"
 			/>
 		</Configuration>
 	</Configurations>
@@ -183,12 +190,48 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\7z_open.cpp"
+				RelativePath=".\ExtractCallback.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\FileStreams.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\foo_unpack_7z.cpp"
 				>
+			</File>
+			<File
+				RelativePath=".\SevenZipSupport.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\stdafx.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -197,11 +240,23 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\7z_open.h"
+				RelativePath=".\ExtractCallback.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FileStreams.h"
 				>
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SevenZipSupport.h"
+				>
+			</File>
+			<File
+				RelativePath=".\stdafx.h"
 				>
 			</File>
 		</Filter>
@@ -219,59 +274,63 @@
 			Name="7z"
 			>
 			<File
-				RelativePath=".\7z\DLL.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Windows\DLL.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\FileDir.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Windows\FileDir.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\FileFind.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Windows\FileFind.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\FileIO.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Windows\FileIO.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\FileName.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Windows\FileName.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\FileStreams.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\7zip\Common\FileStreams.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\IntToString.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Common\IntToString.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\MyString.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Common\MyString.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\MyVector.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Common\MyVector.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\NewHandler.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Common\NewHandler.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\PropVariant.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Windows\PropVariant.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\PropVariantConversions.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Windows\PropVariantConversions.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\StringConvert.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Windows\Registry.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7z\Wildcard.cpp"
+				RelativePath="..\..\..\SDK\7z\CPP\Common\StringConvert.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\SDK\7z\CPP\Common\Wildcard.cpp"
 				>
 			</File>
 		</Filter>
