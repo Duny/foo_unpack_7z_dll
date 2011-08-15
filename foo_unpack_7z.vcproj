@@ -202,6 +202,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\file_buffer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\FileStreams.cpp"
 				>
 			</File>
@@ -210,7 +214,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SevenZipSupport.cpp"
+				RelativePath=".\SevenZipArchive.cpp"
 				>
 			</File>
 			<File
@@ -244,6 +248,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\file_buffer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\FileStreams.h"
 				>
 			</File>
@@ -252,7 +260,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SevenZipSupport.h"
+				RelativePath=".\SevenZipArchive.h"
 				>
 			</File>
 			<File

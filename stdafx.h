@@ -22,6 +22,8 @@
 #include "7zip\ICoder.h"
 #include "7zip\MyVersion.h"
 
-#include "SevenZipSupport.h"
+#include "SevenZipArchive.h"
 #include "FileStreams.h"
 #include "ExtractCallback.h" 
+
+#include "file_buffer.h"

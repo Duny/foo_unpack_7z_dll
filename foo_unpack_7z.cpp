@@ -16,9 +16,9 @@ protected:
 		pfc::string_extension ext (p_archive);
 		if (strcmp (ext, get_archive_type ()) != 0)
 			throw exception_io_data ();
-//#ifdef _DEBUG 
+#ifdef _DEBUG 
         console::formatter () << "get_stats_in_archive " << p_archive << " " << p_file;
-//#endif
+#endif
 		file_ptr file;
 		SevenZipArchive archive;
 
@@ -33,9 +33,9 @@ protected:
 		pfc::string_extension ext (p_archive);
 		if (strcmp (ext, get_archive_type ()) != 0)
 			throw exception_io_data ();
-//#ifdef _DEBUG
+#ifdef _DEBUG
         console::formatter() << "open_archive " << p_archive << " " << p_file;
-//#endif
+#endif
 		file_ptr file;
 		SevenZipArchive archive; 
 
@@ -48,12 +48,20 @@ protected:
 public:
 	virtual void archive_list (const char *path, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers)
 	{
-//#ifdef _DEBUG
+#ifdef _DEBUG
         console::formatter() << "archive_list " << path << "; want_readers=" << p_want_readers;
-//#endif
+#endif
 		pfc::string_extension ext (path);
 		if (_stricmp (ext, get_archive_type ()) != 0)
 			throw exception_io_data ();
+
+		{
+			t_filestats stats;
+			bool is_writeable;
+
+			filesystem::g_get_stats (path, stats, is_writeable, p_out);
+			console::formatter() << "timestamp: " << stats.m_timestamp;
+		}
 
 		file_ptr p_file = p_reader;
 		if (p_file.is_empty ())
@@ -79,10 +87,9 @@ public:
 
 static archive_factory_t<SevenZipArchiveImpl> g_archive_sevenzip;
 
-DECLARE_COMPONENT_VERSION( "7z Unpacker", "2.0", 
+DECLARE_COMPONENT_VERSION( "7z Unpacker", "2.1", 
     "Unpacker for 7z archives.\n"
 	"Requires 7z.dll (32 bit) to work\n"
-    "Get it here http://7-zip.org/download.html\n"
-    "\n"
+    "Get it here http://7-zip.org/download.html\n\n"
     "(c) 2011 Dmitry Duny Efimenko"
 );
