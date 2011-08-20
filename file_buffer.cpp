@@ -2,11 +2,11 @@
 
 #include "file_buffer.h"
 
-file_buffer::file_buffer( t_filetimestamp p_timestamp, t_size buf_size )
-	: m_timestamp( p_timestamp ), m_position( 0 )
+file_buffer::file_buffer( const t_filestats & stats )
+	: m_stats( stats ), m_position( 0 )
 {
-	if (buf_size)
-		m_buffer.prealloc (buf_size);
+    if (stats.m_size)
+		m_buffer.set_count (static_cast<t_size>(stats.m_size));
 }
 
 t_size file_buffer::read( void * p_buffer, t_size p_bytes, abort_callback & )
@@ -29,7 +29,7 @@ void file_buffer::write( const void * p_buffer, t_size p_bytes, abort_callback &
 
 t_filesize file_buffer::get_size( abort_callback & )
 {
-	return m_buffer.get_count();
+	return m_buffer.get_count(); 
 }
 
 t_filesize file_buffer::get_position( abort_callback & )
@@ -40,6 +40,7 @@ t_filesize file_buffer::get_position( abort_callback & )
 void file_buffer::resize( t_filesize p_size, abort_callback & )
 {
 	m_buffer.set_count( (t_size)p_size );
+    m_stats.m_size = p_size;
 	if ( m_position > p_size ) m_position = p_size;
 }
 
@@ -70,7 +71,7 @@ void file_buffer::on_idle( abort_callback & )
 
 t_filetimestamp file_buffer::get_timestamp( abort_callback & )
 {
-	return m_timestamp;
+    return m_stats.m_timestamp;
 }
 
 void file_buffer::reopen( abort_callback & )

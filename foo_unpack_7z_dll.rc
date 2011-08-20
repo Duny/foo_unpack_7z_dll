@@ -1,0 +1,132 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1251)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_7ZPREFERENCES DIALOGEX 0, 0, 332, 288
+STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
+FONT 8, "Microsoft Sans Serif", 400, 0, 0xCC
+BEGIN
+    CONTROL         "Use &default (search in 7-Zip installation folder and in component's installation folder)",IDC_RADIO_DEFAULT_LOCATION,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,33,116,276,10
+    CONTROL         "&Custom",IDC_RADIO_CUSTOM_LOCATION,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,33,128,39,10
+    PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE,33,141,33,14
+    LTEXT           "7z.dll path here",IDC_STATIC_DLL_LOCATION,71,144,251,8
+    CONTROL         "Be &quiet (log messages to the console, instead of showing popups)",IDC_CHECK_QUIET_MODE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,38,175,254,10
+    GROUPBOX        "7z.dll location",IDC_STATIC_DLL_LOCATION_GROUP,2,101,329,63
+    CONTROL         "Enable debug messages",IDC_CHECK_DEBUG_MESSAGES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,233,273,94,10
+END
+
+#endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Russian resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
+#ifdef _WIN32
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+#pragma code_page(1251)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 2,1,0,0
+ PRODUCTVERSION 2,1,0,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x5L
+#else
+ FILEFLAGS 0x4L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "041904b0"
+        BEGIN
+            VALUE "Comments", "Requires 7z.dll (32 bit) to work"
+            VALUE "FileDescription", "*.7z archive support for foobar2000"
+            VALUE "FileVersion", "2, 1, 0, 0"
+            VALUE "LegalCopyright", "Copyright (c) 2009-2011 Efimenko Dmitry"
+            VALUE "ProductVersion", "2, 1, 0, 0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x419, 1200
+    END
+END
+
+#endif    // Russian resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

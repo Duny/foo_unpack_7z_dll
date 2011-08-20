@@ -5,10 +5,10 @@ class file_buffer : public file
 {
 	pfc::array_t<t_uint8> m_buffer;
 	t_filesize m_position;
-	t_filetimestamp m_timestamp;
+	t_filestats m_stats;
 
 public:
-	file_buffer( t_filetimestamp p_timestamp, t_size buf_size = 0 );
+    file_buffer( const t_filestats & stats );
 
 	// stream_reader
 	virtual t_size read( void *, t_size, abort_callback & );

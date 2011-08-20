@@ -52,7 +52,7 @@ STDMETHODIMP FooOutStream::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPos
     return S_OK;
 }
 
-STDMETHODIMP FooOutStream::SetSize(UInt64 newSize)
+STDMETHODIMP FooOutStream::SetSize (UInt64 newSize)
 {
     m_stream->resize (newSize, m_abort);
 
