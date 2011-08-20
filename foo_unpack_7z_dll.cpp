@@ -15,6 +15,10 @@ class archive_type_7z : public archive_impl
 {
 	static const char *archive_ext;
 
+	file_ptr m_last_opened_file;
+	pfc::string8 m_last_opened_file_path;
+	critical_section m_sync;
+
 	virtual const char * get_archive_type () { return archive_ext; }
 
     virtual bool supports_content_types () { return false; }
@@ -48,24 +52,48 @@ class archive_type_7z : public archive_impl
 			throw exception_io_data ();
 
 		file_ptr file;
-		C7zArchive archive; 
-
-		filesystem::g_open (file, p_archive, filesystem::open_mode_read, p_abort);
-		archive.Open (file, p_abort);
-
-		const C7zArchive::t_arch_items &items = archive.items ();
+		C7zArchive archive;
+	
 		const pfc::string8_fast &file_name = p_file;
-		t_size i = 0, n = items.get_size ();
-		for (; i < n; i++) 
-			if (items[i].m_path == file_name)
-				break;
-		
-		if (i == n)
-			throw exception_io_not_found ();
 
 		DWORD start = GetTickCount ();
-		archive.GetFileReader (i, p_out, p_abort);
+		if (file_name == m_last_opened_file_path) {
+			insync (m_sync);
+
+			filesystem::g_open_tempmem (p_out, p_abort);
+			m_last_opened_file->reopen (p_abort);
+			file::g_transfer_file (m_last_opened_file, p_out, p_abort);
+		}
+		else {
+			insync (m_sync);
+
+			filesystem::g_open (file, p_archive, filesystem::open_mode_read, p_abort);
+			archive.Open (file, p_abort);
+
+			const C7zArchive::t_arch_items &items = archive.items ();
+			
+			t_size i = 0, n = items.get_size ();
+			for (; i < n; i++) 
+				if (items[i].m_path == file_name)
+					break;
+			
+			if (i == n)
+				throw exception_io_not_found ();
+			else {
+				archive.GetFileReader (i, p_out, p_abort);
+
+				if (m_last_opened_file.is_valid ())
+					m_last_opened_file.release ();
+				filesystem::g_open_tempmem (m_last_opened_file, p_abort);
+
+				file::g_transfer_file (p_out, m_last_opened_file, p_abort);
+				m_last_opened_file_path = file_name;
+
+				p_out->reopen (p_abort);
+			}
+		}
 		DWORD end = GetTickCount ();
+		
 		if (cfg_debug_messages)
 			show_debug_message () << "open_archive(\"" << pfc::string_filename (p_archive) << "\", \"" << p_file << "\")" <<
 				" took " << (t_int32)(end - start) << " ms\n";
