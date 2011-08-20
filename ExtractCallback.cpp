@@ -1,15 +1,5 @@
 #include "stdafx.h"
 
-STDMETHODIMP CFooExtractCallback::SetTotal(UInt64 /* size */)
-{
-    return S_OK;
-}
-
-STDMETHODIMP CFooExtractCallback::SetCompleted(const UInt64 * /* completeValue */)
-{
-    return S_OK; 
-} 
-
 STDMETHODIMP CFooExtractCallback::GetStream (UInt32 index, ISequentialOutStream **outStream, Int32 askExtractMode)
 {
     *outStream = 0;
@@ -25,11 +15,6 @@ STDMETHODIMP CFooExtractCallback::GetStream (UInt32 index, ISequentialOutStream 
     m_outFileStream = outStreamLoc;
     *outStream = outStreamLoc.Detach ();
     
-    return S_OK;
-}
-
-STDMETHODIMP CFooExtractCallback::PrepareOperation (Int32 askExtractMode)
-{
     return S_OK;
 }
 

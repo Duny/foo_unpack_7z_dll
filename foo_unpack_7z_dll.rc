@@ -30,15 +30,16 @@ IDD_7ZPREFERENCES DIALOGEX 0, 0, 332, 288
 STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
 FONT 8, "Microsoft Sans Serif", 400, 0, 0xCC
 BEGIN
-    CONTROL         "Use &default (search in 7-Zip installation folder and in component's installation folder)",IDC_RADIO_DEFAULT_LOCATION,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,33,116,276,10
+    CONTROL         "&Default (search in 7-Zip installation folder and in component installation folder)",IDC_RADIO_DEFAULT_LOCATION,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,33,116,258,10
     CONTROL         "&Custom",IDC_RADIO_CUSTOM_LOCATION,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,33,128,39,10
     PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE,33,141,33,14
     LTEXT           "7z.dll path here",IDC_STATIC_DLL_LOCATION,71,144,251,8
-    CONTROL         "Be &quiet (log messages to the console, instead of showing popups)",IDC_CHECK_QUIET_MODE,
+    CONTROL         "Be &quiet (log messages to the console, instead of showing popup windows)",IDC_CHECK_QUIET_MODE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,38,175,254,10
     GROUPBOX        "7z.dll location",IDC_STATIC_DLL_LOCATION_GROUP,2,101,329,63
-    CONTROL         "Enable debug messages",IDC_CHECK_DEBUG_MESSAGES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,233,273,94,10
+    CONTROL         "Enable &debug messages",IDC_CHECK_DEBUG_MESSAGES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,38,193,94,10
+    ICON            IDI_7ZIP_LOGO,IDC_STATIC,7,4,21,20
 END
 
 #endif    // Neutral resources
@@ -103,9 +104,9 @@ BEGIN
         BLOCK "041904b0"
         BEGIN
             VALUE "Comments", "Requires 7z.dll (32 bit) to work"
-            VALUE "FileDescription", "*.7z archive support for foobar2000"
+            VALUE "FileDescription", "7z archive support for foobar2000"
             VALUE "FileVersion", "2, 1, 0, 0"
-            VALUE "LegalCopyright", "Copyright (c) 2009-2011 Efimenko Dmitry"
+            VALUE "LegalCopyright", "© 2009-2011 Efimenko Dmitry"
             VALUE "ProductVersion", "2, 1, 0, 0"
         END
     END
@@ -115,6 +116,15 @@ BEGIN
     END
 END
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_7ZIP_LOGO           ICON                    "J:\\projects\\SDK\\7z\\CPP\\7zip\\UI\\FileManager\\7zipLogo.ico"
 #endif    // Russian resources
 /////////////////////////////////////////////////////////////////////////////
 

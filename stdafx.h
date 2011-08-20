@@ -26,9 +26,6 @@
 #include "FileStreams.h"
 #include "ExtractCallback.h" 
 
-// helpers
-#include "file_buffer.h"
-
 #include "resource.h"
 
 #define COMPONENT_NAME "foo_unpack_7z_dll"

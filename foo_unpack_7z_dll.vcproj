@@ -210,10 +210,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\file_buffer.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\FileStreams.cpp"
 				>
 			</File>
@@ -264,10 +260,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\file_buffer.h"
-				>
-			</File>
-			<File
 				RelativePath=".\FileStreams.h"
 				>
 			</File>
@@ -279,12 +271,20 @@
 				RelativePath=".\stdafx.h"
 				>
 			</File>
+			<File
+				RelativePath=".\tempmem_with_timestamp.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+			<File
+				RelativePath="..\..\..\SDK\7z\CPP\7zip\UI\FileManager\7zipLogo.ico"
+				>
+			</File>
 			<File
 				RelativePath=".\foo_unpack_7z_dll.rc"
 				>

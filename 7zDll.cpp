@@ -9,12 +9,11 @@ typedef UINT32 (WINAPI * CreateObjectFunc)(const GUID *clsID, const GUID *interf
 // global variables
 DEFINE_GUID (CLSID_CFormat7z, 0x23170F69, 0x40C1, 0x278A, 0x10, 0x00, 0x00, 0x01, 0x10, 0x07, 0x00, 0x00);
 
+static NWindows::NDLL::CLibrary g_7zDll;
 static CreateObjectFunc g_createObjectFunc = NULL;
 
 static void InitLibrary ()
 {
-	static NWindows::NDLL::CLibrary g_7zDll;
-
     if (g_7zDll.IsLoaded () && g_createObjectFunc != NULL) return;
 
 	UString dll_path;
@@ -40,7 +39,7 @@ static void InitLibrary ()
 
 		if (!g_7zDll.IsLoaded ()) {
 			// 2. look in foobar2000 installation folder
-			dll_path = GetUnicodeString (AString (pfc::string_directory (core_api::get_my_full_path ())), CP_ACP);
+			dll_path = GetUnicodeString (AString (pfc::string_directory (core_api::get_my_full_path ())));
 			if (dll_path[dll_path.Length () - 1] != '\\')
 					dll_path += '\\';
 				dll_path += DLL_NAME;
@@ -58,11 +57,18 @@ static void InitLibrary ()
 			show_error_message () << "Custom 7z.dll location is not specified";
 		else if (!filesystem::g_exists (cfg_dll_custom_path, abort_callback_dummy ()))
 			show_error_message () << "File \"" << cfg_dll_custom_path << "\" not found";
-		else if (!g_7zDll.Load (pfc::stringcvt::string_wide_from_utf8 (cfg_dll_custom_path)))
-			show_error_message () << "Could't load " << cfg_dll_custom_path;
+		else {
+			if (!g_7zDll.Load (pfc::stringcvt::string_wide_from_utf8 (cfg_dll_custom_path)))
+				show_error_message () << "Could't load " << cfg_dll_custom_path;
+			else
+				dll_path = GetUnicodeString (AString (cfg_dll_custom_path));
+		}
 	}
 
 	if (g_7zDll.IsLoaded ()) {
+		if (cfg_debug_messages)
+			show_debug_message () << "Loaded \"" << pfc::stringcvt::string_utf8_from_wide (dll_path) << "\"";
+
 		g_createObjectFunc = (CreateObjectFunc)g_7zDll.GetProc ("CreateObject");
 		if (g_createObjectFunc == NULL)
 			show_error_message () << "Could't get \"CreateObject\" function address";
