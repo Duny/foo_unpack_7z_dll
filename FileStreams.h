@@ -1,12 +1,12 @@
+#pragma once
+
 class FooInStream:
     public IInStream,
     public IStreamGetSize,
     public CMyUnknownImp
 {
 public:
-
     FooInStream (file_ptr const &p_stream, abort_callback &p_abort) : m_stream (p_stream), m_abort (p_abort) {}
-    virtual ~FooInStream () {}
 
     MY_UNKNOWN_IMP2(IInStream, IStreamGetSize)
 
@@ -14,7 +14,6 @@ public:
     STDMETHOD(Seek)(Int64 offset, UInt32 seekOrigin, UInt64 *newPosition);
 
     STDMETHOD(GetSize)(UInt64 *size);
-
 private:
     abort_callback &m_abort;
     file_ptr	    m_stream;
@@ -26,7 +25,6 @@ class FooOutStream:
 {
 public:
     FooOutStream (file_ptr &p_stream, abort_callback &p_abort) : m_stream (p_stream), m_abort (p_abort) {}
-    virtual ~FooOutStream () {}
 
     MY_UNKNOWN_IMP1(IOutStream)
 

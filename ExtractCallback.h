@@ -1,4 +1,4 @@
-
+#pragma once
 class CFooExtractCallback : public IArchiveExtractCallback, public CMyUnknownImp
 {
 public:

@@ -18,7 +18,6 @@ STDMETHODIMP FooInStream::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPosi
 {
 	try {
 		if (seekOrigin >= 3) return STG_E_INVALIDFUNCTION;
-
 		m_stream->seek_ex (offset, (file::t_seek_mode)seekOrigin, m_abort); // Dirty hack
 		if (newPosition) *newPosition = m_stream->get_position (m_abort);
 		return S_OK;

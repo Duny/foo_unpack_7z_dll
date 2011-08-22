@@ -30,16 +30,16 @@ IDD_7ZPREFERENCES DIALOGEX 0, 0, 332, 288
 STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
 FONT 8, "Microsoft Sans Serif", 400, 0, 0xCC
 BEGIN
-    CONTROL         "&Default (search in 7-Zip installation folder and in component installation folder)",IDC_RADIO_DEFAULT_LOCATION,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,33,116,258,10
+    CONTROL         "&Default (search in 7-Zip installation folder and in component's installation folder)",IDC_RADIO_DEFAULT_LOCATION,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,33,116,263,10
     CONTROL         "&Custom",IDC_RADIO_CUSTOM_LOCATION,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,33,128,39,10
     PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE,33,141,33,14
     LTEXT           "7z.dll path here",IDC_STATIC_DLL_LOCATION,71,144,251,8
-    CONTROL         "Be &quiet (log messages to the console, instead of showing popup windows)",IDC_CHECK_QUIET_MODE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,38,175,254,10
+    CONTROL         "Be &quiet (log error messages to the console, instead of showing popup windows)",IDC_CHECK_QUIET_MODE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,33,175,264,10
     GROUPBOX        "7z.dll location",IDC_STATIC_DLL_LOCATION_GROUP,2,101,329,63
-    CONTROL         "Enable &debug messages",IDC_CHECK_DEBUG_MESSAGES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,38,193,94,10
-    ICON            IDI_7ZIP_LOGO,IDC_STATIC,7,4,21,20
+    CONTROL         "Enable &debug messages",IDC_CHECK_DEBUG_MESSAGES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,33,193,94,10
+    ICON            IDI_7ZIP_LOGO,IDC_STATIC,7,4,20,20
 END
 
 #endif    // Neutral resources
@@ -124,7 +124,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_7ZIP_LOGO           ICON                    "J:\\projects\\SDK\\7z\\CPP\\7zip\\UI\\FileManager\\7zipLogo.ico"
+IDI_7ZIP_LOGO           ICON                    "7zipLogo.ico"
 #endif    // Russian resources
 /////////////////////////////////////////////////////////////////////////////
 

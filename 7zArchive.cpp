@@ -48,12 +48,9 @@ void C7zArchive::GetFileReader (t_size i, file_ptr &p_out, abort_callback &p_abo
 {
 	p_out = new service_impl_t<tempmem_with_timestamp> (m_items[i].m_stats);
 
-    CFooExtractCallback *extractCallbackSpec = new CFooExtractCallback (p_out, p_abort);
-    CMyComPtr<IArchiveExtractCallback> extractCallback (extractCallbackSpec);
-
-    size_t index[] = { i };
+    CMyComPtr<IArchiveExtractCallback> extractCallback (new CFooExtractCallback (p_out, p_abort));
 	
-    HRESULT result = m_archive->Extract (index, 1, false, extractCallback);
+    HRESULT result = m_archive->Extract (&i, 1, false, extractCallback);
 	if (result != S_OK) {
 		show_error_message () << "Error extracting \"" << m_items[i].m_path << "\"";
 		throw exception_io_data ();

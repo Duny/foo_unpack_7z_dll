@@ -282,7 +282,7 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\7zip\UI\FileManager\7zipLogo.ico"
+				RelativePath=".\7zipLogo.ico"
 				>
 			</File>
 			<File

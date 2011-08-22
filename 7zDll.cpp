@@ -38,7 +38,7 @@ static void InitLibrary ()
 		}
 
 		if (!g_7zDll.IsLoaded ()) {
-			// 2. look in foobar2000 installation folder
+			// 2. look in component's installation folder
 			dll_path = GetUnicodeString (AString (pfc::string_directory (core_api::get_my_full_path ())));
 			if (dll_path[dll_path.Length () - 1] != '\\')
 					dll_path += '\\';
