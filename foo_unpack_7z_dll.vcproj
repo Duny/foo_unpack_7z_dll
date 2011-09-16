@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(BUILD_OUT_DIR)\$(ProjectName)\$(ConfigurationName)"
+			OutputDirectory="$(BUILD_BIN_DIR)\$(ProjectName)\$(ConfigurationName)"
 			IntermediateDirectory="$(OutDir)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -65,7 +65,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="$(FB2KSDK)\foobar2000\shared\shared.lib shlwapi.lib user32.lib"
-				OutputFile="$(OutDir)\$(ProjectName).dll"
+				OutputFile="$(FB2K_DEBUG_DIR)\user-components\$(ProjectName)\$(ProjectName).dll"
 				LinkIncremental="2"
 				GenerateManifest="false"
 				GenerateDebugInformation="true"
@@ -100,7 +100,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(BUILD_OUT_DIR)\$(ProjectName)\$(ConfigurationName)"
+			OutputDirectory="$(BUILD_BIN_DIR)\$(ProjectName)\$(ConfigurationName)"
 			IntermediateDirectory="$(OutDir)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -147,6 +147,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="$(FB2KSDK)\foobar2000\shared\shared.lib shlwapi.lib user32.lib"
+				OutputFile="$(FB2K_RELEASE_DIR)\user-components\$(ProjectName)\$(ProjectName).dll"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="false"
