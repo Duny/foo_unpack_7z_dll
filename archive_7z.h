@@ -4,48 +4,48 @@
 #include "Common\MyCom.h"
 #include "7zip\Archive\IArchive.h"
 
-class archive_7z
+struct file_in_archive {
+	t_filestats  m_stats;
+	pfc::string8 m_path;
+};
+typedef std::vector<file_in_archive> archive_items;
+
+class item_callback
 {
-	friend class archive_7z_cached;
 public:
-	struct file_desc_t {
-		t_filestats  m_stats;
-		pfc::string8 m_path;
-	};
-	typedef pfc::array_t<file_desc_t> t_arch_items;
-
-	~archive_7z () { Close (); }
-
-    void Open (const char*, file_ptr const &, abort_callback &);
-    void Close () { if (m_archive) m_archive->Close (); }
-
-	const t_arch_items & items () const { return m_items; }
-
-    void GetFileReader (t_size i, file_ptr &p_out, abort_callback &p_abort);
-	void GetFileReader (const pfc::string8 &path, file_ptr &p_out, abort_callback &p_abort);
-
-private:
-	CMyComPtr<IInArchive> m_archive;
-	pfc::string8_fast m_path;
-	t_filetimestamp m_timestamp;
-	t_arch_items m_items;
-
-    void GetFileList ();
+	virtual bool on_item (const file_in_archive &p_file) = 0;
 };
 
-class archive_7z_cached
+class archive_7z
 {
-	enum { cache_size = 10 };
-
-	static archive_7z m_cache[cache_size];
-	static t_size m_cache_pos;
-	static critical_section m_section;
-
-	c_insync m_sync;
 public:
-	archive_7z_cached () : m_sync (m_section) {}
+	archive_7z () {}
+	archive_7z (const char *p_archive, abort_callback &p_abort) { open (p_archive, p_abort); }
 
-	const archive_7z & Open (const char*, file_ptr const &, abort_callback &);
+	~archive_7z () { close (); }
+
+    void open (const file_ptr &p_file, abort_callback &p_abort);
+	void open (const char *p_file, abort_callback &p_abort);
+    void close ();
+
+	const t_filestats& get_stats (const char *p_file);
+
+	void list (item_callback &p_callback);
+
+	const archive_items & items () const { return m_items; }
+
+	void get_reader (const pfc::string8 &p_file, file_ptr &p_out, abort_callback &p_abort);
+
+private:
+	archive_7z (const archive_7z &);
+	archive_7z& operator= (const archive_7z &);
+
+	CMyComPtr<IInArchive> m_archive;
+	t_filetimestamp m_timestamp;
+	archive_items m_items;
+
+	void get_reader (t_size i, file_ptr &p_out, abort_callback &p_abort);
+    void list_archive ();
 };
 
 #endif

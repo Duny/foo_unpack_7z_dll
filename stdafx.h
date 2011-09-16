@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <algorithm>
+
 // foobar2000 includes
 #include "foobar2000\ATLHelpers\ATLHelpers.h"
 
@@ -32,10 +35,10 @@ public:
 	}
 };
 
-class show_debug_message : public pfc::string_formatter
+class debug_log : public pfc::string_formatter
 {
 public:
-	~show_debug_message () {
-			console::formatter () << COMPONENT_NAME << ": " << get_ptr ();
+	~debug_log () {
+			if (cfg_debug_messages) console::formatter () << COMPONENT_NAME << ": " << get_ptr ();
 	}
 };
