@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\..\bin\$(ProjectName)\$(ConfigurationName)"
+			OutputDirectory="$(BUILD_OUT_DIR)\$(ProjectName)\$(ConfigurationName)"
 			IntermediateDirectory="$(OutDir)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -44,7 +44,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="0"
 				WholeProgramOptimization="false"
-				AdditionalIncludeDirectories="..\..\..\SDK\fb2k\;..\..\..\SDK\7z\CPP"
+				AdditionalIncludeDirectories="$(FB2KSDK);$(7ZSRC)\CPP"
 				PreprocessorDefinitions="WIN32;_DEBUG_;_WINDOWS;_USRDLL;FOO_UNPACK_7Z_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\..\..\SDK\fb2k\foobar2000\shared\shared.lib shlwapi.lib user32.lib UxTheme.lib"
+				AdditionalDependencies="$(FB2KSDK)\foobar2000\shared\shared.lib shlwapi.lib user32.lib"
 				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="2"
 				GenerateManifest="false"
@@ -95,12 +95,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="..\..\..\extras\$(ProjectName)\$(ConfigurationName)\cmd_$(RemoteMachine)_$(PlatformName).bat $(TargetFileName) $(TargetPath)"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\..\..\bin\$(ProjectName)\$(ConfigurationName)"
+			OutputDirectory="$(BUILD_OUT_DIR)\$(ProjectName)\$(ConfigurationName)"
 			IntermediateDirectory="$(OutDir)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -127,7 +127,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="2"
-				AdditionalIncludeDirectories="..\..\..\SDK\fb2k\;..\..\..\SDK\7z\CPP"
+				AdditionalIncludeDirectories="$(FB2KSDK);$(7ZSRC)\CPP"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;FOO_UNPACK_7Z_EXPORTS"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -146,7 +146,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\..\..\SDK\fb2k\foobar2000\shared\shared.lib shlwapi.lib user32.lib"
+				AdditionalDependencies="$(FB2KSDK)\foobar2000\shared\shared.lib shlwapi.lib user32.lib"
 				LinkIncremental="1"
 				GenerateManifest="false"
 				GenerateDebugInformation="false"
@@ -290,63 +290,63 @@
 			Name="7z"
 			>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Windows\DLL.cpp"
+				RelativePath="$(7ZSRC)\CPP\Windows\DLL.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Windows\FileDir.cpp"
+				RelativePath="$(7ZSRC)\CPP\Windows\FileDir.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Windows\FileFind.cpp"
+				RelativePath="$(7ZSRC)\CPP\Windows\FileFind.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Windows\FileIO.cpp"
+				RelativePath="$(7ZSRC)\CPP\Windows\FileIO.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Windows\FileName.cpp"
+				RelativePath="$(7ZSRC)\CPP\Windows\FileName.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\7zip\Common\FileStreams.cpp"
+				RelativePath="$(7ZSRC)\CPP\7zip\Common\FileStreams.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Common\IntToString.cpp"
+				RelativePath="$(7ZSRC)\CPP\Common\IntToString.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Common\MyString.cpp"
+				RelativePath="$(7ZSRC)\CPP\Common\MyString.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Common\MyVector.cpp"
+				RelativePath="$(7ZSRC)\CPP\Common\MyVector.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Common\NewHandler.cpp"
+				RelativePath="$(7ZSRC)\CPP\Common\NewHandler.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Windows\PropVariant.cpp"
+				RelativePath="$(7ZSRC)\CPP\Windows\PropVariant.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Windows\PropVariantConversions.cpp"
+				RelativePath="$(7ZSRC)\CPP\Windows\PropVariantConversions.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Windows\Registry.cpp"
+				RelativePath="$(7ZSRC)\CPP\Windows\Registry.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Common\StringConvert.cpp"
+				RelativePath="$(7ZSRC)\CPP\Common\StringConvert.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\SDK\7z\CPP\Common\Wildcard.cpp"
+				RelativePath="$(7ZSRC)\CPP\Common\Wildcard.cpp"
 				>
 			</File>
 		</Filter>
