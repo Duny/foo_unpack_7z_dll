@@ -1,9 +1,7 @@
 #include "stdafx.h"
+#include "file_streams.h"
 
-//=================================================
-// CFooInFileStream
-//=================================================
-STDMETHODIMP FooInStream::Read (void *data, UInt32 size, UInt32 *processedSize)
+STDMETHODIMP foo_in_stream::Read (void *data, UInt32 size, UInt32 *processedSize)
 {
 	try {
 		UInt32 realProcessedSize = m_stream->read (data, size, m_abort);
@@ -14,7 +12,7 @@ STDMETHODIMP FooInStream::Read (void *data, UInt32 size, UInt32 *processedSize)
 	}
 }
 
-STDMETHODIMP FooInStream::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPosition)
+STDMETHODIMP foo_in_stream::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPosition)
 {
 	try {
 		if (seekOrigin >= 3) return STG_E_INVALIDFUNCTION;
@@ -26,7 +24,7 @@ STDMETHODIMP FooInStream::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPosi
 	}
 } 
 
-STDMETHODIMP FooInStream::GetSize(UInt64 *size)
+STDMETHODIMP foo_in_stream::GetSize(UInt64 *size)
 {
 	try {
 		if (size) *size = m_stream->get_size (m_abort);
@@ -36,10 +34,7 @@ STDMETHODIMP FooInStream::GetSize(UInt64 *size)
 	}
 }
 
-//=================================================
-// CFooOutFileStream
-//=================================================
-STDMETHODIMP FooOutStream::Write (const void *data, UInt32 size, UInt32 *processedSize)
+STDMETHODIMP foo_out_stream::Write (const void *data, UInt32 size, UInt32 *processedSize)
 {
 	try {
 		m_stream->write (data, size, m_abort);
@@ -50,7 +45,7 @@ STDMETHODIMP FooOutStream::Write (const void *data, UInt32 size, UInt32 *process
 	}
 }
 
-STDMETHODIMP FooOutStream::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPosition)
+STDMETHODIMP foo_out_stream::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPosition)
 {
 	try {
 		if (seekOrigin >= 3) return STG_E_INVALIDFUNCTION;
@@ -62,7 +57,7 @@ STDMETHODIMP FooOutStream::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPos
 	}
 }
 
-STDMETHODIMP FooOutStream::SetSize (UInt64 newSize)
+STDMETHODIMP foo_out_stream::SetSize (UInt64 newSize)
 {
 	try {
 		m_stream->resize (newSize, m_abort);

@@ -1,12 +1,15 @@
-#pragma once
+#ifndef _FILE_STREAMS_H_
+#define _FILE_STREAMS_H_
 
-class FooInStream:
+#include "7zip\Common\FileStreams.h"
+
+class foo_in_stream:
     public IInStream,
     public IStreamGetSize,
     public CMyUnknownImp
 {
 public:
-    FooInStream (file_ptr const &p_stream, abort_callback &p_abort) : m_stream (p_stream), m_abort (p_abort) {}
+    foo_in_stream (file_ptr const &p_stream, abort_callback &p_abort) : m_stream (p_stream), m_abort (p_abort) {}
 
     MY_UNKNOWN_IMP2(IInStream, IStreamGetSize)
 
@@ -19,12 +22,12 @@ private:
     file_ptr	    m_stream;
 };
 
-class FooOutStream:
+class foo_out_stream:
     public IOutStream,
     public CMyUnknownImp
 {
 public:
-    FooOutStream (file_ptr &p_stream, abort_callback &p_abort) : m_stream (p_stream), m_abort (p_abort) {}
+    foo_out_stream (file_ptr &p_stream, abort_callback &p_abort) : m_stream (p_stream), m_abort (p_abort) {}
 
     MY_UNKNOWN_IMP1(IOutStream)
 
@@ -36,3 +39,5 @@ private:
     abort_callback &m_abort;
     file_ptr        m_stream;
 };
+
+#endif

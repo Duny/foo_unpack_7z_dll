@@ -190,15 +190,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\7zArchive.cpp"
+				RelativePath=".\7z_dll.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\7zDll.cpp"
+				RelativePath=".\archive_7z.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ExtractCallback.cpp"
+				RelativePath=".\extract_callback.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -210,15 +210,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\FileStreams.cpp"
+				RelativePath=".\file_streams.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\foo_unpack_7z_dll.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\SDK\fb2k\foobar2000\ATLHelpers\misc.cpp"
 				>
 			</File>
 			<File
@@ -252,15 +248,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\7zArchive.h"
+				RelativePath=".\archive_7z.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ExtractCallback.h"
+				RelativePath=".\extract_callback.h"
 				>
 			</File>
 			<File
-				RelativePath=".\FileStreams.h"
+				RelativePath=".\file_streams.h"
 				>
 			</File>
 			<File

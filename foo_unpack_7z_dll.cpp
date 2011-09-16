@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "archive_7z.h"
 
 DECLARE_COMPONENT_VERSION
 (
@@ -32,12 +33,12 @@ class archive_type_7z : public archive_impl
 			show_debug_message () << "get_stats_in_archive(\"" << pfc::string_filename (p_archive) << "\", \"" << p_file << "\")";
 
 		file_ptr file;
-		C7zArchive archive;
+		archive_7z archive;
 		
 		filesystem::g_open (file, p_archive, filesystem::open_mode_read, p_abort);
-		archive.Open (file, p_abort);
+		archive.Open (p_archive, file, p_abort);
 
-		const C7zArchive::t_arch_items &items = archive.items ();
+		const archive_7z::t_arch_items &items = archive.items ();
 		const pfc::string8_fast &file_name = p_file;
 		for (t_size i = 0, n = items.get_size (); i < n; i++) {
 			if (items[i].m_path == file_name)
@@ -52,7 +53,7 @@ class archive_type_7z : public archive_impl
 			throw exception_io_data ();
 
 		file_ptr file;
-		C7zArchive archive;
+		archive_7z archive;
 	
 		const pfc::string8_fast &file_name = p_file;
 
@@ -68,9 +69,9 @@ class archive_type_7z : public archive_impl
 			insync (m_sync);
 
 			filesystem::g_open (file, p_archive, filesystem::open_mode_read, p_abort);
-			archive.Open (file, p_abort);
+			archive.Open (p_archive, file, p_abort);
 
-			const C7zArchive::t_arch_items &items = archive.items ();
+			const archive_7z::t_arch_items &items = archive.items ();
 			
 			t_size i = 0, n = items.get_size ();
 			for (; i < n; i++) 
@@ -108,9 +109,9 @@ class archive_type_7z : public archive_impl
 		if (p_file.is_empty ())
 			filesystem::g_open (p_file, p_archive, filesystem::open_mode_read, p_out);
 
-		C7zArchive archive;
-		archive.Open (p_file, p_out);
-		const C7zArchive::t_arch_items &items = archive.items ();
+		archive_7z archive;
+		archive.Open (p_archive, p_file, p_out);
+		const archive_7z::t_arch_items &items = archive.items ();
 
 		DWORD start = GetTickCount ();
 

@@ -1,5 +1,10 @@
 #include "stdafx.h"
 
+#include "Windows\Registry.h"
+#include "Windows\DLL.h"
+#include "Common\StringConvert.h"
+#include "7zip\Archive\IArchive.h"
+
 #define DLL_NAME (L"7z.dll")
 #define REG_PATH_7Z TEXT("Software") TEXT(STRING_PATH_SEPARATOR) TEXT("7-Zip")
 

@@ -1,23 +1,32 @@
 #include "stdafx.h"
+
+#include "Windows\PropVariant.h"
+#include "Windows\PropVariantConversions.h"
+
+#include "archive_7z.h"
+#include "extract_callback.h"
 #include "tempmem_with_timestamp.h"
 
-void C7zArchive::Open (file_ptr const &p_file, abort_callback &p_abort)
+
+void archive_7z::Open (const char *p_archive, file_ptr const &p_file, abort_callback &p_abort)
 {
 	if (!CreateArchiveObject ((void **)&m_archive))
 		throw std::exception ("Could't init 7z.dll");
 
 	m_timestamp = p_file->get_timestamp (p_abort);
 
-    FooInStream *fileSpec = new FooInStream (p_file, p_abort);
+    foo_in_stream *fileSpec = new foo_in_stream (p_file, p_abort);
     CMyComPtr<IInStream> file = fileSpec;
 
     if (m_archive->Open (file, 0, NULL) != S_OK)
         throw exception_io_unsupported_format ();
 
+	m_path = p_archive;
+
 	GetFileList ();
 }
 
-void C7zArchive::GetFileList ()
+void archive_7z::GetFileList ()
 {
     UInt32 num_items = 0;
 	if (m_archive->GetNumberOfItems (&num_items) != S_OK) {
@@ -44,11 +53,11 @@ void C7zArchive::GetFileList ()
     }
 }
 
-void C7zArchive::GetFileReader (t_size i, file_ptr &p_out, abort_callback &p_abort)
+void archive_7z::GetFileReader (t_size i, file_ptr &p_out, abort_callback &p_abort)
 {
 	p_out = new service_impl_t<tempmem_with_timestamp> (m_items[i].m_stats);
 
-    CMyComPtr<IArchiveExtractCallback> extractCallback (new CFooExtractCallback (p_out, p_abort));
+    CMyComPtr<IArchiveExtractCallback> extractCallback (new foo_extract_callback (p_out, p_abort));
 	
     HRESULT result = m_archive->Extract (&i, 1, false, extractCallback);
 	if (result != S_OK) {
