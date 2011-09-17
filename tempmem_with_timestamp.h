@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _TEMPMEM_WITH_TIMESTAMP_H_
+#define _TEMPMEM_WITH_TIMESTAMP_H_
 
 class tempmem_with_timestamp : public file
 {
@@ -27,3 +28,4 @@ public:
 	virtual bool get_content_type (pfc::string_base &) { return false; }
 	virtual bool is_remote () { return false; }
 };
+#endif

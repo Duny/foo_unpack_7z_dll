@@ -13,7 +13,6 @@ DECLARE_COMPONENT_VERSION
 );
 VALIDATE_COMPONENT_FILENAME (COMPONENT_NAME ".dll");
 
-
 class archive_type_7z : public archive_impl
 {
 	static const char *g_ext_7z;
@@ -53,42 +52,22 @@ class archive_type_7z : public archive_impl
 	{
 		check_is_our_type (p_archive);
 
-		class process_item : public item_callback
-		{
-			archive_impl *m_owner;
-			archive_7z &m_archive;
-			const char *m_archive_path;
-			archive_callback &m_callback;
-			bool m_want_readers;
-
-		public:
-			process_item (
-				archive_impl *owner,
-				archive_7z &archive,
-				const char *archive_path,
-				archive_callback &callback,
-				bool want_readers
-			)
-			: m_owner (owner), m_archive (archive), m_archive_path (archive_path),
-				m_callback (callback), m_want_readers (want_readers) {}
-
-			virtual bool on_item (const file_in_archive &p_file) {
-				pfc::string8_fast m_url;
-				m_owner->make_unpack_path (m_url, m_archive_path, p_file.m_path);
-			
-				file_ptr temp;
-				if (m_want_readers)
-					m_archive.get_reader (p_file.m_path, temp, m_callback);
-
-				return m_callback.on_entry (m_owner, m_url, p_file.m_stats, temp);
-			}
-		};
-
 		DWORD start = GetTickCount ();
 
 		archive_7z archive;
 		p_reader.is_empty () ? archive.open (p_archive, p_out) : archive.open (p_reader, p_out);
-		archive.list (process_item (this, archive, p_archive, p_out, p_want_readers));
+
+		archive.list ([&] (const file_in_archive &p_file) -> bool
+        {
+			pfc::string8_fast m_url;
+			make_unpack_path (m_url, p_archive, p_file.m_path);
+			
+			file_ptr temp;
+			if (p_want_readers)
+				archive.get_reader (p_file.m_path, temp, p_out);
+
+			return p_out.on_entry (this, m_url, p_file.m_stats, temp);
+        });
 
 		DWORD end = GetTickCount ();
 		debug_log () << "archive_list(\"" << pfc::string_filename (p_archive) << "\", " << p_want_readers << ")"

@@ -45,11 +45,11 @@ private:
 
 	void OnChanged ();
 
-	inline t_uint32 GetSelectedDllMode () const { 
+	t_uint32 GetSelectedDllMode () const { 
 		return IsDlgButtonChecked (IDC_RADIO_DEFAULT_LOCATION) == BST_CHECKED ? dll_location_default : dll_location_custom;
 	}
 
-	inline void EnableBrowseButton (bool enable) {
+	void EnableBrowseButton (bool enable) {
 		GetDlgItem (IDC_BUTTON_BROWSE).EnableWindow (enable ? FALSE : TRUE);
 	}
 

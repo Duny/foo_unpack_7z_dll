@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "7zip\Archive\IArchive.h"
-
 #include "extract_callback.h"
 
 STDMETHODIMP foo_extract_callback::GetStream (UInt32 index, ISequentialOutStream **outStream, Int32 askExtractMode)

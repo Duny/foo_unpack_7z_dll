@@ -8,10 +8,14 @@
 
 // 7-zip includes
 #include "Common\MyInitGuid.h"
+#include "Common\MyCom.h"
+#include "7zip\Archive\IArchive.h"
 
 #include "resource.h"
 
+
 #define COMPONENT_NAME "foo_unpack_7z_dll"
+
 
 enum dll_location_mode { 
 	dll_location_default,
@@ -22,7 +26,9 @@ extern cfg_bool cfg_quiet_mode, cfg_debug_messages;
 extern cfg_uint cfg_dll_location_mode;
 extern cfg_string cfg_dll_custom_path;
 
-bool CreateArchiveObject (void **out);
+
+void CreateArchiveObject (CMyComPtr<IInArchive> &out);
+
 
 class show_error_message : public pfc::string_formatter
 {
@@ -39,6 +45,6 @@ class debug_log : public pfc::string_formatter
 {
 public:
 	~debug_log () {
-			if (cfg_debug_messages) console::formatter () << COMPONENT_NAME << ": " << get_ptr ();
+		if (cfg_debug_messages) console::formatter () << COMPONENT_NAME << ": " << get_ptr ();
 	}
 };
