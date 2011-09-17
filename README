@@ -2,6 +2,6 @@ This is a foobar2000 component for unpacking 7-zip archives, which uses 7z.dll i
 
 Building
 In order to build, you will need to define some environment variables:
-1. 7ZSRC must point to the directory, where 7z source code can be found
+1. SEVENZIPSRC must point to the directory, where 7z source code can be found
 2. FB2KSDK must point to the folder with foobar2000 SDK
 3. BUILD_BIN_DIR will be used for project's binary files (*.obj, etc)

@@ -5,78 +5,78 @@
 #include "Common\StringConvert.h"
 #include "7zip\Archive\IArchive.h"
 
-#define DLL_NAME (L"7z.dll")
-#define REG_PATH_7Z TEXT("Software") TEXT(STRING_PATH_SEPARATOR) TEXT("7-Zip")
-
-// type definitions 
-typedef UINT32 (WINAPI * CreateObjectFunc)(const GUID *clsID, const GUID *interfaceID, void **outObject);
-
-// global variables
-DEFINE_GUID (CLSID_CFormat7z, 0x23170F69, 0x40C1, 0x278A, 0x10, 0x00, 0x00, 0x01, 0x10, 0x07, 0x00, 0x00);
-
-static NWindows::NDLL::CLibrary g_7zDll;
-static CreateObjectFunc g_createObjectFunc = NULL;
-
-static void InitLibrary ()
+namespace
 {
-    if (g_7zDll.IsLoaded () && g_createObjectFunc != NULL) return;
+	const UString dll_name (L"7z.dll");
+	const UString reg_path_7z (TEXT("Software") TEXT(STRING_PATH_SEPARATOR) TEXT("7-Zip"));
 
-	UString dll_path;
+	DEFINE_GUID (CLSID_CFormat7z, 0x23170F69, 0x40C1, 0x278A, 0x10, 0x00, 0x00, 0x01, 0x10, 0x07, 0x00, 0x00);
 
-	if (cfg_dll_location_mode == dll_location_default) {
-		UString triedPaths;
+	NWindows::NDLL::CLibrary g_7zDll;
 
-		// 1.
-		// try to find 7-zip installation
-		NWindows::NRegistry::CKey key;
-		if (key.Open (HKEY_CURRENT_USER, REG_PATH_7Z, KEY_READ) == ERROR_SUCCESS) {
-			if (key.QueryValue (TEXT ("Path"), dll_path) == ERROR_SUCCESS && !dll_path.IsEmpty ()) {
-				if (dll_path[dll_path.Length () - 1] != '\\')
-					dll_path += '\\';
-				dll_path += DLL_NAME;
+	typedef UINT32 (WINAPI * CreateObjectFunc)(const GUID *clsID, const GUID *interfaceID, void **outObject);
+	CreateObjectFunc g_createObjectFunc = NULL;
 
-				g_7zDll.Load (dll_path);
 
-				triedPaths = dll_path;
-				triedPaths += '\n';
+	void InitLibrary ()
+	{
+		if (g_7zDll.IsLoaded () && g_createObjectFunc != NULL) return;
+
+		UString path;
+
+		if (cfg_dll_location_mode == dll_location_default) {
+			UString triedPaths;
+
+			// 1.
+			// try to find 7-zip installation
+			NWindows::NRegistry::CKey key;
+			if (key.Open (HKEY_CURRENT_USER, reg_path_7z, KEY_READ) == ERROR_SUCCESS) {
+				if (key.QueryValue (TEXT ("Path"), path) == ERROR_SUCCESS && !path.IsEmpty ()) {
+					if (path[path.Length () - 1] != '\\')
+						path += '\\';
+					path += dll_name;
+
+					g_7zDll.Load (path);
+
+					triedPaths = path;
+					triedPaths += '\n';
+				}
 			}
+
+			if (!g_7zDll.IsLoaded ()) {
+				// 2. look in component's installation folder
+				path = GetUnicodeString (AString (pfc::string_directory (core_api::get_my_full_path ())));
+				if (path[path.Length () - 1] != '\\')
+					path += '\\';
+				path += dll_name;
+
+				g_7zDll.Load (path);
+
+				triedPaths += path;
+			}
+
+			if (!g_7zDll.IsLoaded ())
+				show_error_message () << "Could't load 7z.dll\nLooked in:\n" << pfc::stringcvt::string_utf8_from_wide (triedPaths);
 		}
-
-		if (!g_7zDll.IsLoaded ()) {
-			// 2. look in component's installation folder
-			dll_path = GetUnicodeString (AString (pfc::string_directory (core_api::get_my_full_path ())));
-			if (dll_path[dll_path.Length () - 1] != '\\')
-					dll_path += '\\';
-				dll_path += DLL_NAME;
-
-				g_7zDll.Load (dll_path);
-
-				triedPaths += dll_path;
-		}
-
-		if (!g_7zDll.IsLoaded ())
-			show_error_message () << "Could't load 7z.dll\nLooked in:\n" << pfc::stringcvt::string_utf8_from_wide (triedPaths);
-	}
-	else { // dll_location_custom
-		if (cfg_dll_custom_path.is_empty ())
-			show_error_message () << "Custom 7z.dll location is not specified";
-		else if (!filesystem::g_exists (cfg_dll_custom_path, abort_callback_dummy ()))
-			show_error_message () << "File \"" << cfg_dll_custom_path << "\" not found";
-		else {
+		else { // dll_location_custom
+			if (cfg_dll_custom_path.is_empty ())
+				show_error_message () << "Custom 7z.dll location is not specified";
+			else if (!filesystem::g_exists (cfg_dll_custom_path, abort_callback_dummy ()))
+				show_error_message () << "File \"" << cfg_dll_custom_path << "\" not found";
+			
 			if (!g_7zDll.Load (pfc::stringcvt::string_wide_from_utf8 (cfg_dll_custom_path)))
 				show_error_message () << "Could't load " << cfg_dll_custom_path;
 			else
-				dll_path = GetUnicodeString (AString (cfg_dll_custom_path));
+				path = GetUnicodeString (AString (cfg_dll_custom_path));
 		}
-	}
 
-	if (g_7zDll.IsLoaded ()) {
-		if (cfg_debug_messages)
-			show_debug_message () << "Loaded \"" << pfc::stringcvt::string_utf8_from_wide (dll_path) << "\"";
+		if (g_7zDll.IsLoaded ()) {
+			debug_log () << "Loaded \"" << pfc::stringcvt::string_utf8_from_wide (path) << "\"";
 
-		g_createObjectFunc = (CreateObjectFunc)g_7zDll.GetProc ("CreateObject");
-		if (g_createObjectFunc == NULL)
-			show_error_message () << "Could't get \"CreateObject\" function address";
+			g_createObjectFunc = (CreateObjectFunc)g_7zDll.GetProc ("CreateObject");
+			if (g_createObjectFunc == NULL)
+				show_error_message () << "Could't get \"CreateObject\" function address";
+		}
 	}
 }
 

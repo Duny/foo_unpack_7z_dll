@@ -52,7 +52,7 @@ class archive_type_7z : public archive_impl
 	virtual void archive_list (const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers)
 	{
 		check_is_our_type (p_archive);
-		
+
 		class process_item : public item_callback
 		{
 			archive_impl *m_owner;
