@@ -69,7 +69,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
-      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <ImportLibrary>
+      </ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
@@ -99,7 +100,8 @@
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <ImportLibrary>
+      </ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
@@ -111,7 +113,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="7z_dll.cpp" />
-    <ClCompile Include="archive_7z.cpp" />
+    <ClCompile Include="archive.cpp" />
     <ClCompile Include="extract_callback.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
@@ -139,7 +141,8 @@
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\Wildcard.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="archive_7z.h" />
+    <ClInclude Include="archive.h" />
+    <ClInclude Include="7z_dll.h" />
     <ClInclude Include="extract_callback.h" />
     <ClInclude Include="file_streams.h" />
     <ClInclude Include="resource.h" />

@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "archive_7z.h"
+#include "archive.h"
 #include <iostream>
 
 DECLARE_COMPONENT_VERSION
@@ -32,7 +32,7 @@ class archive_type_7z : public archive_impl
 
 		debug_log () << "get_stats_in_archive(\"" << pfc::string_filename (p_archive) << "\", \"" << p_file << "\")";
 
-		return archive_7z (p_archive, p_abort).get_stats (p_file);
+		return unpack_7z::archive (p_archive, p_abort).get_stats (p_file);
 	}
 
 	virtual void open_archive (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort)
@@ -41,7 +41,7 @@ class archive_type_7z : public archive_impl
 
 		DWORD start = GetTickCount ();
 
-		archive_7z (p_archive, p_abort).get_reader (p_file, p_out, p_abort);
+		unpack_7z::archive (p_archive, p_abort).get_reader (p_file, p_out, p_abort);
 
 		DWORD end = GetTickCount ();
 		debug_log () << "open_archive(\"" << pfc::string_filename (p_archive) << "\", \"" << p_file << "\")"
@@ -54,10 +54,10 @@ class archive_type_7z : public archive_impl
 
 		DWORD start = GetTickCount ();
 
-		archive_7z archive;
+		unpack_7z::archive archive;
 		p_reader.is_empty () ? archive.open (p_archive, p_out) : archive.open (p_reader, p_out);
 
-		archive.list ([&] (const file_in_archive &p_file) -> bool
+		archive.list ([&] (const unpack_7z::file_in_archive &p_file) -> bool
         {
 			pfc::string8_fast m_url;
 			make_unpack_path (m_url, p_archive, p_file.m_path);

@@ -27,9 +27,6 @@ extern cfg_uint cfg_dll_location_mode;
 extern cfg_string cfg_dll_custom_path;
 
 
-void CreateArchiveObject (CMyComPtr<IInArchive> &out);
-
-
 class show_error_message : public pfc::string_formatter
 {
 public:
