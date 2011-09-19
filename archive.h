@@ -9,7 +9,7 @@ namespace unpack_7z
 	    pfc::string8 m_path;
     };
 
-    PFC_DECLARE_EXCEPTION (exception_arch_7z, pfc::exception, COMPONENT_NAME " error");
+    PFC_DECLARE_EXCEPTION (exception_arch_7z, pfc::exception, COMPONENT_NAME " archive error");
     PFC_DECLARE_EXCEPTION (exception_arch_close, exception_arch_7z, "Couldn't close archive");
     PFC_DECLARE_EXCEPTION (exception_arch_open, exception_arch_7z, "Archive open error");
     PFC_DECLARE_EXCEPTION (exception_arch_file_not_found, exception_arch_7z, "File not found in archive");
@@ -34,7 +34,7 @@ namespace unpack_7z
                     break;
         }
 
-	    void get_reader (const pfc::string8 &p_file, file_ptr &p_out, abort_callback &p_abort);
+	    void get_reader (const char *p_file, file_ptr &p_out, abort_callback &p_abort);
 
     private:
 	    archive (const archive &);

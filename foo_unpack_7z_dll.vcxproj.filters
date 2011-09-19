@@ -16,6 +16,9 @@
     <Filter Include="7z">
       <UniqueIdentifier>{2e9d9a41-58f4-4456-8323-0c15c71c6985}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Help">
+      <UniqueIdentifier>{d031e757-82db-477c-83e2-d6f8846a3c11}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="extract_callback.cpp">
@@ -88,7 +91,12 @@
     <None Include="7zipLogo.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="$(BOOST)\libs\index.html" />
+    <None Include="$(FB2KSDK)\sdk-readme.html">
+      <Filter>Help</Filter>
+    </None>
+    <None Include="$(BOOST)\libs\index.html">
+      <Filter>Help</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="foo_unpack_7z_dll.rc">

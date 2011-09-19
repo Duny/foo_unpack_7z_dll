@@ -7,14 +7,17 @@
 #include "7z_dll.h"
 #include "extract_callback.h"
 #include "tempmem_with_timestamp.h"
+#include "disk_cache.h"
 
 namespace unpack_7z
 {
     void archive::open (file_ptr const &p_file, abort_callback &p_abort)
     {
+        static_api_ptr_t<disk_cache::manager> api;
+
         try {
             CMyComPtr<IInArchive> archive_new (dll::create_archive_object ());
-
+            static_api_ptr_t<disk_cache::manager> api;
             CMyComPtr<IInStream> stream_new (new streams::in_stream (p_file, p_abort));
 
             if (archive_new->Open (stream_new, 0, NULL) != S_OK)
@@ -79,7 +82,7 @@ namespace unpack_7z
         p_out->reopen (p_abort);
     }
 
-    void archive::get_reader (const pfc::string8 &p_file, file_ptr &p_out, abort_callback &p_abort)
+    void archive::get_reader (const char *p_file, file_ptr &p_out, abort_callback &p_abort)
     {
 	    auto begin = m_items.begin (), end = m_items.end ();
 	    auto pos = std::find_if (begin, end, [p_file] (const file_in_archive &p_item) { return pfc::stricmp_ascii (p_item.m_path, p_file) == 0; });

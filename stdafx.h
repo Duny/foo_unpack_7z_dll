@@ -25,6 +25,7 @@ enum dll_location_mode {
 extern cfg_bool cfg_quiet_mode, cfg_debug_messages;
 extern cfg_uint cfg_dll_location_mode;
 extern cfg_string cfg_dll_custom_path;
+extern cfg_uint cfg_disk_cache_size;
 
 
 class show_error_message : public pfc::string_formatter
