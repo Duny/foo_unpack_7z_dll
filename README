@@ -5,3 +5,4 @@ In order to build, you will need to define some environment variables:
 1. SEVENZIPSRC must point to the directory, where 7z source code can be found
 2. FB2KSDK must point to the folder with foobar2000 SDK
 3. BUILD_BIN_DIR will be used for project's binary files (*.obj, etc)
+4. BOOST for the path with boost library files

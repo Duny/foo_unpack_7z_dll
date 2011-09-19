@@ -1,60 +1,94 @@
 #include "stdafx.h"
 
-#include "Windows\Registry.h"
-#include "Windows\DLL.h"
 #include "Common\StringConvert.h"
 #include "7zip\Archive\IArchive.h"
-
 #include "7z_dll.h"
+#include "boost\smart_ptr\scoped_array.hpp"
 
 namespace unpack_7z
 {
     namespace dll
-    {
-	    const UString dll_name (L"7z.dll");
-	    const UString reg_path_7z (TEXT("Software") TEXT(STRING_PATH_SEPARATOR) TEXT("7-Zip"));
-
+    {    
 	    DEFINE_GUID (CLSID_CFormat7z, 0x23170F69, 0x40C1, 0x278A, 0x10, 0x00, 0x00, 0x01, 0x10, 0x07, 0x00, 0x00);
 
-	    typedef UINT32 (WINAPI * create_object_func_t)(const GUID *clsID, const GUID *interfaceID, void **outObject);
+        typedef UINT32 (WINAPI * create_object_func_t)(const GUID *clsID, const GUID *interfaceID, void **outObject);
+
+        class library {
+            HMODULE m_module;
+
+        public:
+            library () : m_module (nullptr) {}
+            ~library() { free (); }
+
+            bool load (const pfc::string8 &path) {
+                HMODULE new_module = uLoadLibrary (path);
+                if (!new_module) return false;
+                if (!free ()) return false;
+                m_module = new_module;
+                return true;
+            }
+
+            bool is_loaded () const { return m_module != nullptr; }
+
+            bool free () {
+                if (m_module == nullptr) return true;
+                if (!FreeLibrary (m_module)) return false;
+                m_module = nullptr;
+                return true;
+            }
+
+            create_object_func_t get_proc () const { return (create_object_func_t)GetProcAddress (m_module, "CreateObject"); }
+        };
 
 	    create_object_func_t get_func ()
 	    {
-            static NWindows::NDLL::CLibrary m_dll;
-            static create_object_func_t m_func = nullptr;
+            static library m_dll;
 
-		    if (m_func != nullptr) return m_func;
+            if (m_dll.is_loaded ()) {
+                create_object_func_t func = m_dll.get_proc ();
+                if (func)
+                    return func;
+                else {
+                    if (!m_dll.free ())
+                        throw exception_dll_unload ();
+                }
+            }
 
-            m_dll.Free ();
-
-		    UString path;
+		    pfc::string8 path;
 
 		    if (cfg_dll_location_mode == dll_location_default) {
-			    UString triedPaths;
+			    pfc::string8 triedPaths;
 
-                auto try_folder = [&] (const UString &folder) {
+                auto try_folder = [&] (const char *folder) {
                     path = folder;
-                    if (path.Back () != '\\')
-				        path += '\\';
-                    path += dll_name;
+                    if (!path.ends_with ('\\'))
+				        path.add_char ('\\');
+                    path += "7z.dll";
                     triedPaths += path + '\n';
 
-				    m_dll.Load (path);
+				    m_dll.load (path);
                 };
 
 			    // 1. search for 7-zip installation folder
-			    NWindows::NRegistry::CKey key;
-			    if (key.Open (HKEY_CURRENT_USER, reg_path_7z, KEY_READ) == ERROR_SUCCESS) {
-                    UString tmp;
-				    if (key.QueryValue (TEXT ("Path"), tmp) == ERROR_SUCCESS && !tmp.IsEmpty ())
-					    try_folder (tmp);
-			    }
+                HKEY key;
+                if (RegOpenKeyEx (HKEY_CURRENT_USER, L"Software\\7-Zip", 0, KEY_READ, &key) == ERROR_SUCCESS) {
+                    DWORD value_size = 0, dummy = 0;
+                    LONG res = RegQueryValueEx (key, TEXT ("Path"), nullptr, &dummy, nullptr, &value_size);
+                    if (res == ERROR_SUCCESS || res == ERROR_MORE_DATA) {
+                        boost::scoped_array<TCHAR> tmp (new TCHAR[value_size + 1]);
+                        res = RegQueryValueEx (key, TEXT ("Path"), nullptr, &dummy, (LPBYTE)tmp.get (), &value_size);
+                        if (res == ERROR_SUCCESS)
+                            try_folder (pfc::stringcvt::string_ansi_from_wide (tmp.get ()));
+                    }
 
-			    if (!m_dll.IsLoaded ()) // 2. look in component's installation folder
-				    try_folder (GetUnicodeString (AString (pfc::string_directory (core_api::get_my_full_path ()))));
+                    RegCloseKey (key);
+                }
 
-			    if (!m_dll.IsLoaded ())
-				    show_error_message () << "Couldn't load 7z.dll\nLooked in:\n" << pfc::stringcvt::string_utf8_from_wide (triedPaths);
+			    if (!m_dll.is_loaded ()) // 2. look in component's installation folder
+				    try_folder (core_api::get_my_full_path ());
+
+			    if (!m_dll.is_loaded ())
+				    show_error_message () << "Couldn't load 7z.dll\nLooked in:\n" << triedPaths;
 		    }
 		    else { // dll_location_custom
 			    if (cfg_dll_custom_path.is_empty ())
@@ -62,25 +96,23 @@ namespace unpack_7z
 			    else if (!filesystem::g_exists (cfg_dll_custom_path, abort_callback_dummy ()))
 				    show_error_message () << "File \"" << cfg_dll_custom_path << "\" not found";
 			
-			    if (!m_dll.Load (pfc::stringcvt::string_wide_from_utf8 (cfg_dll_custom_path)))
+			    if (!m_dll.load (cfg_dll_custom_path))
 				    show_error_message () << "Couldn't load " << cfg_dll_custom_path;
 			    else
-				    path = GetUnicodeString (AString (cfg_dll_custom_path));
+				    path = cfg_dll_custom_path;
 		    }
 
-		    if (m_dll.IsLoaded ()) {
-			    debug_log () << "Loaded \"" << pfc::stringcvt::string_utf8_from_wide (path) << "\"";
+		    if (m_dll.is_loaded ()) {
+			    debug_log () << "Loaded \"" << path << "\"";
 
-			    m_func = (create_object_func_t)m_dll.GetProc ("CreateObject");
-			    if (m_func == nullptr)
+			    create_object_func_t func = m_dll.get_proc ();
+			    if (func == nullptr)
 				    throw exception_dll_func_not_found ();
                 else
-                    return m_func;
+                    return func;
 		    }
-            else {
-                m_func = nullptr;
+            else
                 throw exception_dll_not_loaded ();
-            }
 	    }
 
 

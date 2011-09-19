@@ -33,34 +33,10 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\DLL.cpp">
-      <Filter>7z</Filter>
-    </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\FileDir.cpp">
-      <Filter>7z</Filter>
-    </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\FileFind.cpp">
-      <Filter>7z</Filter>
-    </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\FileIO.cpp">
-      <Filter>7z</Filter>
-    </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\FileName.cpp">
-      <Filter>7z</Filter>
-    </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\7zip\Common\FileStreams.cpp">
-      <Filter>7z</Filter>
-    </ClCompile>
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\IntToString.cpp">
       <Filter>7z</Filter>
     </ClCompile>
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\MyString.cpp">
-      <Filter>7z</Filter>
-    </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\MyVector.cpp">
-      <Filter>7z</Filter>
-    </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\NewHandler.cpp">
       <Filter>7z</Filter>
     </ClCompile>
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\PropVariant.cpp">
@@ -69,13 +45,7 @@
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\PropVariantConversions.cpp">
       <Filter>7z</Filter>
     </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\Registry.cpp">
-      <Filter>7z</Filter>
-    </ClCompile>
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\StringConvert.cpp">
-      <Filter>7z</Filter>
-    </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\Wildcard.cpp">
       <Filter>7z</Filter>
     </ClCompile>
     <ClCompile Include="archive.cpp">
@@ -112,6 +82,7 @@
     <None Include="7zipLogo.ico">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="$(BOOST)\libs\index.html" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="foo_unpack_7z_dll.rc">

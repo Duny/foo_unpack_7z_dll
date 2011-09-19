@@ -54,7 +54,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>$(FB2KSDK);$(SEVENZIPSRC)\CPP\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FB2KSDK);$(SEVENZIPSRC)\CPP\;$(BOOST)\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG_;_WINDOWS;_USRDLL;FOO_UNPACK_7Z_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -84,7 +84,7 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(FB2KSDK);$(SEVENZIPSRC)\CPP;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(FB2KSDK);$(SEVENZIPSRC)\CPP;$(BOOST)\%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;FOO_UNPACK_7Z_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -124,21 +124,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\DLL.cpp" />
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\FileDir.cpp" />
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\FileFind.cpp" />
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\FileIO.cpp" />
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\FileName.cpp" />
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\7zip\Common\FileStreams.cpp" />
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\IntToString.cpp" />
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\MyString.cpp" />
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\MyVector.cpp" />
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\NewHandler.cpp" />
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\PropVariant.cpp" />
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\PropVariantConversions.cpp" />
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Windows\Registry.cpp" />
     <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\StringConvert.cpp" />
-    <ClCompile Include="$(SEVENZIPSRC)\CPP\Common\Wildcard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="archive.h" />
@@ -151,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="7zipLogo.ico" />
+    <None Include="$(BOOST)\libs\index.html" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="foo_unpack_7z_dll.rc" />

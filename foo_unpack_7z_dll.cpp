@@ -13,16 +13,16 @@ DECLARE_COMPONENT_VERSION
 );
 VALIDATE_COMPONENT_FILENAME (COMPONENT_NAME ".dll");
 
+#define _7Z_EXT "7z"
+
 class archive_type_7z : public archive_impl
 {
-	static const char *g_ext_7z;
-
-	virtual const char * get_archive_type () { return g_ext_7z; }
+	virtual const char * get_archive_type () { return _7Z_EXT; }
 
     virtual bool supports_content_types () { return false; }
 
 	void check_is_our_type (const char *path) {
-		if (_stricmp (pfc::string_extension (path), g_ext_7z) != 0)
+		if (_stricmp (pfc::string_extension (path), _7Z_EXT) != 0)
 			throw exception_io_data ();
 	}
 
@@ -74,6 +74,4 @@ class archive_type_7z : public archive_impl
 			<< " took " << (t_int32)(end - start) << " ms\n";
 	}
 };
-const char *archive_type_7z::g_ext_7z = "7z";
-
 static archive_factory_t<archive_type_7z> g_archive_7z;
