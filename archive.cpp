@@ -12,19 +12,25 @@ namespace unpack_7z
 {
     void archive::open (file_ptr const &p_file, abort_callback &p_abort)
     {
-	    close ();
+        try {
+            CMyComPtr<IInArchive> archive_new (dll::create_archive_object ());
 
-	    m_archive = unpack_7z::dll::create_archive_object ();
+            CMyComPtr<IInStream> stream_new (new streams::in_stream (p_file, p_abort));
 
-	    m_timestamp = p_file->get_timestamp (p_abort);
+            if (archive_new->Open (stream_new, 0, NULL) != S_OK)
+                throw exception_arch_open ();
 
-        foo_in_stream *fileSpec = new foo_in_stream (p_file, p_abort);
-        CMyComPtr<IInStream> file = fileSpec;
+            close ();
 
-        if (m_archive->Open (file, 0, NULL) != S_OK)
-            throw exception_io_unsupported_format ();
+            m_archive = archive_new;
+            m_stream = stream_new;
+        }
+        catch (...) {
+            throw;
+        }
 
-	    list_archive ();
+        m_timestamp = p_file->get_timestamp (p_abort);
+        list_archive ();
     }
 
     void archive::open (const char *p_archive, abort_callback &p_abort)
@@ -37,30 +43,34 @@ namespace unpack_7z
 
     void archive::close ()
     {
-	    if (m_archive)
-		    m_archive->Close ();
+        m_stream.Release ();
+
+	    if (m_archive) {
+		    if (m_archive->Close () != S_OK)
+                throw exception_arch_close ();
+            m_archive.Release ();
+        } 
 		
 	    m_items.clear ();
 	    m_timestamp = 0;
     }
 
-    const t_filestats& archive::get_stats (const char *p_file)
+    const t_filestats& archive::get_stats (const char *p_file) const
     {
-	    auto pos = std::find_if (m_items.begin (), m_items.end (), 
-            [p_file] (const file_in_archive &p_item) { return pfc::stricmp_ascii (p_item.m_path, p_file) == 0; });
+	    auto pos = std::find_if (m_items.begin (), m_items.end (), [p_file] (const file_in_archive &p_item) { return pfc::stricmp_ascii (p_item.m_path, p_file) == 0; });
 	    if (pos != m_items.end ())
 		    return (*pos).m_stats;
 	    else
-		    throw exception_io_not_found ();
+		    throw exception_arch_file_not_found ();
     }
 
     void archive::get_reader_internal (t_size i, file_ptr &p_out, abort_callback &p_abort)
     {
 	    p_out = new service_impl_t<tempmem_with_timestamp> (m_items[i].m_stats);
 
-        CMyComPtr<IArchiveExtractCallback> extract_callback (new foo_extract_callback (p_out, p_abort));
+        CMyComPtr<IArchiveExtractCallback> archive_extract_callback (new extract_callback (p_out, p_abort));
 	
-        HRESULT result = m_archive->Extract (&i, 1, false, extract_callback);
+        HRESULT result = m_archive->Extract (&i, 1, false, archive_extract_callback);
 	    if (result != S_OK) {
 		    show_error_message () << "Error extracting \"" << m_items[i].m_path << "\"";
 		    throw exception_io_data ();
@@ -72,12 +82,11 @@ namespace unpack_7z
     void archive::get_reader (const pfc::string8 &p_file, file_ptr &p_out, abort_callback &p_abort)
     {
 	    auto begin = m_items.begin (), end = m_items.end ();
-	    auto pos = std::find_if (begin, end,
-            [p_file] (const file_in_archive &p_item) { return pfc::stricmp_ascii (p_item.m_path, p_file) == 0; });
+	    auto pos = std::find_if (begin, end, [p_file] (const file_in_archive &p_item) { return pfc::stricmp_ascii (p_item.m_path, p_file) == 0; });
 	    if (pos != end)
 		    get_reader_internal (pos - begin, p_out, p_abort);
 	    else
-		    throw exception_io_not_found ();
+		    throw exception_arch_file_not_found ();
     }
 
     void archive::list_archive ()

@@ -9,6 +9,11 @@ namespace unpack_7z
 	    pfc::string8 m_path;
     };
 
+    PFC_DECLARE_EXCEPTION (exception_arch_7z, pfc::exception, COMPONENT_NAME " error");
+    PFC_DECLARE_EXCEPTION (exception_arch_close, exception_arch_7z, "Couldn't close archive");
+    PFC_DECLARE_EXCEPTION (exception_arch_open, exception_arch_7z, "Archive open error");
+    PFC_DECLARE_EXCEPTION (exception_arch_file_not_found, exception_arch_7z, "File not found in archive");
+
     class archive
     {
     public:
@@ -20,9 +25,14 @@ namespace unpack_7z
 	    void open (const char *p_file, abort_callback &p_abort);
         void close ();
 
-	    const t_filestats& get_stats (const char *p_file);
+	    const t_filestats& get_stats (const char *p_file) const;
 
-	    template <class Func> void list (Func f) { std::find_if (m_items.begin (), m_items.end (), f); }
+	    template <class Func> void list (Func f) const
+        {
+            for (decltype(m_items.size ()) n = m_items.size (), i = 0; i < n; i++)
+                if (!f (m_items[i]))
+                    break;
+        }
 
 	    void get_reader (const pfc::string8 &p_file, file_ptr &p_out, abort_callback &p_abort);
 
@@ -30,7 +40,9 @@ namespace unpack_7z
 	    archive (const archive &);
 	    archive& operator= (const archive &);
 
+        CMyComPtr<IInStream> m_stream;
 	    CMyComPtr<IInArchive> m_archive;
+
 	    t_filetimestamp m_timestamp;
 
 	    std::vector<file_in_archive> m_items;

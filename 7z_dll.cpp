@@ -64,7 +64,8 @@ namespace unpack_7z
                     if (!path.ends_with ('\\'))
 				        path.add_char ('\\');
                     path += "7z.dll";
-                    triedPaths += path + '\n';
+                    triedPaths += path;
+                    triedPaths.add_char ('\n');
 
 				    m_dll.load (path);
                 };
@@ -85,10 +86,10 @@ namespace unpack_7z
                 }
 
 			    if (!m_dll.is_loaded ()) // 2. look in component's installation folder
-				    try_folder (core_api::get_my_full_path ());
+				    try_folder (pfc::string_directory (core_api::get_my_full_path ()));
 
 			    if (!m_dll.is_loaded ())
-				    show_error_message () << "Couldn't load 7z.dll\nLooked in:\n" << triedPaths;
+				    show_error_message () << "Couldn't load 7z.dll. Looked in:\n" << triedPaths;
 		    }
 		    else { // dll_location_custom
 			    if (cfg_dll_custom_path.is_empty ())
