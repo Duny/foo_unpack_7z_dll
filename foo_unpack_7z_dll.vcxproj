@@ -114,6 +114,7 @@
   <ItemGroup>
     <ClCompile Include="7z_dll.cpp" />
     <ClCompile Include="archive.cpp" />
+    <ClCompile Include="disk_cache.cpp" />
     <ClCompile Include="extract_callback.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
@@ -133,6 +134,7 @@
   <ItemGroup>
     <ClInclude Include="archive.h" />
     <ClInclude Include="7z_dll.h" />
+    <ClInclude Include="disk_cache.h" />
     <ClInclude Include="extract_callback.h" />
     <ClInclude Include="file_streams.h" />
     <ClInclude Include="resource.h" />

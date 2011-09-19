@@ -54,6 +54,9 @@
     <ClCompile Include="7z_dll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="disk_cache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extract_callback.h">
@@ -75,6 +78,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="7z_dll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="disk_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
