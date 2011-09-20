@@ -1,11 +1,11 @@
 #include "stdafx.h"
+#include "disk_cache.h"
 
 static const GUID guid_cfg_quiet_mode = { 0x47419c83, 0xf297, 0x4052, { 0x9a, 0x92, 0x43, 0x55, 0x43, 0x1e, 0x8e, 0xf8 } };
 static const GUID guid_cfg_debug_messages = { 0x4bbcc43d, 0xb10, 0x4bd4, { 0x98, 0xba, 0x58, 0x80, 0x6a, 0x9d, 0x61, 0x5e } };
 static const GUID guid_cfg_dll_location_mode = { 0x52b27d56, 0xa744, 0x4d67, { 0xb4, 0x8f, 0x65, 0xac, 0x8a, 0xeb, 0x60, 0x65 } };
 static const GUID guid_cfg_dll_custom_path = { 0x292200c6, 0xfe9a, 0x4174, { 0xaa, 0xf7, 0xb8, 0xe3, 0x9f, 0x41, 0x92, 0x9f } };
 static const GUID guid_cfg_disk_cache_size = { 0x6652e210, 0x3b5e, 0x4256, { 0x81, 0xb7, 0x59, 0xba, 0xef, 0x2b, 0x35, 0x67 } };
-
 
 enum 
 {
@@ -22,7 +22,9 @@ cfg_string cfg_dll_custom_path (guid_cfg_dll_custom_path, "");
 cfg_uint   cfg_disk_cache_size (guid_cfg_disk_cache_size, default_cfg_disk_cache_size);
 
 
-class C7zPreferences : public CDialogImpl<C7zPreferences>, public preferences_page_instance
+class C7zPreferences : 
+    public CDialogImpl<C7zPreferences>,
+    public preferences_page_instance
 {
 public:
 	C7zPreferences (preferences_page_callback::ptr callback) : m_callback (callback) {}
@@ -41,11 +43,16 @@ public:
         COMMAND_HANDLER_EX (IDC_RADIO_DEFAULT_LOCATION, BN_CLICKED, OnButtonClicked)
         COMMAND_HANDLER_EX (IDC_RADIO_CUSTOM_LOCATION, BN_CLICKED, OnButtonClicked)
 		COMMAND_HANDLER_EX (IDC_BUTTON_BROWSE, BN_CLICKED, OnButtonClicked)
+        COMMAND_HANDLER_EX (IDC_EDIT_SPIN_CTRL_BUDDY, EN_CHANGE, OnSpinChange)
 	END_MSG_MAP ()
 
 private:
 	BOOL OnInitDialog (CWindow, LPARAM);
     void OnButtonClicked (UINT, int, CWindow);
+    void OnSpinChange (UINT, int, CWindow)
+    {
+        int i = 0;
+    }
 
 	void OnChanged ();
 
@@ -58,6 +65,8 @@ private:
 	}
 
 	const preferences_page_callback::ptr m_callback;
+
+    CUpDownCtrl m_spin_cache_size;
 };
 
 BOOL C7zPreferences::OnInitDialog (CWindow, LPARAM)
@@ -73,6 +82,11 @@ BOOL C7zPreferences::OnInitDialog (CWindow, LPARAM)
 
     CheckDlgButton (IDC_CHECK_QUIET_MODE, cfg_quiet_mode ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton (IDC_CHECK_DEBUG_MESSAGES, cfg_debug_messages ? BST_CHECKED : BST_UNCHECKED);
+
+    m_spin_cache_size.Attach (GetDlgItem (IDC_SPIN_CACHE_SIZE));
+    m_spin_cache_size.SetBuddy (GetDlgItem (IDC_EDIT_SPIN_CTRL));
+    m_spin_cache_size.SetRange32 (0, unpack_7z::disk_cache::max_cache_size);
+    m_spin_cache_size.SetPos32 (cfg_disk_cache_size);
 
 	return FALSE; 
 }

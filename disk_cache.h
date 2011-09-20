@@ -8,6 +8,9 @@ namespace unpack_7z
         PFC_DECLARE_EXCEPTION (exception_disk_cache, pfc::exception, COMPONENT_NAME " disk cache error");
         PFC_DECLARE_EXCEPTION (exception_cache_init_failed, exception_disk_cache, "Couldn't initialize disk cache system");
 
+        const t_uint32 max_cache_size = 20;
+
+
         class NOVTABLE file_cached : public service_base {
         public:
             virtual bool is_empty () const = 0;

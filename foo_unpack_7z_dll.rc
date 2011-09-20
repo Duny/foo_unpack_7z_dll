@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Neutral resources
+// Нейтральный resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
-#ifdef _WIN32
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #pragma code_page(1251)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -37,23 +35,39 @@ BEGIN
     LTEXT           "7z.dll path here",IDC_STATIC_DLL_LOCATION,71,144,251,8
     CONTROL         "Be &quiet (log error messages to the console, instead of showing popup windows)",IDC_CHECK_QUIET_MODE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,33,175,264,10
-    GROUPBOX        "7z.dll location",IDC_STATIC_DLL_LOCATION_GROUP,2,101,329,63
+    GROUPBOX        "7z.dll location",IDC_STATIC_DLL_LOCATION_GROUP,1,101,330,63
     CONTROL         "Enable &debug messages",IDC_CHECK_DEBUG_MESSAGES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,33,193,94,10
     ICON            IDI_7ZIP_LOGO,IDC_STATIC,7,4,20,20
+    GROUPBOX        "Number of extracted files cached on disk (0 to disable caching)",IDC_STATIC,1,47,330,40
+    EDITTEXT        IDC_EDIT_SPIN_CTRL_BUDDY,33,62,47,13,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_SPIN_CACHE_SIZE,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_HOTTRACK,82,62,10,14
 END
 
-#endif    // Neutral resources
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_7ZPREFERENCES, DIALOG
+    BEGIN
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Нейтральный resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// Russian resources
+// Русский (Россия) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
-#ifdef _WIN32
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 #pragma code_page(1251)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -125,7 +139,7 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_7ZIP_LOGO           ICON                    "7zipLogo.ico"
-#endif    // Russian resources
+#endif    // Русский (Россия) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
