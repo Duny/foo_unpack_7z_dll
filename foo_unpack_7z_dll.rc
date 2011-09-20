@@ -28,15 +28,14 @@ IDD_7ZPREFERENCES DIALOGEX 0, 0, 332, 288
 STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
 FONT 8, "Microsoft Sans Serif", 400, 0, 0xCC
 BEGIN
-    CONTROL         "&Default (search in 7-Zip installation folder and in component's installation folder)",IDC_RADIO_DEFAULT_LOCATION,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,33,116,263,10
-    CONTROL         "&Custom",IDC_RADIO_CUSTOM_LOCATION,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,33,128,39,10
+    CONTROL         "&Default (search in 7-Zip installation folder)",IDC_RADIO_DEFAULT_LOCATION,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,33,116,145,10
+    CONTROL         "&Custom (specify location):",IDC_RADIO_CUSTOM_LOCATION,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,33,128,96,10
     PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE,33,141,33,14
     LTEXT           "7z.dll path here",IDC_STATIC_DLL_LOCATION,71,144,251,8
-    CONTROL         "Be &quiet (log error messages to the console, instead of showing popup windows)",IDC_CHECK_QUIET_MODE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,33,175,264,10
     GROUPBOX        "7z.dll location",IDC_STATIC_DLL_LOCATION_GROUP,1,101,330,63
-    CONTROL         "Enable &debug messages",IDC_CHECK_DEBUG_MESSAGES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,33,193,94,10
+    CONTROL         "Enable &debug log",IDC_CHECK_DEBUG_MESSAGES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,33,193,94,10
     ICON            IDI_7ZIP_LOGO,IDC_STATIC,7,4,20,20
     GROUPBOX        "Number of extracted files cached on disk (0 to disable caching)",IDC_STATIC,1,47,330,40
     EDITTEXT        IDC_EDIT_SPIN_CTRL_BUDDY,33,62,47,13,ES_AUTOHSCROLL | ES_NUMBER

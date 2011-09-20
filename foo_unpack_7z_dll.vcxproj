@@ -114,6 +114,7 @@
   <ItemGroup>
     <ClCompile Include="7z_dll.cpp" />
     <ClCompile Include="archive.cpp" />
+    <ClCompile Include="config.cpp" />
     <ClCompile Include="disk_cache.cpp" />
     <ClCompile Include="extract_callback.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -134,17 +135,19 @@
   <ItemGroup>
     <ClInclude Include="archive.h" />
     <ClInclude Include="7z_dll.h" />
+    <ClInclude Include="config.h" />
     <ClInclude Include="disk_cache.h" />
     <ClInclude Include="extract_callback.h" />
     <ClInclude Include="file_streams.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="tempmem_with_timestamp.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="7zipLogo.ico" />
     <None Include="$(BOOST)\libs\index.html" />
-	<None Include="$(FB2KSDK)\sdk-readme.html" />
+    <None Include="$(FB2KSDK)\sdk-readme.html" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="foo_unpack_7z_dll.rc" />

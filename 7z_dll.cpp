@@ -3,6 +3,8 @@
 #include "Common\StringConvert.h"
 #include "7zip\Archive\IArchive.h"
 #include "7z_dll.h"
+#include "config.h"
+#include "utils.h"
 #include "boost\smart_ptr\scoped_array.hpp"
 
 namespace unpack_7z
@@ -56,21 +58,32 @@ namespace unpack_7z
 
 		    pfc::string8 path;
 
-		    if (cfg_dll_location_mode == dll_location_default) {
-			    pfc::string8 triedPaths;
+		    if (cfg::using_custom_dll) {
+                if (cfg::dll_path.is_empty ())
+                    error_log () << "Custom 7z.dll location is not specified";
+                else if (!filesystem::g_exists (cfg::dll_path, abort_callback_dummy ()))
+                    error_log () << "File \"" << cfg::dll_path << "\" not found";
+
+                if (!m_dll.load (cfg::dll_path))
+                    error_log () << "Couldn't load " << cfg::dll_path;
+                else
+                    path = cfg::dll_path;
+		    }
+		    else {
+                pfc::string8 triedPaths;
 
                 auto try_folder = [&] (const char *folder) {
                     path = folder;
                     if (!path.ends_with ('\\'))
-				        path.add_char ('\\');
+                        path.add_char ('\\');
                     path += "7z.dll";
                     triedPaths += path;
                     triedPaths.add_char ('\n');
 
-				    m_dll.load (path);
+                    m_dll.load (path);
                 };
 
-			    // 1. search for 7-zip installation folder
+                // 1. search for 7-zip installation folder
                 HKEY key;
                 if (RegOpenKeyEx (HKEY_CURRENT_USER, L"Software\\7-Zip", 0, KEY_READ, &key) == ERROR_SUCCESS) {
                     DWORD value_size = 0, dummy = 0;
@@ -85,22 +98,11 @@ namespace unpack_7z
                     RegCloseKey (key);
                 }
 
-			    if (!m_dll.is_loaded ()) // 2. look in component's installation folder
-				    try_folder (pfc::string_directory (core_api::get_my_full_path ()));
+                if (!m_dll.is_loaded ()) // 2. look in component's installation folder
+                    try_folder (pfc::string_directory (core_api::get_my_full_path ()));
 
-			    if (!m_dll.is_loaded ())
-				    show_error_message () << "Couldn't load 7z.dll. Looked in:\n" << triedPaths;
-		    }
-		    else { // dll_location_custom
-			    if (cfg_dll_custom_path.is_empty ())
-				    show_error_message () << "Custom 7z.dll location is not specified";
-			    else if (!filesystem::g_exists (cfg_dll_custom_path, abort_callback_dummy ()))
-				    show_error_message () << "File \"" << cfg_dll_custom_path << "\" not found";
-			
-			    if (!m_dll.load (cfg_dll_custom_path))
-				    show_error_message () << "Couldn't load " << cfg_dll_custom_path;
-			    else
-				    path = cfg_dll_custom_path;
+                if (!m_dll.is_loaded ())
+                    error_log () << "Couldn't load 7z.dll. Looked in:\n" << triedPaths;
 		    }
 
 		    if (m_dll.is_loaded ()) {

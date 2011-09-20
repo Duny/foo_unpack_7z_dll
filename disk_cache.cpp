@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include "disk_cache.h"
+#include "config.h"
 
 namespace unpack_7z
 {
@@ -52,7 +53,7 @@ namespace unpack_7z
             manager_impl ()
             {
                 m_successful_init = (m_not_writing = uCreateEvent (nullptr, TRUE, TRUE, nullptr)) != NULL;
-                for (t_uint32 i = 0; i < cfg_disk_cache_size && m_successful_init; i++) {
+                for (t_uint32 i = 0; i < cfg::disk_cache_size && m_successful_init; i++) {
                     HANDLE hEvent = uCreateEvent (nullptr, TRUE, TRUE, nullptr);
                     if (hEvent) {
                         m_not_reading_from_slot.push_back (hEvent);

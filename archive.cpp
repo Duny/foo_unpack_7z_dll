@@ -8,6 +8,7 @@
 #include "extract_callback.h"
 #include "tempmem_with_timestamp.h"
 #include "disk_cache.h"
+#include "utils.h"
 
 namespace unpack_7z
 {
@@ -75,7 +76,7 @@ namespace unpack_7z
 	
         HRESULT result = m_archive->Extract (&i, 1, false, archive_extract_callback);
 	    if (result != S_OK) {
-		    show_error_message () << "Error extracting \"" << m_items[i].m_path << "\"";
+		    error_log () << "Error extracting \"" << m_items[i].m_path << "\"";
 		    throw exception_io_data ();
 	    }
     
@@ -96,7 +97,7 @@ namespace unpack_7z
     {
         UInt32 num_items = 0;
 	    if (m_archive->GetNumberOfItems (&num_items) != S_OK) {
-		    show_error_message () << "Couldn't get number of items in the archive";
+		    error_log () << "Couldn't get number of items in the archive";
 		    throw exception_io_data ();
 	    }
 
