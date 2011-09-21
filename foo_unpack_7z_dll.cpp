@@ -33,7 +33,7 @@ namespace unpack_7z
 	    {
 		    check_is_our_type (p_archive);
 
-		    debug_log () << "get_stats_in_archive(\"" << pfc::string_filename (p_archive) << "\", \"" << p_file << "\")";
+		    debug_log () << "get_stats_in_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")";
 
 		    return unpack_7z::archive (p_archive, p_abort).get_stats (p_file);
 	    }
@@ -47,7 +47,7 @@ namespace unpack_7z
 		    unpack_7z::archive (p_archive, p_abort).get_reader (p_file, p_out, p_abort);
 
 		    DWORD end = GetTickCount ();
-		    debug_log () << "open_archive(\"" << pfc::string_filename (p_archive) << "\", \"" << p_file << "\")"
+		    debug_log () << "open_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")"
 			    << " took " << (t_int32)(end - start) << " ms\n";
 	    }
 
@@ -73,7 +73,7 @@ namespace unpack_7z
             });
 
 		    DWORD end = GetTickCount ();
-		    debug_log () << "archive_list(\"" << pfc::string_filename (p_archive) << "\", " << p_want_readers << ")"
+		    debug_log () << "archive_list(" << pfc::string_filename_ext (p_archive) << ", " << p_want_readers << ")"
 			    << " took " << (t_int32)(end - start) << " ms\n";
 	    }
     };

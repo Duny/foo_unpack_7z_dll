@@ -8,13 +8,13 @@ namespace unpack_7z
     class error_log : public pfc::string_formatter
     {
     public:
-        ~error_log () { console::formatter () << COMPONENT_NAME << " error: " << get_ptr (); }
+        ~error_log () { if (!is_empty()) console::formatter () << "Error("COMPONENT_NAME"):" << get_ptr (); }
     };
 
     class debug_log : public pfc::string_formatter
     {
     public:
-        ~debug_log () { if (cfg::debug_log) console::formatter () << COMPONENT_NAME << ": " << get_ptr (); }
+        ~debug_log () { if (!is_empty() && cfg::debug_log) console::formatter () << "Debug("COMPONENT_NAME"):" << get_ptr (); }
     };
 }
 #endif

@@ -11,8 +11,8 @@ namespace unpack_7z
         class NOVTABLE manager : public service_base {
         public:
             // false then file not found in cache
-            virtual bool fetch (const char *p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort) = 0;
-            virtual void store (const char *p_archive, const char *p_file, const file_ptr &file, abort_callback &p_abort) = 0;
+            virtual bool fetch (const char *p_archive, const char *p_file, const file_ptr &p_out, abort_callback &p_abort) = 0;
+            virtual void store (const char *p_archive, const char *p_file, const file_ptr &p_in, abort_callback &p_abort) = 0;
 
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(manager)
         };

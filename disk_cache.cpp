@@ -2,7 +2,7 @@
 
 #include "disk_cache.h"
 #include "config.h"
-#include "tempmem_with_timestamp.h"
+#include "utils.h"
 
 namespace unpack_7z
 {
@@ -13,12 +13,18 @@ namespace unpack_7z
         {
             struct cache_slot
             {
+                void reset ()
+                {
+                    archive_path.reset ();
+                    file_path.reset ();
+                    if (file.is_valid ()) file.release ();
+                }
+
                 pfc::string8 archive_path;
                 pfc::string8 file_path; // path from inside the archive, e.i. "some folder\somefile.mp3"
-
                 file_ptr file;
-                t_filetimestamp timestamp;
             };
+
             vector<cache_slot> m_cache;
             t_uint32 m_next_slot;
 
@@ -31,14 +37,14 @@ namespace unpack_7z
 
                 bool operator () (const cache_slot &slot)
                 {
-                    return pfc::stricmp_ascii (slot.archive_path, archive) == 0 && pfc::stricmp_ascii (slot.file_path, file) == 0;
+                    return slot.file.is_valid () && pfc::stricmp_ascii (slot.archive_path, archive) == 0 && pfc::stricmp_ascii (slot.file_path, file) == 0;
                 }
 
                 const char *archive;
                 const char *file;
             };
 
-            bool fetch (const char *p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort) override
+            bool fetch (const char *p_archive, const char *p_file, const file_ptr &p_out, abort_callback &p_abort) override
             {
                 if (cfg::disk_cache_size == 0)
                     return false;
@@ -47,15 +53,18 @@ namespace unpack_7z
 
                 auto pos = find_if (m_cache.begin (), m_cache.end (), cache_slot_equal (p_archive, p_file));
                 if (pos != m_cache.end ()) {
-                    p_out = new service_impl_t<tempmem_with_timestamp> (pos->timestamp);
-                    file::g_transfer_file (pos->file, p_out, p_abort);
-                    return true;
+                    try {
+                        file::g_transfer_file (pos->file, p_out, p_abort);
+                        return true;
+                    } catch (const std::exception &e) { 
+                        error_log () << "disk cache fetch exception:" << e.what ();
+                    }
                 }
-                else
-                    return false;
+
+                return false;
             }
 
-            void store (const char *p_archive, const char *p_file, const file_ptr &file_new, abort_callback &p_abort)
+            void store (const char *p_archive, const char *p_file, const file_ptr &p_in, abort_callback &p_abort)
             {
                 if (cfg::disk_cache_size == 0)
                     return;
@@ -66,16 +75,18 @@ namespace unpack_7z
                 if (pos == m_cache.end ()) {
                     cache_slot &slot = m_cache[m_next_slot];
 
-                    if (slot.file.is_empty ())
-                        filesystem::g_open_temp (slot.file, p_abort);
+                    try {
+                        if (slot.file.is_empty ()) filesystem::g_open_temp (slot.file, p_abort);
+                        file::g_transfer_file (p_in, slot.file, p_abort);
 
-                    file::g_transfer_file (file_new, slot.file, p_abort);
+                        slot.archive_path = p_archive;
+                        slot.file_path = p_file;
 
-                    slot.archive_path = p_archive;
-                    slot.file_path = p_file;
-                    slot.timestamp = file_new->get_timestamp (p_abort);
-
-                    m_next_slot = (m_next_slot + 1) % cfg::disk_cache_size;
+                        m_next_slot = (m_next_slot + 1) % cfg::disk_cache_size;
+                    } catch (const std::exception &e) {
+                        error_log () << "disk cache store exception:" << e.what ();
+                        slot.reset ();
+                    }
                 }
             }
 

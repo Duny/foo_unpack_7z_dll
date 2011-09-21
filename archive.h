@@ -48,7 +48,7 @@ namespace unpack_7z
 
 	    std::vector<file_in_archive> m_items;
 
-	    void get_reader_internal (t_size i, file_ptr &p_out, abort_callback &p_abort);
+	    void extract_file (t_size i, file_ptr &p_out, abort_callback &p_abort);
         void list_archive ();
     };
 }

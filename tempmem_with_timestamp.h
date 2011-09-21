@@ -35,5 +35,7 @@ namespace unpack_7z
 	    bool get_content_type (pfc::string_base &) override { return false; }
 	    bool is_remote () override { return false; }
     };
+
+    typedef service_impl_t<tempmem_with_timestamp> file_tempmem;
 }
 #endif
