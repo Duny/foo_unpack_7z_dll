@@ -14,9 +14,9 @@ namespace unpack_7z
 	        //dialog resource ID
 	        enum { IDD = IDD_7ZPREFERENCES };
 	
-	        t_uint32 get_state ();
-	        void apply ();
-	        void reset ();
+	        t_uint32 get_state () override;
+	        void apply () override;
+	        void reset () override;
 
 	        BEGIN_MSG_MAP (dialog)
 		        MSG_WM_INITDIALOG (OnInitDialog)

@@ -1,5 +1,5 @@
-#ifndef _DLL_7Z_H_
-#define _DLL_7Z_H_
+#ifndef _FOO_UNPACK_7Z_DLL_DLL_H_
+#define _FOO_UNPACK_7Z_DLL_DLL_H_
 
 namespace unpack_7z
 {

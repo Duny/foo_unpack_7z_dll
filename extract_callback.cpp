@@ -13,7 +13,7 @@ namespace unpack_7z
         if (askExtractMode != NArchive::NExtract::NAskMode::kExtract)
             return S_OK;
 
-        m_out_stream_spec = new streams::out_stream (m_stream, m_abort);
+        m_out_stream_spec = new streams::out (m_stream, m_abort);
 
         CMyComPtr<ISequentialOutStream> outStreamLoc (m_out_stream_spec);
    

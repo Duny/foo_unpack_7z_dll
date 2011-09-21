@@ -1,5 +1,5 @@
-#ifndef __UTILS__H_
-#define __UTILS__H_
+#ifndef _FOO_UNPACK_7Z_DLL_UTILS_H_
+#define _FOO_UNPACK_7Z_DLL_UTILS_H_
 
 #include "config.h"
 

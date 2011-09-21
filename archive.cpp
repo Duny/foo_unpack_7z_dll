@@ -4,7 +4,7 @@
 #include "Windows\PropVariantConversions.h"
 
 #include "archive.h"
-#include "7z_dll.h"
+#include "dll.h"
 #include "extract_callback.h"
 #include "tempmem_with_timestamp.h"
 #include "disk_cache.h"
@@ -19,7 +19,7 @@ namespace unpack_7z
         try {
             CMyComPtr<IInArchive> archive_new (dll::create_archive_object ());
             static_api_ptr_t<disk_cache::manager> api;
-            CMyComPtr<IInStream> stream_new (new streams::in_stream (p_file, p_abort));
+            CMyComPtr<IInStream> stream_new (new streams::in (p_file, p_abort));
 
             if (archive_new->Open (stream_new, 0, NULL) != S_OK)
                 throw exception_arch_open ();

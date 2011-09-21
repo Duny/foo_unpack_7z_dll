@@ -2,7 +2,7 @@
 
 #include "Common\StringConvert.h"
 #include "7zip\Archive\IArchive.h"
-#include "7z_dll.h"
+#include "dll.h"
 #include "config.h"
 #include "utils.h"
 #include "boost\smart_ptr\scoped_array.hpp"

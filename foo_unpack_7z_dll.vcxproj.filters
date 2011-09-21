@@ -51,9 +51,6 @@
     <ClCompile Include="archive.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="7z_dll.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="disk_cache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -61,6 +58,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -83,9 +83,6 @@
     <ClInclude Include="archive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="7z_dll.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="disk_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -93,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dll.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,5 +1,5 @@
-#ifndef _CFG_VARS_H_
-#define _CFG_VARS_H_
+#ifndef _FOO_UNPACK_7Z_DLL_CONFIG_H_
+#define _FOO_UNPACK_7Z_DLL_CONFIG_H_
 
 namespace unpack_7z
 {
@@ -12,12 +12,15 @@ namespace unpack_7z
 
         namespace defaults 
         {
-            extern const __declspec(selectany) bool debug_log = false;
-            extern const __declspec(selectany) bool using_custom_dll = false;
-            extern const __declspec(selectany) t_uint32 disk_cache_size = 5;
+            enum
+            {
+                debug_log = false,
+                using_custom_dll = false,
+                disk_cache_size = 5
+            };
         };
 
-        void reset (); // reset config to defaults
+        void reset (); // reset configuration to defaults
     }
 }
 #endif

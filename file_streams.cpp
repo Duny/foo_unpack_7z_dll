@@ -6,7 +6,7 @@ namespace unpack_7z
     namespace streams
     {
 
-        STDMETHODIMP in_stream::Read (void *data, UInt32 size, UInt32 *processedSize)
+        STDMETHODIMP in::Read (void *data, UInt32 size, UInt32 *processedSize)
         {
 	        try {
 		        UInt32 realProcessedSize = m_stream->read (data, size, m_abort);
@@ -17,7 +17,7 @@ namespace unpack_7z
 	        }
         }
 
-        STDMETHODIMP in_stream::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPosition)
+        STDMETHODIMP in::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPosition)
         {
 	        try {
 		        if (seekOrigin >= 3) return STG_E_INVALIDFUNCTION;
@@ -29,7 +29,7 @@ namespace unpack_7z
 	        }
         } 
 
-        STDMETHODIMP in_stream::GetSize(UInt64 *size)
+        STDMETHODIMP in::GetSize(UInt64 *size)
         {
 	        try {
 		        if (size) *size = m_stream->get_size (m_abort);
@@ -39,7 +39,7 @@ namespace unpack_7z
 	        }
         }
 
-        STDMETHODIMP out_stream::Write (const void *data, UInt32 size, UInt32 *processedSize)
+        STDMETHODIMP out::Write (const void *data, UInt32 size, UInt32 *processedSize)
         {
 	        try {
 		        m_stream->write (data, size, m_abort);
@@ -50,7 +50,7 @@ namespace unpack_7z
 	        }
         }
 
-        STDMETHODIMP out_stream::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPosition)
+        STDMETHODIMP out::Seek (Int64 offset, UInt32 seekOrigin, UInt64 *newPosition)
         {
 	        try {
 		        if (seekOrigin >= 3) return STG_E_INVALIDFUNCTION;
@@ -62,7 +62,7 @@ namespace unpack_7z
 	        }
         }
 
-        STDMETHODIMP out_stream::SetSize (UInt64 newSize)
+        STDMETHODIMP out::SetSize (UInt64 newSize)
         {
 	        try {
 		        m_stream->resize (newSize, m_abort);

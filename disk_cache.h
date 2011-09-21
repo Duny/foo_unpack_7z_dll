@@ -1,5 +1,5 @@
-#ifndef _DISK_CACHE_H_
-#define _DISK_CACHE_H_
+#ifndef _FOO_UNPACK_7Z_DLL_DISK_CACHE_H_
+#define _FOO_UNPACK_7Z_DLL_DISK_CACHE_H_
 
 namespace unpack_7z
 {

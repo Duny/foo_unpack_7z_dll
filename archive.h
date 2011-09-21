@@ -1,5 +1,5 @@
-#ifndef _ARCHIVE_7Z_H_
-#define _ARCHIVE_7Z_H_
+#ifndef _FOO_UNPACK_7Z_DLL_ARCHIVE_H_
+#define _FOO_UNPACK_7Z_DLL_ARCHIVE_H_
 
 namespace unpack_7z
 {
