@@ -116,9 +116,6 @@
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="config.cpp" />
     <ClCompile Include="disk_cache.cpp" />
-    <ClCompile Include="extract_callback.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="file_streams.cpp" />
     <ClCompile Include="foo_unpack_7z_dll.cpp" />
     <ClCompile Include="preferences.cpp" />

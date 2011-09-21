@@ -8,25 +8,34 @@ namespace unpack_7z
     class extract_callback : public IArchiveExtractCallback, public CMyUnknownImp
     {
     public:
+        extract_callback (file_ptr &p_stream, abort_callback &p_abort)
+            : m_stream (new streams::out (p_stream, p_abort)) { }
+
         MY_UNKNOWN_IMP1(IArchiveOpenCallback)
+
 
         // IProgress
 	    STDMETHOD(SetTotal)(UInt64 size) override { return S_OK; }
         STDMETHOD(SetCompleted)(const UInt64 *completeValue) override { return S_OK; }
 
         // IArchiveExtractCallback
-        STDMETHOD(GetStream)(UInt32 index, ISequentialOutStream **outStream, Int32 askExtractMode) override;
         STDMETHOD(PrepareOperation)(Int32 askExtractMode) override { return S_OK; }
-        STDMETHOD(SetOperationResult)(Int32 resultEOperationResult) override;
+        STDMETHOD(SetOperationResult)(Int32 resultEOperationResult) override { return S_OK; };
 
-        extract_callback (file_ptr &p_stream, abort_callback &p_abort) : m_abort (p_abort), m_stream (p_stream) {}
+        STDMETHOD(GetStream)(UInt32 index, ISequentialOutStream **outStream, Int32 askExtractMode) override
+        {
+            *outStream = 0;
+
+            if (askExtractMode != NArchive::NExtract::NAskMode::kExtract)
+                return S_OK;
+
+            *outStream = m_stream.Detach ();
+
+            return S_OK;
+        }
 
     private:
-        abort_callback &m_abort;
-        file_ptr        m_stream;
-
-        streams::out *m_out_stream_spec;
-        CMyComPtr<ISequentialOutStream> m_out_file_stream; 
+        CMyComPtr<ISequentialOutStream> m_stream; 
     };
 }
 #endif
