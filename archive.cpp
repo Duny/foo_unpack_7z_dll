@@ -34,6 +34,7 @@ namespace unpack_7z
         }
 
         m_timestamp = p_file->get_timestamp (p_abort);
+        m_path = "";
         list_archive ();
     }
 
@@ -43,6 +44,7 @@ namespace unpack_7z
 
 	    filesystem::g_open (file, p_archive, filesystem::open_mode_read, p_abort);
 	    open (file, p_abort);
+        m_path = p_archive;
     }
 
     void archive::close ()
@@ -57,6 +59,7 @@ namespace unpack_7z
 		
 	    m_items.clear ();
 	    m_timestamp = 0;
+        m_path = "";
     }
 
     const t_filestats& archive::get_stats (const char *p_file) const
@@ -70,7 +73,7 @@ namespace unpack_7z
 
     void archive::get_reader_internal (t_size i, file_ptr &p_out, abort_callback &p_abort)
     {
-	    p_out = new service_impl_t<tempmem_with_timestamp> (m_items[i].m_stats);
+	    p_out = new service_impl_t<tempmem_with_timestamp> (m_items[i].m_stats.m_timestamp);
 
         CMyComPtr<IArchiveExtractCallback> archive_extract_callback (new extract_callback (p_out, p_abort));
 	
@@ -85,12 +88,17 @@ namespace unpack_7z
 
     void archive::get_reader (const char *p_file, file_ptr &p_out, abort_callback &p_abort)
     {
-	    auto begin = m_items.begin (), end = m_items.end ();
-	    auto pos = std::find_if (begin, end, [p_file] (const file_in_archive &p_item) { return pfc::stricmp_ascii (p_item.m_path, p_file) == 0; });
-	    if (pos != end)
-		    get_reader_internal (pos - begin, p_out, p_abort);
-	    else
-		    throw exception_arch_file_not_found ();
+        static_api_ptr_t<disk_cache::manager> api;
+        if (!api->fetch (m_path, p_file, p_out, p_abort)) {
+	        auto begin = m_items.begin (), end = m_items.end ();
+	        auto pos = std::find_if (begin, end, [p_file] (const file_in_archive &p_item) { return pfc::stricmp_ascii (p_item.m_path, p_file) == 0; });
+	        if (pos != end) {
+		        get_reader_internal (pos - begin, p_out, p_abort);
+                api->store (m_path, p_file, p_out, p_abort);
+            }
+	        else
+		        throw exception_arch_file_not_found ();
+        }
     }
 
     void archive::list_archive ()

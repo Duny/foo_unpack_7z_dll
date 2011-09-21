@@ -43,6 +43,7 @@ namespace unpack_7z
         CMyComPtr<IInStream> m_stream;
 	    CMyComPtr<IInArchive> m_archive;
 
+        pfc::string8 m_path;
 	    t_filetimestamp m_timestamp;
 
 	    std::vector<file_in_archive> m_items;

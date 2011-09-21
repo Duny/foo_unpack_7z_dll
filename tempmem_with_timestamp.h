@@ -6,10 +6,10 @@ namespace unpack_7z
     class tempmem_with_timestamp : public file
     {
 	    file_ptr m_file_mem;
-	    t_filestats m_stats;
+	    t_filetimestamp m_timestamp;
 
     public:
-	    tempmem_with_timestamp (const t_filestats & stats) : m_stats (stats)
+	    tempmem_with_timestamp (const t_filetimestamp &timestamp) : m_timestamp (timestamp)
         { filesystem::g_open_tempmem (m_file_mem, abort_callback_dummy ()); }
 
 	    t_size read (void *p_buffer, t_size p_bytes, abort_callback &p_abort) override 
@@ -27,7 +27,7 @@ namespace unpack_7z
         { m_file_mem->seek (p_position, p_abort); }
 	
 	    void on_idle (abort_callback &) override {}
-	    t_filetimestamp get_timestamp (abort_callback &) override { return m_stats.m_timestamp; }
+	    t_filetimestamp get_timestamp (abort_callback &) override { return m_timestamp; }
 	    void reopen (abort_callback &p_abort) override { m_file_mem->reopen (p_abort); }
 
 	    bool is_in_memory () override { return true; }
