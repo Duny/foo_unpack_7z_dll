@@ -75,18 +75,20 @@ namespace unpack_7z
                 if (pos == m_cache.end ()) {
                     cache_slot &slot = m_cache[m_next_slot];
 
+                    m_next_slot = (m_next_slot + 1) % cfg::disk_cache_size;
+
                     try {
-                        if (slot.file.is_empty ()) filesystem::g_open_temp (slot.file, p_abort);
+                        if (slot.file.is_empty ())
+                            filesystem::g_open_temp (slot.file, p_abort);
+
                         file::g_transfer_file (p_in, slot.file, p_abort);
-
-                        slot.archive_path = p_archive;
-                        slot.file_path = p_file;
-
-                        m_next_slot = (m_next_slot + 1) % cfg::disk_cache_size;
                     } catch (const std::exception &e) {
                         error_log () << "disk cache store exception:" << e.what ();
-                        slot.reset ();
+                        return;
                     }
+
+                    slot.archive_path = p_archive;
+                    slot.file_path = p_file;
                 }
             }
 
