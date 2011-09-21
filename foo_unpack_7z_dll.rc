@@ -24,22 +24,22 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 // Dialog
 //
 
-IDD_7ZPREFERENCES DIALOGEX 0, 0, 332, 288
+IDD_PREFERENCES DIALOGEX 0, 0, 332, 288
 STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
 FONT 8, "Microsoft Sans Serif", 400, 0, 0xCC
 BEGIN
-    CONTROL         "&Default (search in 7-Zip installation folder)",IDC_RADIO_DEFAULT_LOCATION,
-                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,33,116,145,10
-    CONTROL         "&Custom (specify location):",IDC_RADIO_CUSTOM_LOCATION,
-                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,33,128,96,10
-    PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE,33,141,33,14
-    LTEXT           "7z.dll path here",IDC_STATIC_DLL_LOCATION,71,144,251,8
-    GROUPBOX        "7z.dll location",IDC_STATIC_DLL_LOCATION_GROUP,1,101,330,63
-    CONTROL         "Enable &debug log",IDC_CHECK_DEBUG_MESSAGES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,33,193,94,10
+    CONTROL         "&Default (search in 7-Zip installation folder)",IDC_RADIO_LOC_DEFAULT,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,12,47,145,10
+    CONTROL         "&Custom (specify location):",IDC_RADIO_LOC_CUSTOM,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,12,59,96,10
+    PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE,12,72,33,14
+    LTEXT           "7z.dll path here",IDC_STATIC_DLL_LOCATION,49,75,251,8
+    GROUPBOX        "7z.dll location",IDC_STATIC_DLL_LOCATION_GROUP,1,35,330,59
+    CONTROL         "Enable &debug log",IDC_CHECK_DEBUG_LOG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,257,273,70,10
     ICON            IDI_7ZIP_LOGO,IDC_STATIC,7,4,20,20
-    GROUPBOX        "Number of extracted files cached on disk (0 to disable caching)",IDC_STATIC,1,47,330,40
-    EDITTEXT        IDC_EDIT_SPIN_CTRL_BUDDY,33,65,47,13,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "",IDC_SPIN_CACHE_SIZE,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_HOTTRACK,82,65,10,14
+    GROUPBOX        "Number of extracted files cached on disk (0 to disable caching)",IDC_STATIC,0,100,330,33
+    EDITTEXT        IDC_EDIT_SPIN_CTRL_BUDDY,12,114,47,13,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_SPIN_CACHE_SIZE,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_HOTTRACK,61,114,10,14
 END
 
 
@@ -51,7 +51,7 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO
 BEGIN
-    IDD_7ZPREFERENCES, DIALOG
+    IDD_PREFERENCES, DIALOG
     BEGIN
     END
 END

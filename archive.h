@@ -9,10 +9,10 @@ namespace unpack_7z
 	    pfc::string8 m_path;
     };
 
-    PFC_DECLARE_EXCEPTION (exception_arch_7z, pfc::exception, COMPONENT_NAME " archive error");
-    PFC_DECLARE_EXCEPTION (exception_arch_close, exception_arch_7z, "Couldn't close archive");
-    PFC_DECLARE_EXCEPTION (exception_arch_open, exception_arch_7z, "Archive open error");
-    PFC_DECLARE_EXCEPTION (exception_arch_file_not_found, exception_arch_7z, "File not found in archive");
+    PFC_DECLARE_EXCEPTION (exception_arch_7z, pfc::exception, COMPONENT_NAME);
+    PFC_DECLARE_EXCEPTION (exception_arch_close, exception_arch_7z, COMPONENT_NAME ": couldn't close archive");
+    PFC_DECLARE_EXCEPTION (exception_arch_open, exception_arch_7z, COMPONENT_NAME ": archive open error");
+    PFC_DECLARE_EXCEPTION (exception_arch_file_not_found, exception_arch_7z, COMPONENT_NAME ": file not found in archive");
 
     class archive
     {

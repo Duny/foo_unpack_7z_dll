@@ -1,4 +1,5 @@
 #include "stdafx.h"
+
 #include "disk_cache.h"
 #include "config.h"
 
@@ -12,131 +13,120 @@ namespace unpack_7z
 	        dialog (preferences_page_callback::ptr callback) : m_callback (callback) {}
 
 	        //dialog resource ID
-	        enum { IDD = IDD_7ZPREFERENCES };
-	
-	        t_uint32 get_state () override;
-	        void apply () override;
-	        void reset () override;
-
-	        BEGIN_MSG_MAP (dialog)
-		        MSG_WM_INITDIALOG (OnInitDialog)
-                COMMAND_HANDLER_EX (IDC_CHECK_QUIET_MODE, BN_CLICKED, OnButtonClicked)
-		        COMMAND_HANDLER_EX (IDC_CHECK_DEBUG_MESSAGES, BN_CLICKED, OnButtonClicked)
-                COMMAND_HANDLER_EX (IDC_RADIO_DEFAULT_LOCATION, BN_CLICKED, OnButtonClicked)
-                COMMAND_HANDLER_EX (IDC_RADIO_CUSTOM_LOCATION, BN_CLICKED, OnButtonClicked)
-		        COMMAND_HANDLER_EX (IDC_BUTTON_BROWSE, BN_CLICKED, OnButtonClicked)
-                COMMAND_HANDLER_EX (IDC_EDIT_SPIN_CTRL_BUDDY, EN_CHANGE, OnSpinChange)
-	        END_MSG_MAP ()
+	        enum { IDD = IDD_PREFERENCES };
 
         private:
-	        BOOL OnInitDialog (CWindow, LPARAM);
-            void OnButtonClicked (UINT, int, CWindow);
-            void OnSpinChange (UINT, int, CWindow)
+            // preferences_page_instance methods overrides
+            t_uint32 get_state () override;
+            void apply () override;
+            void reset () override;
+
+            // CDialogImpl
+            BEGIN_MSG_MAP (dialog)
+                MSG_WM_INITDIALOG (on_init_dialog)
+                COMMAND_HANDLER_EX (IDC_CHECK_DEBUG_LOG, BN_CLICKED, on_state_changed)
+                COMMAND_HANDLER_EX (IDC_RADIO_LOC_DEFAULT, BN_CLICKED, on_dll_mode)
+                COMMAND_HANDLER_EX (IDC_RADIO_LOC_CUSTOM, BN_CLICKED, on_dll_mode)
+                COMMAND_HANDLER_EX (IDC_BUTTON_BROWSE, BN_CLICKED, on_browse_for_dll)
+                COMMAND_HANDLER_EX (IDC_EDIT_SPIN_CTRL_BUDDY, EN_CHANGE, on_state_changed)
+            END_MSG_MAP ()
+
+            // messages
+	        BOOL on_init_dialog (CWindow, LPARAM)
             {
-                int i = 0;
+                // attach windows to members
+                m_disc_cache_size.Attach (GetDlgItem (IDC_SPIN_CACHE_SIZE));
+                m_location_default.Attach (GetDlgItem (IDC_RADIO_LOC_DEFAULT));
+                m_location_custom.Attach (GetDlgItem (IDC_RADIO_LOC_CUSTOM));
+                m_browse.Attach (GetDlgItem (IDC_BUTTON_BROWSE));
+                m_dll_path.Attach (GetDlgItem (IDC_STATIC_DLL_LOCATION));
+                m_debug_log.Attach (GetDlgItem (IDC_CHECK_DEBUG_LOG));
+
+                // initialize controls
+                set_dll_custom_mode (cfg::using_custom_dll, cfg::dll_path);
+                m_debug_log.SetCheck (cfg::debug_log ? BST_CHECKED : BST_UNCHECKED);
+                m_disc_cache_size.SetBuddy (GetDlgItem (IDC_EDIT_SPIN_CTRL_BUDDY));
+                m_disc_cache_size.SetRange32 (0, unpack_7z::disk_cache::max_cache_size);
+                m_disc_cache_size.SetPos32 (cfg::disk_cache_size);
+
+                return FALSE;
             }
 
-	        void OnChanged ();
+            void on_state_changed (UINT, int, CWindow)
+            {
+                m_callback->on_state_changed ();
+            }
 
-	        t_uint32 GetSelectedDllMode () const { 
-		        //return IsDlgButtonChecked (IDC_RADIO_DEFAULT_LOCATION) == BST_CHECKED ? cfg::loc_default : cfg::loc_custom;
-                true;
-	        }
+            void on_browse_for_dll (UINT, int, CWindow)
+            {
+                pfc::string8 tmp;
+                if (uGetOpenFileName (*this, "Dlls|*.dll|All files|*.*", 0, "dll", "Locate 7z.dll", pfc::string_directory (cfg::dll_path), tmp, FALSE)) {
+                    m_dll_path.SetWindowText (pfc::stringcvt::string_os_from_utf8 (tmp));
+                    m_callback->on_state_changed ();
+                }
+            }
 
-	        void EnableBrowseButton (bool enable) {
-		        GetDlgItem (IDC_BUTTON_BROWSE).EnableWindow (enable ? FALSE : TRUE);
-	        }
+            void on_dll_mode (UINT, int, CWindow)
+            {
+                m_browse.EnableWindow (m_location_custom.IsChecked ());
+                m_callback->on_state_changed ();
+            }
 
+            // helpers
+            void set_dll_custom_mode (bool custom, const pfc::string8 &path)
+            {
+                (custom ? m_location_custom : m_location_default).SetCheck (BST_CHECKED);
+                m_dll_path.SetWindowText (pfc::stringcvt::string_os_from_utf8 (path));
+                m_browse.EnableWindow (custom);
+            }
+
+            // member variables
 	        const preferences_page_callback::ptr m_callback;
 
-            CUpDownCtrl m_spin_cache_size;
+            CCheckBox m_debug_log, m_location_default, m_location_custom;
+            CButton m_browse;
+            CStatic m_dll_path;
+            CUpDownCtrl m_disc_cache_size;
         };
-
-        BOOL dialog::OnInitDialog (CWindow, LPARAM)
-        {
-            /*CheckDlgButton (cfg::default_location () ? IDC_RADIO_DEFAULT_LOCATION : IDC_RADIO_CUSTOM_LOCATION, BST_CHECKED);
-
-            EnableBrowseButton (cfg::default_location ());
-
-            SetDlgItemText (IDC_STATIC_DLL_LOCATION, pfc::stringcvt::string_os_from_utf8 (cfg::dll_custom_path));
-
-            CheckDlgButton (IDC_CHECK_QUIET_MODE, cfg::quiet_mode ? BST_CHECKED : BST_UNCHECKED);
-	        CheckDlgButton (IDC_CHECK_DEBUG_MESSAGES, cfg::debug_messages ? BST_CHECKED : BST_UNCHECKED);
-
-            m_spin_cache_size.Attach (GetDlgItem (IDC_SPIN_CACHE_SIZE));
-            m_spin_cache_size.SetBuddy (GetDlgItem (IDC_EDIT_SPIN_CTRL));
-            m_spin_cache_size.SetRange32 (0, unpack_7z::disk_cache::max_cache_size);
-            m_spin_cache_size.SetPos32 (cfg::disk_cache_size);*/
-
-	        return FALSE; 
-        }
-
-        void dialog::OnButtonClicked (UINT, int id, CWindow)
-        {
-	        /*EnableBrowseButton (GetSelectedDllMode () == cfg::loc_default);
-
-	        if (id == IDC_BUTTON_BROWSE) {
-		        pfc::string8 file_name;
-		        if (uGetOpenFileName (*this, "Dlls|*.dll|All files|*.*", 0, "dll", "Locate 7z.dll", 
-			        pfc::string_directory (cfg::dll_custom_path), file_name, FALSE))
-			        SetDlgItemText (IDC_STATIC_DLL_LOCATION, pfc::stringcvt::string_wide_from_utf8 (file_name));
-	        }*/ 
-
-            OnChanged ();
-        }
 
         t_uint32 dialog::get_state ()
         {
 	        t_uint32 state = preferences_state::resettable;
 
-            /*if ((IsDlgButtonChecked (IDC_CHECK_QUIET_MODE) == BST_CHECKED) != cfg::quiet_mode)
+            if (m_debug_log.IsChecked () != cfg::debug_log)
                 state |= preferences_state::changed;
 
-	        if (GetSelectedDllMode () != cfg::dll_location_mode)
-		        state |= (preferences_state::needs_restart | preferences_state::changed); 
+            if (m_location_custom.IsChecked () != cfg::using_custom_dll)
+                state |= (preferences_state::changed | preferences_state::needs_restart);
 
-	        if (uGetDlgItemText (*this, IDC_STATIC_DLL_LOCATION) != cfg::dll_custom_path) {
-		        state |= preferences_state::changed;
-		        if (GetSelectedDllMode () == cfg::loc_custom)
-			        state |= preferences_state::needs_restart;
-	        }
+            if (cfg::dll_path != pfc::string8 (string_utf8_from_window (m_dll_path))) {
+                state |= preferences_state::changed;
+                if (m_location_custom.IsChecked ())
+                    state |= preferences_state::needs_restart;
+            }
 
-            if ((IsDlgButtonChecked (IDC_CHECK_DEBUG_MESSAGES) == BST_CHECKED) != cfg::debug_messages)
-                state |= preferences_state::changed;*/
+            if (m_disc_cache_size.GetPos32 () != cfg::disk_cache_size)
+                state |= (preferences_state::changed | preferences_state::needs_restart);
 
 	        return state;
         }
 
         void dialog::reset ()
         {
-	        /*CheckDlgButton (IDC_RADIO_DEFAULT_LOCATION, BST_UNCHECKED);
-	        CheckDlgButton (IDC_RADIO_CUSTOM_LOCATION, BST_UNCHECKED);
+            m_debug_log.SetCheck (cfg::defaults::debug_log ? BST_CHECKED : BST_UNCHECKED);
+            set_dll_custom_mode (cfg::defaults::using_custom_dll, "");
+            m_disc_cache_size.SetPos32 (cfg::defaults::disk_cache_size);
 
-	        int id = cfg::dll_location_mode_def == cfg::loc_default ? IDC_RADIO_DEFAULT_LOCATION : IDC_RADIO_CUSTOM_LOCATION;
-            CheckDlgButton (id, BST_CHECKED);
-	
-	        EnableBrowseButton (cfg::dll_location_mode_def == cfg::loc_default);
-	        SetDlgItemText (IDC_STATIC_DLL_LOCATION, pfc::stringcvt::string_os_from_utf8 (""));
-
-	        CheckDlgButton (IDC_CHECK_QUIET_MODE, cfg::quiet_mode_def ? BST_CHECKED : BST_UNCHECKED);
-	        CheckDlgButton (IDC_CHECK_DEBUG_MESSAGES, cfg::debug_messages_def ? BST_CHECKED : BST_UNCHECKED);*/
-
-	        OnChanged ();
+	        m_callback->on_state_changed ();
         }
 
         void dialog::apply ()
         {	
-	        /*cfg::dll_location_mode = IsDlgButtonChecked (IDC_RADIO_DEFAULT_LOCATION) == BST_CHECKED ? cfg::loc_default : cfg::loc_custom;
-	        cfg::dll_custom_path = string_utf8_from_window (*this, IDC_STATIC_DLL_LOCATION);
+            cfg::debug_log = m_debug_log.IsChecked ();
+            cfg::using_custom_dll = m_location_custom.IsChecked ();
+            cfg::dll_path = string_utf8_from_window (m_dll_path);
+            cfg::disk_cache_size = m_disc_cache_size.GetPos32 ();
 
-	        cfg::quiet_mode = IsDlgButtonChecked (IDC_CHECK_QUIET_MODE) == BST_CHECKED;
-	        cfg::debug_messages = IsDlgButtonChecked (IDC_CHECK_DEBUG_MESSAGES) == BST_CHECKED;*/
-
-	        OnChanged ();
-        }
-
-        void dialog::OnChanged ()
-        {
 	        m_callback->on_state_changed ();
         }
 
