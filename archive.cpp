@@ -6,19 +6,14 @@
 #include "archive.h"
 #include "dll.h"
 #include "extract_callback.h"
-#include "tempmem_with_timestamp.h"
-#include "disk_cache.h"
 #include "utils.h"
 
 namespace unpack_7z
 {
     void archive::open (file_ptr const &p_file, abort_callback &p_abort)
     {
-        static_api_ptr_t<disk_cache::manager> api;
-
         try {
             CMyComPtr<IInArchive> archive_new (dll::create_archive_object ());
-            static_api_ptr_t<disk_cache::manager> api;
             CMyComPtr<IInStream> stream_new (new file_streams::in (p_file, p_abort));
 
             if (archive_new->Open (stream_new, 0, NULL) != S_OK)
@@ -26,8 +21,8 @@ namespace unpack_7z
 
             close ();
 
-            m_archive = archive_new;
-            m_stream = stream_new;
+            m_archive = archive_new.Detach ();
+            m_stream = stream_new.Detach ();
 
             m_timestamp = p_file->get_timestamp (p_abort);
             m_path.reset ();
@@ -71,7 +66,7 @@ namespace unpack_7z
 		    throw exception_arch_file_not_found ();
     }
 
-    void archive::extract_file (t_size i, file_ptr &p_out, abort_callback &p_abort)
+    void archive::extract_file (t_size i, const file_ptr &p_out, abort_callback &p_abort) const
     {
         CMyComPtr<IArchiveExtractCallback> archive_extract_callback (new extract_callback (p_out, p_abort));
 	
@@ -80,25 +75,15 @@ namespace unpack_7z
 		    error_log () << "Error extracting \"" << m_items[i].m_path << "\"";
 		    throw exception_io_data ();
 	    }
+        p_out->reopen (p_abort);
     }
 
-    void archive::get_reader (const char *p_file, file_ptr &p_out, abort_callback &p_abort)
+    void archive::extract_file (const char *p_file, const file_ptr &p_out, abort_callback &p_abort) const
     {
         auto begin = m_items.begin (), end = m_items.end ();
         auto pos = std::find_if (begin, end, [p_file] (const file_in_archive &p_item) { return pfc::stricmp_ascii (p_item.m_path, p_file) == 0; });
-        if (pos != end) {
-            auto index = pos - begin;
-
-            p_out = new file_tempmem (m_items[index].m_stats.m_timestamp);
-
-            static_api_ptr_t<disk_cache::manager> api;
-            if (!api->fetch (m_path, p_file, p_out, p_abort)) {
-                extract_file (index, p_out, p_abort);
-                api->store (m_path, p_file, p_out, p_abort);
-            }
-            
-            p_out->reopen (p_abort);
-        }
+        if (pos != end)
+            extract_file (pos - begin, p_out, p_abort);
         else
             throw exception_arch_file_not_found ();
     }
@@ -119,7 +104,7 @@ namespace unpack_7z
         for (UInt32 i = 0; i < num_items; i++) {
             m_archive->GetProperty (i, kpidPath, &prop);
             if (prop.vt != VT_BSTR) continue;
-		    file_desc.m_path = pfc::stringcvt::string_utf8_from_wide (ConvertPropVariantToString (prop));
+		    file_desc.m_path = pfc::stringcvt::string_utf8_from_os (ConvertPropVariantToString (prop));
 
             m_archive->GetProperty (i, kpidSize, &prop);
             if (prop.vt != VT_UI8) continue;

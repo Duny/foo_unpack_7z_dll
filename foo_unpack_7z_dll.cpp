@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "archive.h"
+#include "disk_cache.h"
 #include "utils.h"
 
 DECLARE_COMPONENT_VERSION
@@ -44,7 +44,8 @@ namespace unpack_7z
 
 		    DWORD start = GetTickCount ();
 
-		    unpack_7z::archive (p_archive, p_abort).get_reader (p_file, p_out, p_abort);
+		    //unpack_7z::archive (p_archive, p_abort).extract_file (p_file, p_out, p_abort);
+            disk_cache::fetch (p_archive, p_file, p_out, p_abort);
 
 		    DWORD end = GetTickCount ();
 		    debug_log () << "open_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")"
@@ -60,16 +61,16 @@ namespace unpack_7z
 		    unpack_7z::archive archive;
 		    p_reader.is_empty () ? archive.open (p_archive, p_out) : archive.open (p_reader, p_out);
 
-		    archive.list ([&] (const unpack_7z::file_in_archive &p_file) -> bool
+		    archive.list ([&] (const pfc::string8 &p_file, const t_filestats &p_stats) -> bool
             {
 			    pfc::string8_fast m_url;
-			    make_unpack_path (m_url, p_archive, p_file.m_path);
+			    make_unpack_path (m_url, p_archive, p_file);
 			
 			    file_ptr temp;
 			    if (p_want_readers)
-				    archive.get_reader (p_file.m_path, temp, p_out);
+                    disk_cache::fetch (archive, p_file, temp, p_out);
 
-			    return p_out.on_entry (this, m_url, p_file.m_stats, temp);
+			    return p_out.on_entry (this, m_url, p_stats, temp);
             });
 
 		    DWORD end = GetTickCount ();

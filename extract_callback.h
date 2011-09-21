@@ -8,7 +8,7 @@ namespace unpack_7z
     class extract_callback : public IArchiveExtractCallback, public CMyUnknownImp
     {
     public:
-        extract_callback (file_ptr &p_stream, abort_callback &p_abort)
+        extract_callback (const file_ptr &p_stream, abort_callback &p_abort)
             : m_stream (new file_streams::out (p_stream, p_abort)) { }
 
         MY_UNKNOWN_IMP1(IArchiveOpenCallback)

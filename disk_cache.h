@@ -1,6 +1,8 @@
 #ifndef _FOO_UNPACK_7Z_DLL_DISK_CACHE_H_
 #define _FOO_UNPACK_7Z_DLL_DISK_CACHE_H_
 
+#include "archive.h"
+
 namespace unpack_7z
 {
     namespace disk_cache
@@ -11,11 +13,18 @@ namespace unpack_7z
         class NOVTABLE manager : public service_base {
         public:
             // false then file not found in cache
-            virtual bool fetch (const char *p_archive, const char *p_file, const file_ptr &p_out, abort_callback &p_abort) = 0;
-            virtual void store (const char *p_archive, const char *p_file, const file_ptr &p_in, abort_callback &p_abort) = 0;
+            virtual bool fetch (const char *p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort) = 0;
+            virtual void store (const char *p_archive, const char *p_file, const file_ptr &p_in, const t_filetimestamp &timestamp, abort_callback &p_abort) = 0;
 
             FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(manager)
         };
+
+        // fetches file from cache or unpacks file from the archive if file is not cached
+        // function allocates space for memory file and returns 
+        // throws exceptions on errors
+        bool fetch (const char *p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort);
+        //
+        bool fetch (const unpack_7z::archive &p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort);
 
         // {309B1505-2792-4BC4-A4CB-6BC4768DD296}
         __declspec(selectany) const GUID manager::class_guid = 

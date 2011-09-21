@@ -25,8 +25,8 @@ namespace unpack_7z
             STDMETHOD(GetSize)(UInt64 *size) override;
 
         private:
+            file_ptr m_stream;
             abort_callback &m_abort;
-            file_ptr	    m_stream;
         };
 
         class out:
@@ -34,7 +34,7 @@ namespace unpack_7z
             public CMyUnknownImp
         {
         public:
-            out (file_ptr &p_stream, abort_callback &p_abort) : m_stream (p_stream), m_abort (p_abort) {}
+            out (const file_ptr &p_stream, abort_callback &p_abort) : m_stream (p_stream), m_abort (p_abort) {}
 
             MY_UNKNOWN_IMP1(IOutStream)
 
@@ -45,8 +45,8 @@ namespace unpack_7z
             STDMETHOD(SetSize)(UInt64 newSize) override;
 
         private:
+            file_ptr m_stream;
             abort_callback &m_abort;
-            file_ptr        m_stream;
         };
     }
 }
