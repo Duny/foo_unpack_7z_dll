@@ -5,7 +5,7 @@
 
 namespace unpack_7z
 {
-    namespace streams
+    namespace file_streams
     {
         class in:
             public IInStream,

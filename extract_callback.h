@@ -9,7 +9,7 @@ namespace unpack_7z
     {
     public:
         extract_callback (file_ptr &p_stream, abort_callback &p_abort)
-            : m_stream (new streams::out (p_stream, p_abort)) { }
+            : m_stream (new file_streams::out (p_stream, p_abort)) { }
 
         MY_UNKNOWN_IMP1(IArchiveOpenCallback)
 
