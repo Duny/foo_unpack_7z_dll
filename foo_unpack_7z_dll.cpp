@@ -6,11 +6,11 @@
 DECLARE_COMPONENT_VERSION
 (
     "7z Archive Unpacker", // NAME
-    "2.1", // VERSION
+    "3.0", // VERSION
     "Unpacker for 7-Zip archives.\n" // ABOUT
 	"Requires 7z.dll (32 bit) to work.\n"
     "Get it here http://7-zip.org/download.html\n\n"
-	"(c) 2011 Dmitry Duny Efimenko"
+	"(c) 2009-2011 Dmitry Duny Efimenko"
 );
 VALIDATE_COMPONENT_FILENAME (COMPONENT_NAME ".dll");
 
@@ -44,8 +44,7 @@ namespace unpack_7z
 
 		    DWORD start = GetTickCount ();
 
-		    //unpack_7z::archive (p_archive, p_abort).extract_file (p_file, p_out, p_abort);
-            disk_cache::fetch (p_archive, p_file, p_out, p_abort);
+            disk_cache::fetch_or_unpack (p_archive, p_file, p_out, p_abort);
 
 		    DWORD end = GetTickCount ();
 		    debug_log () << "open_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")"
@@ -68,7 +67,7 @@ namespace unpack_7z
 			
 			    file_ptr temp;
 			    if (p_want_readers)
-                    disk_cache::fetch (archive, p_file, temp, p_out);
+                    disk_cache::fetch_or_unpack (archive, p_file, temp, p_out);
 
 			    return p_out.on_entry (this, m_url, p_stats, temp);
             });

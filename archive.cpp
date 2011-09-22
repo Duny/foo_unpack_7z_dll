@@ -71,10 +71,9 @@ namespace unpack_7z
         CMyComPtr<IArchiveExtractCallback> archive_extract_callback (new extract_callback (p_out, p_abort));
 	
         HRESULT result = m_archive->Extract (&i, 1, false, archive_extract_callback);
-	    if (result != S_OK) {
-		    error_log () << "Error extracting \"" << m_items[i].m_path << "\"";
-		    throw exception_io_data ();
-	    }
+	    if (result != S_OK)
+		    throw exception_arch_extract_error ();
+
         p_out->reopen (p_abort);
     }
 
@@ -91,10 +90,8 @@ namespace unpack_7z
     void archive::list_archive ()
     {
         UInt32 num_items = 0;
-	    if (m_archive->GetNumberOfItems (&num_items) != S_OK) {
-		    error_log () << "Couldn't get number of items in the archive";
-		    throw exception_io_data ();
-	    }
+	    if (m_archive->GetNumberOfItems (&num_items) != S_OK)
+		    throw exception_arch_num_items_error ();
 
         m_items.reserve (num_items);
 
