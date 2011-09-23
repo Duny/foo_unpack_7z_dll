@@ -106,7 +106,7 @@ namespace unpack_7z
             }
 
             if (m_disc_cache_size.GetPos32 () != cfg::disk_cache_size)
-                state |= (preferences_state::changed | preferences_state::needs_restart);
+                state |= preferences_state::changed;
 
 	        return state;
         }
@@ -125,7 +125,9 @@ namespace unpack_7z
             cfg::debug_log = m_debug_log.IsChecked ();
             cfg::using_custom_dll = m_location_custom.IsChecked ();
             cfg::dll_path = string_utf8_from_window (m_dll_path);
+
             cfg::disk_cache_size = m_disc_cache_size.GetPos32 ();
+            static_api_ptr_t<disk_cache::manager>()->restart ();
 
 	        m_callback->on_state_changed ();
         }

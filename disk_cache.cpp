@@ -63,7 +63,7 @@ namespace unpack_7z
                 return false;
             }
 
-            void store (const char *p_archive, const char *p_file, const file_ptr &p_in, const t_filetimestamp &timestamp, abort_callback &p_abort) override
+            void store (const char *p_archive, const char *p_file, const file_ptr &p_in, abort_callback &p_abort) override
             {
                 if (cfg::disk_cache_size == 0)
                     return;
@@ -81,6 +81,7 @@ namespace unpack_7z
                             filesystem::g_open_temp (slot.file, p_abort);
 
                         file::g_transfer_file (p_in, slot.file, p_abort);
+                        slot.timestamp = p_in->get_timestamp (p_abort);
                     } catch (const std::exception &e) {
                         error_log () << "disk cache store exception:" << e.what ();
                         slot.file.release ();
@@ -89,7 +90,16 @@ namespace unpack_7z
 
                     slot.archive_path = p_archive;
                     slot.file_path = p_file;
-                    slot.timestamp = timestamp;
+                }
+            }
+
+            void restart () override
+            {
+                insync (m_lock);
+
+                if (cfg::disk_cache_size != m_cache.size ()) {
+                    m_cache.resize (cfg::disk_cache_size);
+                    m_next_slot %= cfg::disk_cache_size;
                 }
             }
 
@@ -109,15 +119,13 @@ namespace unpack_7z
 
         bool fetch_or_unpack (const unpack_7z::archive &p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort)
         {
-            const t_filestats &stats = p_archive.get_stats (p_file);
-
             static_api_ptr_t<disk_cache::manager> api;
             if (api->fetch (p_archive.get_path (), p_file, p_out, p_abort))
                 return true;
             else {
-                p_out = new file_tempmem (stats.m_timestamp);
+                p_out = new file_tempmem (p_archive.get_stats (p_file).m_timestamp);
                 p_archive.extract_file (p_file, p_out, p_abort);
-                api->store (p_archive.get_path (), p_file, p_out, stats.m_timestamp, p_abort);
+                api->store (p_archive.get_path (), p_file, p_out, p_abort);
                 return true;
             }
         }
