@@ -74,7 +74,7 @@ namespace unpack_7z
 	    if (result != S_OK)
 		    throw exception_arch_extract_error ();
 
-        p_out->reopen (p_abort);
+        p_out->seek (0, p_abort);
     }
 
     void archive::extract_file (const char *p_file, const file_ptr &p_out, abort_callback &p_abort) const

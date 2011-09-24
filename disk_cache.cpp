@@ -52,6 +52,7 @@ namespace unpack_7z
                     p_out = new file_tempmem (pos->timestamp);
                     try {
                         file::g_transfer_file (pos->file, p_out, p_abort);
+                        p_out->seek (0, p_abort);
                         return true;
                     } catch (const std::exception &e) {
                         p_out.release ();
@@ -81,6 +82,8 @@ namespace unpack_7z
                             filesystem::g_open_temp (slot.file, p_abort);
 
                         file::g_transfer_file (p_in, slot.file, p_abort);
+                        p_in->seek (0, p_abort);
+
                         slot.timestamp = p_in->get_timestamp (p_abort);
                     } catch (const std::exception &e) {
                         error_log () << "disk cache store exception:" << e.what ();

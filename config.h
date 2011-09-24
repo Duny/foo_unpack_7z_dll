@@ -19,8 +19,6 @@ namespace unpack_7z
                 disk_cache_size = 5
             };
         };
-
-        void reset (); // reset configuration to defaults
     }
 }
 #endif
