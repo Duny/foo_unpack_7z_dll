@@ -73,7 +73,7 @@ namespace unpack_7z
 
                 auto pos = find_if (m_cache.begin (), m_cache.end (), cache_slot_equal (p_archive, p_file));
                 if (pos == m_cache.end ()) {
-                    cache_slot &slot = m_cache[m_next_slot];
+                    cache_slot &slot = m_cache[m_next_slot % cfg::disk_cache_size];
 
                     m_next_slot = (m_next_slot + 1) % cfg::disk_cache_size;
 
@@ -102,7 +102,8 @@ namespace unpack_7z
 
                 if (cfg::disk_cache_size != m_cache.size ()) {
                     m_cache.resize (cfg::disk_cache_size);
-                    m_next_slot %= cfg::disk_cache_size;
+                    if (cfg::disk_cache_size)
+                        m_next_slot %= cfg::disk_cache_size;
                 }
             }
 
