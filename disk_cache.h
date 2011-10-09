@@ -24,9 +24,9 @@ namespace unpack_7z
         // fetches file from cache or unpacks file from the archive if file is not cached
         // function allocates space for memory file and returns 
         // throws exceptions on errors
-        bool fetch_or_unpack (const char *p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort);
+        void fetch_or_unpack (const char *p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort);
         //
-        bool fetch_or_unpack (const unpack_7z::archive &p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort);
+        void fetch_or_unpack (const unpack_7z::archive &p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort);
 
         // {309B1505-2792-4BC4-A4CB-6BC4768DD296}
         __declspec(selectany) const GUID manager::class_guid = 

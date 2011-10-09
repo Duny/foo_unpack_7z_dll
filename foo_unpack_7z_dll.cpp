@@ -14,8 +14,6 @@ DECLARE_COMPONENT_VERSION
 );
 VALIDATE_COMPONENT_FILENAME (COMPONENT_NAME ".dll");
 
-#define _7Z_EXT "7z"
-
 namespace unpack_7z
 {
     class archive_type_7z : public archive_impl

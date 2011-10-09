@@ -14,3 +14,5 @@
 #include "resource.h"
 
 #define COMPONENT_NAME "foo_unpack_7z_dll"
+
+#define _7Z_EXT "7z"
