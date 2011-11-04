@@ -6,7 +6,7 @@
 DECLARE_COMPONENT_VERSION
 (
     "7z Archive Unpacker", // NAME
-    "3.06", // VERSION
+    "3.0.6", // VERSION
     "Unpacker for 7-Zip archives.\n" // ABOUT
 	"Requires 7z.dll (32 bit) to work.\n"
     "Get it here http://7-zip.org/download.html\n\n"
