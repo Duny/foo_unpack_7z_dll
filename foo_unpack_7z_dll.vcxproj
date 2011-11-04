@@ -92,6 +92,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>
       </DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(FB2KSDK)\foobar2000\shared\shared.lib;shlwapi.lib;user32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -103,8 +104,11 @@
       <ImportLibrary>
       </ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreAllDefaultLibraries>
+      </IgnoreAllDefaultLibraries>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
       <Command>

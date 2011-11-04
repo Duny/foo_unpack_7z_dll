@@ -6,7 +6,7 @@
 DECLARE_COMPONENT_VERSION
 (
     "7z Archive Unpacker", // NAME
-    "3.05", // VERSION
+    "3.06", // VERSION
     "Unpacker for 7-Zip archives.\n" // ABOUT
 	"Requires 7z.dll (32 bit) to work.\n"
     "Get it here http://7-zip.org/download.html\n\n"
@@ -41,12 +41,12 @@ namespace unpack_7z
 		    check_is_our_type (p_archive);
 
 		    DWORD start = GetTickCount ();
+            debug_log () << "open_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")";
 
             disk_cache::fetch_or_unpack (p_archive, p_file, p_out, p_abort);
 
 		    DWORD end = GetTickCount ();
-		    debug_log () << "open_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")"
-			    << " took " << (t_int32)(end - start) << " ms\n";
+		    debug_log () << "open_archive(" << pfc::string_filename_ext (p_archive) << ") took " << (t_int32)(end - start) << " ms\n";
 	    }
 
 	    virtual void archive_list (const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers)
@@ -54,6 +54,7 @@ namespace unpack_7z
 		    check_is_our_type (p_archive);
 
 		    DWORD start = GetTickCount ();
+            debug_log () << "archive_list(" << pfc::string_filename_ext (p_archive) << ")";
 
 		    unpack_7z::archive archive;
 		    p_reader.is_empty () ? archive.open (p_archive, p_out) : archive.open (p_reader, p_out);
@@ -71,8 +72,7 @@ namespace unpack_7z
             });
 
 		    DWORD end = GetTickCount ();
-		    debug_log () << "archive_list(" << pfc::string_filename_ext (p_archive) << ", " << p_want_readers << ")"
-			    << " took " << (t_int32)(end - start) << " ms\n";
+		    debug_log () << "archive_list(" << pfc::string_filename_ext (p_archive) <<") took " << (t_int32)(end - start) << " ms\n";
 	    }
     };
     static archive_factory_t<archive_type_7z> g_archive_7z;

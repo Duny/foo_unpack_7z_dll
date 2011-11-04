@@ -100,8 +100,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,0,5,0
- PRODUCTVERSION 3,0,5,0
+ FILEVERSION 3,0,6,0
+ PRODUCTVERSION 3,0,6,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x5L
@@ -117,10 +117,14 @@ BEGIN
         BLOCK "041904b0"
         BEGIN
             VALUE "Comments", "Requires 7z.dll (32 bit) to work"
-            VALUE "FileDescription", "7z archive support for foobar2000"
-            VALUE "FileVersion", "3.0.5.0"
+            VALUE "CompanyName", "Duny"
+            VALUE "FileDescription", "7z archive support for foobar2000 with 7z.dll"
+            VALUE "FileVersion", "3.0.6.0"
+            VALUE "InternalName", "foo_unpack_7z_dll.dll"
             VALUE "LegalCopyright", "© 2009-2011 Efimenko Dmitry"
-            VALUE "ProductVersion", "3.0.5.0"
+            VALUE "OriginalFilename", "foo_unpack_7z_dll.dll"
+            VALUE "ProductName", "7z archive support for foobar2000"
+            VALUE "ProductVersion", "3.0.6.0"
         END
     END
     BLOCK "VarFileInfo"
