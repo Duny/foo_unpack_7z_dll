@@ -21,8 +21,8 @@ namespace unpack_7z
 
             close ();
 
-            m_archive = archive_new.Detach ();
-            m_stream = stream_new.Detach ();
+            m_archive = archive_new;
+            m_stream = stream_new;
 
             m_timestamp = p_file->get_timestamp (p_abort);
             m_path.reset ();

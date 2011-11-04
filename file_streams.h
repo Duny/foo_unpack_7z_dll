@@ -14,6 +14,10 @@ namespace unpack_7z
         {
         public:
             in (file_ptr const &p_stream, abort_callback &p_abort) : m_stream (p_stream), m_abort (p_abort) {}
+            ~in ()
+            {
+                popup_message::g_show ("sdfdsf", "dsdfsdfd");
+            }
 
             MY_UNKNOWN_IMP2(IInStream, IStreamGetSize)
 
