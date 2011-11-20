@@ -1,12 +1,7 @@
 #include "stdafx.h"
 
-#include "Windows\PropVariant.h"
-#include "Windows\PropVariantConversions.h"
-
-#include "archive.h"
 #include "dll.h"
 #include "extract_callback.h"
-#include "utils.h"
 
 namespace unpack_7z
 {

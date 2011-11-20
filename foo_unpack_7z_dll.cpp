@@ -1,79 +1,24 @@
 #include "stdafx.h"
 
-#include "disk_cache.h"
-#include "utils.h"
-
-DECLARE_COMPONENT_VERSION
-(
-    "7z Archive Unpacker", // NAME
-    "3.0.6", // VERSION
-    "Unpacker for 7-Zip archives.\n" // ABOUT
-	"Requires 7z.dll (32 bit) to work.\n"
-    "Get it here http://7-zip.org/download.html\n\n"
-	"(c) 2009-2011 Dmitry Duny Efimenko"
-);
+DECLARE_COMPONENT_VERSION ("7z Archive Unpacker", "3.0.7 beta",
+"Unpacker for 7-Zip archives.\n"
+"Requires 7z.dll (32 bit) to work.\n"
+"Get it here http://7-zip.org/download.html\n\n"
+"(c) 2009-2011 Efimenko Dmitry (majorquake3@gmail.com)");
 VALIDATE_COMPONENT_FILENAME (COMPONENT_NAME ".dll");
+
 
 namespace unpack_7z
 {
-    class archive_type_7z : public archive_impl
+    namespace cfg
     {
-	    virtual const char * get_archive_type () { return _7Z_EXT; }
+        cfg_bool   debug_log (guid_inline<0x4bbcc43d, 0xb10, 0x4bd4, 0x98, 0xba, 0x58, 0x80, 0x6a, 0x9d, 0x61, 0x5e>::guid, defaults::debug_log);
 
-        virtual bool supports_content_types () { return false; }
+        cfg_bool   dll_path_custom (guid_inline<0x52b27d56, 0xa744, 0x4d67, 0xb4, 0x8f, 0x65, 0xac, 0x8a, 0xeb, 0x60, 0x65>::guid, defaults::dll_path_custom);
+        cfg_string dll_path (guid_inline<0x292200c6, 0xfe9a, 0x4174, 0xaa, 0xf7, 0xb8, 0xe3, 0x9f, 0x41, 0x92, 0x9f>::guid, "");
 
-	    void check_is_our_type (const char *path) {
-		    if (_stricmp (pfc::string_extension (path), _7Z_EXT) != 0)
-			    throw exception_io_data ();
-	    }
-
-	    virtual t_filestats get_stats_in_archive (const char *p_archive, const char *p_file, abort_callback &p_abort)
-	    {
-		    check_is_our_type (p_archive);
-
-		    debug_log () << "get_stats_in_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")";
-
-		    return unpack_7z::archive (p_archive, p_abort).get_stats (p_file);
-	    }
-
-	    virtual void open_archive (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort)
-	    {
-		    check_is_our_type (p_archive);
-
-		    DWORD start = GetTickCount ();
-            debug_log () << "open_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")";
-
-            disk_cache::fetch_or_unpack (p_archive, p_file, p_out, p_abort);
-
-		    DWORD end = GetTickCount ();
-		    debug_log () << "open_archive(" << pfc::string_filename_ext (p_archive) << ") took " << (t_int32)(end - start) << " ms\n";
-	    }
-
-	    virtual void archive_list (const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers)
-	    {
-		    check_is_our_type (p_archive);
-
-		    DWORD start = GetTickCount ();
-            debug_log () << "archive_list(" << pfc::string_filename_ext (p_archive) << ")";
-
-		    unpack_7z::archive archive;
-		    p_reader.is_empty () ? archive.open (p_archive, p_out) : archive.open (p_reader, p_out);
-
-		    archive.list ([&] (const pfc::string8 &p_file, const t_filestats &p_stats) -> bool
-            {
-			    pfc::string8_fast m_url;
-			    make_unpack_path (m_url, p_archive, p_file);
-			
-			    file_ptr temp;
-			    if (p_want_readers)
-                    disk_cache::fetch_or_unpack (archive, p_file, temp, p_out);
-
-			    return p_out.on_entry (this, m_url, p_stats, temp);
-            });
-
-		    DWORD end = GetTickCount ();
-		    debug_log () << "archive_list(" << pfc::string_filename_ext (p_archive) <<") took " << (t_int32)(end - start) << " ms\n";
-	    }
-    };
-    static archive_factory_t<archive_type_7z> g_archive_7z;
+        cfg_bool   cache_location_custom (guid_inline<0x28f84525, 0xdc60, 0x4bab, 0xab, 0xf3, 0x91, 0x32, 0xe5, 0x58, 0xbf, 0x26>::guid, defaults::cache_location_custom);
+        cfg_string cache_location (guid_inline<0xda0dbea6, 0x5f7, 0x4f0e, 0x8f, 0x9f, 0xfd, 0xec, 0xab, 0xd0, 0xaf, 0xb7>::guid, "");
+        cfg_uint   cache_size (guid_inline<0x6652e210, 0x3b5e, 0x4256, 0x81, 0xb7, 0x59, 0xba, 0xef, 0x2b, 0x35, 0x67>::guid, defaults::cache_size);
+    }
 }

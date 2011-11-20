@@ -1,11 +1,5 @@
 #include "stdafx.h"
-
-#include "Common\StringConvert.h"
-#include "7zip\Archive\IArchive.h"
 #include "dll.h"
-#include "config.h"
-#include "utils.h"
-#include "boost\smart_ptr\scoped_array.hpp"
 
 namespace unpack_7z
 {
@@ -58,14 +52,14 @@ namespace unpack_7z
 
 		    pfc::string8 path;
 
-		    if (cfg::using_custom_dll) {
+		    if (cfg::dll_path_custom) {
                 if (cfg::dll_path.is_empty ())
                     error_log () << "Custom 7z.dll location is not specified";
                 else if (!filesystem::g_exists (cfg::dll_path, abort_callback_dummy ()))
                     error_log () << "File \"" << cfg::dll_path << "\" not found";
 
                 if (!m_dll.load (cfg::dll_path))
-                    error_log () << "Couldn't load " << cfg::dll_path;
+                    error_log () << "Couldn't load \"" << cfg::dll_path << "\" as dynamic library";
                 else
                     path = cfg::dll_path;
 		    }
@@ -102,7 +96,7 @@ namespace unpack_7z
                     try_folder (pfc::string_directory (core_api::get_my_full_path ()));
 
                 if (!m_dll.is_loaded ())
-                    error_log () << "Couldn't load 7z.dll. Looked in:\n" << triedPaths;
+                    error_log () << "Couldn't load any 7z.dll. Tried:\n" << triedPaths;
 		    }
 
 		    if (m_dll.is_loaded ()) {

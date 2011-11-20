@@ -25,11 +25,12 @@ namespace unpack_7z
 
 	    const t_filestats& get_stats (const char *p_file) const;
 
-	    template <class Func> void list (Func f) const
+        typedef const boost::function<bool (const pfc::string_base &p_file_name, const t_filestats &p_file_stats)> archive_list_callback_t;
+	    inline void list (archive_list_callback_t &p_func) const
         {
-            for (decltype(m_items.size ()) n = m_items.size (), i = 0; i < n; i++)
-                if (!f (m_items[i].m_path, m_items[i].m_stats))
-                    break;
+            for (t_size n = m_items.size (), i = 0; i < n; i++)
+                if (!p_func (m_items[i].m_path, m_items[i].m_stats))
+                    return;
         }
 
 	    void extract_file (const char *p_file, const file_ptr &p_out, abort_callback &p_abort) const;

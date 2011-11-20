@@ -1,8 +1,6 @@
 #ifndef _FOO_UNPACK_7Z_DLL_DISK_CACHE_H_
 #define _FOO_UNPACK_7Z_DLL_DISK_CACHE_H_
 
-#include "archive.h"
-
 namespace unpack_7z
 {
     namespace disk_cache

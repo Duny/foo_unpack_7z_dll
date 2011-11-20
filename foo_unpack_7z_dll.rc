@@ -28,18 +28,26 @@ IDD_PREFERENCES DIALOGEX 0, 0, 332, 288
 STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
 FONT 8, "Microsoft Sans Serif", 400, 0, 0xCC
 BEGIN
-    CONTROL         "&Default (search in 7-Zip installation folder)",IDC_RADIO_LOC_DEFAULT,
+    CONTROL         "&Default (search in 7-Zip installation folder)",IDC_RADIO_DLL_LOCATION_DEFAULT,
                     "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,12,47,145,10
-    CONTROL         "&Custom (specify location):",IDC_RADIO_LOC_CUSTOM,
+    CONTROL         "&Custom (specify location):",IDC_RADIO_DLL_LOCATION_CUSTOM,
                     "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,12,59,96,10
-    PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE,12,72,33,14
+    PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE_FOR_DLL_LOCATION,12,71,33,14
     LTEXT           "7z.dll path here",IDC_STATIC_DLL_LOCATION,49,75,251,8
-    GROUPBOX        "7z.dll location",IDC_STATIC_DLL_LOCATION_GROUP,1,35,330,59
-    CONTROL         "Enable &debug log",IDC_CHECK_DEBUG_LOG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,257,273,70,10
+    GROUPBOX        "7z.dll location",IDC_STATIC,1,35,330,58
+    CONTROL         "&Enable debug log",IDC_CHECK_DEBUG_LOG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,257,273,70,10
     ICON            IDI_7ZIP_LOGO,IDC_STATIC,7,4,20,20
-    GROUPBOX        "Number of extracted files cached on disk (0 to disable caching)",IDC_STATIC,0,100,330,33
-    EDITTEXT        IDC_EDIT_SPIN_CTRL_BUDDY,12,114,47,13,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "",IDC_SPIN_CACHE_SIZE,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_HOTTRACK,61,114,10,14
+    GROUPBOX        "Extracted files cache",IDC_STATIC,1,100,330,92
+    EDITTEXT        IDC_EDIT_SPIN_CTRL_BUDDY,260,110,47,13,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_SPIN_CACHE_SIZE,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_HOTTRACK,309,110,11,14
+    LTEXT           "&Number of cache items (0 to disable caching):",IDC_STATIC,12,112,156,8
+    GROUPBOX        "Cache location",IDC_STATIC,12,124,308,59
+    CONTROL         "&System temp folder",IDC_RADIO_CACHE_LOCATION_SYSTEM_TEMP,
+                    "Button",BS_AUTORADIOBUTTON,23,136,149,10
+    CONTROL         "C&ustom (specify location):",IDC_RADIO_CACHE_LOCATION_CUSTOM,
+                    "Button",BS_AUTORADIOBUTTON,23,148,149,10
+    PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION,23,160,33,14
+    LTEXT           "cache directory path here",IDC_STATIC_CACHE_LOCATION,61,163,248,8
 END
 
 
@@ -100,8 +108,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,0,6,0
- PRODUCTVERSION 3,0,6,0
+ FILEVERSION 3,0,7,1
+ PRODUCTVERSION 3,0,7,1
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x5L
@@ -118,13 +126,13 @@ BEGIN
         BEGIN
             VALUE "Comments", "Requires 7z.dll (32 bit) to work"
             VALUE "CompanyName", "Duny"
-            VALUE "FileDescription", "7z archive support for foobar2000 with 7z.dll"
-            VALUE "FileVersion", "3.0.6.0"
+            VALUE "FileDescription", "7z archive support for foobar2000"
+            VALUE "FileVersion", "3.0.7.1"
             VALUE "InternalName", "foo_unpack_7z_dll.dll"
             VALUE "LegalCopyright", "© 2009-2011 Efimenko Dmitry"
             VALUE "OriginalFilename", "foo_unpack_7z_dll.dll"
             VALUE "ProductName", "7z archive support for foobar2000"
-            VALUE "ProductVersion", "3.0.6.0"
+            VALUE "ProductVersion", "3.0.7.1"
         END
     END
     BLOCK "VarFileInfo"

@@ -1,8 +1,6 @@
 #ifndef _FOO_UNPACK_7Z_DLL_FILE_STREAMS_H_
 #define _FOO_UNPACK_7Z_DLL_FILE_STREAMS_H_
 
-#include "7zip\Common\FileStreams.h"
-
 namespace unpack_7z
 {
     namespace file_streams

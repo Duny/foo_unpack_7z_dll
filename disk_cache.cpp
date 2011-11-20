@@ -1,11 +1,5 @@
 #include "stdafx.h"
 
-#include "disk_cache.h"
-#include "archive.h"
-#include "config.h"
-#include "utils.h"
-#include "tempmem_with_timestamp.h"
-
 namespace unpack_7z
 {
     namespace disk_cache
@@ -42,7 +36,7 @@ namespace unpack_7z
 
             bool fetch (const char *p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort) override
             {
-                if (cfg::disk_cache_size != 0) {
+                if (cfg::cache_size != 0) {
                     insync (m_lock);
 
                     auto pos = find_if (m_cache.begin (), m_cache.end (), cache_slot_equal (p_archive, p_file));
@@ -64,16 +58,18 @@ namespace unpack_7z
 
             void store (const char *p_archive, const char *p_file, const file_ptr &p_in, abort_callback &p_abort) override
             {
-                if (cfg::disk_cache_size != 0) {
+                if (cfg::cache_size != 0) {
                     insync (m_lock);
 
-                    if (m_cache.empty ()) m_cache.resize (cfg::disk_cache_size);
+                    // setup cache on first call
+                    if (m_cache.empty ()) m_cache.resize (cfg::cache_size);
 
+                    // do not store same file twice
                     auto pos = find_if (m_cache.begin (), m_cache.end (), cache_slot_equal (p_archive, p_file));
                     if (pos == m_cache.end ()) {
-                        cache_slot &slot = m_cache[m_next_slot % cfg::disk_cache_size];
+                        cache_slot &slot = m_cache[m_next_slot % cfg::cache_size];
 
-                        m_next_slot = (m_next_slot + 1) % cfg::disk_cache_size;
+                        m_next_slot = (m_next_slot + 1) % cfg::cache_size;
 
                         try {
                             if (slot.file.is_empty ())
@@ -97,9 +93,9 @@ namespace unpack_7z
 
             void restart () override
             {
-                if (cfg::disk_cache_size != m_cache.size ()) {
+                if (cfg::cache_size != m_cache.size ()) {
                     insync (m_lock);
-                    m_cache.resize (cfg::disk_cache_size);
+                    m_cache.resize (cfg::cache_size);
                 }
             }
         };

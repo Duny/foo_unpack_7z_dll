@@ -116,6 +116,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="archive_impl.cpp" />
     <ClCompile Include="dll.cpp" />
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="config.cpp" />
@@ -136,13 +137,11 @@
   <ItemGroup>
     <ClInclude Include="archive.h" />
     <ClInclude Include="dll.h" />
-    <ClInclude Include="config.h" />
     <ClInclude Include="disk_cache.h" />
     <ClInclude Include="extract_callback.h" />
     <ClInclude Include="file_streams.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="tempmem_with_timestamp.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <ItemGroup>
