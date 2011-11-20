@@ -4,48 +4,55 @@ namespace unpack_7z
 {
     namespace disk_cache
     {
-        using namespace std;
+        // information about file being cached
+        struct cached_content
+        {
+            pfc::string8 archive; // 7z archive full path
+            pfc::string8 file; // path from inside the archive, e.i. "some folder\somefile.mp3"
+
+            cached_content () {}
+            cached_content (const char *p_archive, const char *p_file) : archive (p_archive), file (p_file) {}
+
+            inline bool operator== (const cached_content &other) const
+            { return pfc::stricmp_ascii (other.archive, archive) == 0 && pfc::stricmp_ascii (other.file, file) == 0; }
+        };
+
+        struct cache_slot
+        {
+            cached_content content;
+
+            pfc::string8 cache_path;
+            file_ptr cache_file;
+            t_filetimestamp timestamp;
+
+            ~cache_slot ()
+            {
+                if (!cache_path.is_empty ()) {
+                    cache_file.release ();
+                    uDeleteFile (cache_path);
+                }
+            }
+
+            inline bool operator== (const cached_content &other) const { return content == other; }
+        };
+
         class manager_impl : public manager
         {
-            struct cache_slot
-            {
-                pfc::string8 archive; // 7z archive full path
-                pfc::string8 file_in_archive; // path from inside the archive, e.i. "some folder\somefile.mp3"
+            mutable critical_section m_lock;
+            pfc::list_t<cache_slot> m_cache;
+            t_size m_next_slot;
 
-                pfc::string8 cache_path;
-                file_ptr cache_file;
-                t_filetimestamp timestamp;
-            };
 
-            vector<cache_slot> m_cache;
-            t_uint32 m_next_slot;
-
-            critical_section m_lock;
-
-            struct cache_slot_equal
-            {
-                cache_slot_equal (const char *p_archive, const char *p_file) : archive (p_archive), file (p_file) {}
-
-                bool operator () (const cache_slot &slot)
-                {
-                    return slot.cache_file.is_valid () && pfc::stricmp_ascii (slot.archive, archive) == 0
-                        && pfc::stricmp_ascii (slot.file_in_archive, file) == 0;
-                }
-
-                const char *archive;
-                const char *file;
-            };
-
-            bool fetch (const char *p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort) override
+            bool fetch (const char *p_archive, const char *p_file, file_ptr &p_out, abort_callback &p_abort) const override
             {
                 if (cfg::cache_size != 0) {
                     insync (m_lock);
 
-                    auto pos = find_if (m_cache.begin (), m_cache.end (), cache_slot_equal (p_archive, p_file));
-                    if (pos != m_cache.end ()) {
-                        p_out = new file_tempmem (pos->timestamp);
+                    auto index = m_cache.find_item (cached_content (p_archive, p_file));
+                    if (index != pfc_infinite) {
+                        p_out = new file_tempmem (m_cache[index].timestamp);
                         try {
-                            file::g_transfer_file (pos->cache_file, p_out, p_abort);
+                            file::g_transfer_file (m_cache[index].cache_file, p_out, p_abort);
                             p_out->seek (0, p_abort);
                             return true;
                         } catch (const std::exception &e) {
@@ -64,11 +71,10 @@ namespace unpack_7z
                     insync (m_lock);
 
                     // setup cache on first call
-                    if (m_cache.empty ()) m_cache.resize (cfg::cache_size);
+                    if (!m_cache.get_size ()) m_cache.set_size (cfg::cache_size);
 
                     // do not store same file twice
-                    auto pos = find_if (m_cache.begin (), m_cache.end (), cache_slot_equal (p_archive, p_file));
-                    if (pos == m_cache.end ()) {
+                    if (m_cache.find_item (cached_content (p_archive, p_file)) == pfc_infinite) {
                         auto slot_index = m_next_slot % cfg::cache_size;
                         cache_slot &slot = m_cache[slot_index];
 
@@ -88,17 +94,9 @@ namespace unpack_7z
                             return;
                         }
 
-                        slot.archive = p_archive;
-                        slot.file_in_archive = p_file;
+                        slot.content.archive = p_archive;
+                        slot.content.file = p_file;
                     }
-                }
-            }
-
-            void restart () override
-            {
-                if (cfg::cache_size != m_cache.size ()) {
-                    insync (m_lock);
-                    m_cache.resize (cfg::cache_size);
                 }
             }
 
@@ -106,25 +104,11 @@ namespace unpack_7z
             inline void open_cache_file (cache_slot &slot, const char *magic, abort_callback &p_abort)
             {
                 if (cfg::cache_location_custom) {
-                    console::formatter () << "cache location:" << cfg::cache_location;
                     generate_temp_location_for_file (slot.cache_path, cfg::cache_location, "tmp", magic);
                     filesystem::g_open_write_new (slot.cache_file, slot.cache_path, p_abort);
                 }
                 else
                     filesystem::g_open_temp (slot.cache_file, p_abort);
-            }
-
-        public:
-            ~manager_impl ()
-            {
-                if (cfg::cache_location_custom) {
-                    for (int n = m_cache.size () - 1; n >= 0; n--) {
-                        if (m_cache[n].cache_file.is_valid ()) {
-                            m_cache[n].cache_file.release ();
-                            uDeleteFile (m_cache[n].cache_path);
-                        }
-                    }
-                }
             }
         };
         static service_factory_single_t<manager_impl> g_factory;

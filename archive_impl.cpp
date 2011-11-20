@@ -4,16 +4,16 @@ namespace unpack_7z
 {
     class archive_type_7z : public archive_impl
     {
-        virtual const char * get_archive_type () { return _7Z_EXT; }
+        const char * get_archive_type () override { return _7Z_EXT; }
 
-        virtual bool supports_content_types () { return false; }
+        bool supports_content_types () override { return false; }
 
-        void check_is_our_type (const char *path) {
-            if (_stricmp (pfc::string_extension (path), _7Z_EXT) != 0)
+        inline void check_is_our_type (const char *path) {
+            if (pfc::stricmp_ascii (pfc::string_extension (path), _7Z_EXT) != 0)
                 throw exception_io_data ();
         }
 
-        virtual t_filestats get_stats_in_archive (const char *p_archive, const char *p_file, abort_callback &p_abort)
+        t_filestats get_stats_in_archive (const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
             check_is_our_type (p_archive);
 
@@ -22,12 +22,11 @@ namespace unpack_7z
             return unpack_7z::archive (p_archive, p_abort).get_stats (p_file);
         }
 
-        virtual void open_archive (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort)
+        void open_archive (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
             check_is_our_type (p_archive);
 
             DWORD start = GetTickCount ();
-            debug_log () << "open_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")";
 
             disk_cache::fetch_or_unpack (p_archive, p_file, p_out, p_abort);
 
@@ -35,12 +34,11 @@ namespace unpack_7z
             debug_log () << "open_archive(" << pfc::string_filename_ext (p_archive) << ") took " << (t_int32)(end - start) << " ms\n";
         }
 
-        virtual void archive_list (const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers)
+        void archive_list (const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) override
         {
             check_is_our_type (p_archive);
 
             DWORD start = GetTickCount ();
-            debug_log () << "archive_list(" << pfc::string_filename_ext (p_archive) << ")";
 
             unpack_7z::archive archive;
             p_reader.is_empty () ? archive.open (p_archive, p_out) : archive.open (p_reader, p_out);

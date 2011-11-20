@@ -146,7 +146,7 @@ namespace unpack_7z
             }
 
             if (m_disc_cache_size.GetPos32 () != cfg::cache_size)
-                state |= preferences_state::changed;
+                state |= (preferences_state::changed | preferences_state::needs_restart);
 
 	        return state;
         }
@@ -162,7 +162,6 @@ namespace unpack_7z
             uGetDlgItemText (*this, IDC_STATIC_CACHE_LOCATION, cfg::cache_location);
 
             cfg::cache_size = m_disc_cache_size.GetPos32 ();
-            static_api_ptr_t<disk_cache::manager>()->restart ();
 
             m_callback->on_state_changed ();
         }
