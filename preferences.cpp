@@ -72,9 +72,11 @@ namespace unpack_7z
 
             inline void on_browse_for_cache_location ()
             {
-                pfc::string8 tmp;
                 if (auto result = uBrowseForFolderEx (*this, "Select cache location", cfg::cache_location)) {
-                    uSetDlgItemText (*this, IDC_STATIC_CACHE_LOCATION, result->GetFileName (0));
+                    pfc::string8_fast tmp = result->GetFileName (0);
+                    if (!tmp.ends_with ('\\'))
+                        tmp.add_char ('\\');
+                    uSetDlgItemText (*this, IDC_STATIC_CACHE_LOCATION, tmp);
                     m_callback->on_state_changed ();
                 }
             }
