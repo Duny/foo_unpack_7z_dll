@@ -31,6 +31,25 @@ namespace unpack_7z
     }
 
 
+#define COMMAND_ID_HANDLER_SIMPLE(id, func) \
+	if(uMsg == WM_COMMAND && id == LOWORD(wParam)) \
+	{ \
+		bHandled = TRUE; \
+		lResult = 0; \
+        func(); \
+	    return TRUE; \
+	}
+
+#define COMMAND_HANDLER_SIMPLE(id, code, func) \
+    if(uMsg == WM_COMMAND && id == LOWORD(wParam) && code == HIWORD(wParam)) \
+    { \
+        bHandled = TRUE; \
+        lResult = 0; \
+        func (); \
+        return TRUE; \
+    }
+
+
     // helper to get "inline" GUID definitions
     // some_func (guid_inline<0xbfeaa7ea, 0x6810, 0x41c6, 0x82, 0x6, 0x12, 0x95, 0x5a, 0x89, 0xdf, 0x49>::guid);
     template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
