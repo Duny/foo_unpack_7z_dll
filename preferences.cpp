@@ -27,11 +27,11 @@ namespace unpack_7z
 
                 COMMAND_ID_HANDLER_SIMPLE (IDC_CHECK_DEBUG_LOG, on_state_changed)
 
-                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_DLL_LOCATION_DEFAULT, on_dll_mode_change)
-                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_DLL_LOCATION_CUSTOM, on_dll_mode_change)
+                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_DLL_LOCATION_DEFAULT, on_dll_and_cache_mode_change)
+                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_DLL_LOCATION_CUSTOM, on_dll_and_cache_mode_change)
 
-                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_CACHE_LOCATION_SYSTEM_TEMP, on_cache_mode_change)
-                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_CACHE_LOCATION_CUSTOM, on_cache_mode_change)
+                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_CACHE_LOCATION_SYSTEM_TEMP, on_dll_and_cache_mode_change)
+                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_CACHE_LOCATION_CUSTOM, on_dll_and_cache_mode_change)
 
                 COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_BROWSE_FOR_DLL_LOCATION, on_browse_for_dll)
                 COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION, on_browse_for_cache_location)
@@ -45,6 +45,8 @@ namespace unpack_7z
             {
                 // attach windows to members
                 m_disc_cache_size.Attach (GetDlgItem (IDC_SPIN_CACHE_SIZE));
+                m_disc_cache_size.SetBuddy (GetDlgItem (IDC_EDIT_SPIN_CTRL_BUDDY));
+                m_disc_cache_size.SetRange32 (0, unpack_7z::disk_cache::max_cache_size);
 
                 // initialize controls
                 uButton_SetCheck (*this, IDC_CHECK_DEBUG_LOG, cfg::debug_log);
@@ -52,8 +54,7 @@ namespace unpack_7z
                 set_dll_custom_mode (cfg::dll_path_custom, cfg::dll_path);
 
                 set_cache_custom_mode (cfg::cache_location_custom, cfg::cache_location);
-                m_disc_cache_size.SetBuddy (GetDlgItem (IDC_EDIT_SPIN_CTRL_BUDDY));
-                m_disc_cache_size.SetRange32 (0, unpack_7z::disk_cache::max_cache_size);
+                
                 m_disc_cache_size.SetPos32 (cfg::cache_size);
 
                 return FALSE;
@@ -74,21 +75,15 @@ namespace unpack_7z
             {
                 if (auto result = uBrowseForFolderEx (*this, "Select cache location", cfg::cache_location)) {
                     pfc::string8_fast tmp = result->GetFileName (0);
-                    if (!tmp.ends_with ('\\'))
-                        tmp.add_char ('\\');
+                    if (!tmp.ends_with ('\\')) tmp.add_char ('\\');
                     uSetDlgItemText (*this, IDC_STATIC_CACHE_LOCATION, tmp);
                     m_callback->on_state_changed ();
                 }
             }
 
-            inline void on_dll_mode_change ()
+            inline void on_dll_and_cache_mode_change ()
             {
                 GetDlgItem (IDC_BUTTON_BROWSE_FOR_DLL_LOCATION).EnableWindow (dll_custom_mode ());
-                m_callback->on_state_changed ();
-            }
-
-            inline void on_cache_mode_change ()
-            {
                 GetDlgItem (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION).EnableWindow (cache_custom_mode ());
                 m_callback->on_state_changed ();
             }

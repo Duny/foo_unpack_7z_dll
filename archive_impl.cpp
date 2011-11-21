@@ -24,7 +24,7 @@ namespace unpack_7z
         void open_archive (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
             check_is_our_type (p_archive);
-            operation_timer timer (pfc::string_formatter () << "open_archive(" << pfc::string_filename_ext (p_archive));
+            operation_timer timer (pfc::string_formatter () << "open_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")");
 
             disk_cache::fetch_or_unpack (p_archive, p_file, p_out, p_abort);
         }
