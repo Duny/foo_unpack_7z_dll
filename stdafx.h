@@ -20,7 +20,7 @@
 #include "Common/StringConvert.h"
 
 // boost includes
-#include "boost/smart_ptr/scoped_array.hpp"
+//#include "boost/smart_ptr/scoped_array.hpp"
 #include "boost/function.hpp"
 
 // plugin includes

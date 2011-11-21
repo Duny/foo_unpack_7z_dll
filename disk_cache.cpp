@@ -14,7 +14,7 @@ namespace unpack_7z
             cached_content (const char *p_archive, const char *p_file) : archive (p_archive), file (p_file) {}
 
             inline bool operator== (const cached_content &other) const
-            { return pfc::stricmp_ascii (other.archive, archive) == 0 && pfc::stricmp_ascii (other.file, file) == 0; }
+            { return stricmp_utf8 (other.archive, archive) == 0 && stricmp_utf8 (other.file, file) == 0; }
         };
 
         struct cache_slot

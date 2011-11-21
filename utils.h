@@ -4,7 +4,7 @@
 namespace unpack_7z
 {
     //
-    // plugin configuration
+    // Plugin configuration
     namespace cfg
     {
         extern cfg_bool   debug_log;
@@ -70,6 +70,14 @@ namespace unpack_7z
         ~debug_log () { if (!is_empty() && cfg::debug_log) console::formatter () << "Debug("COMPONENT_NAME"):" << get_ptr (); }
     };
 
+    class operation_timer
+    {
+        pfc::string8_fast m_message;
+        DWORD m_start;
+    public:
+        operation_timer (const char *p_message) : m_message (p_message), m_start (GetTickCount ()) {}
+        ~operation_timer () { debug_log () << m_message << " took " << (t_int32)(GetTickCount () - m_start) << " ms\n"; }
+    };
 
     class tempmem_with_timestamp : public file
     {

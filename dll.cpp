@@ -83,10 +83,10 @@ namespace unpack_7z
                     DWORD value_size = 0, dummy = 0;
                     LONG res = RegQueryValueEx (key, TEXT ("Path"), nullptr, &dummy, nullptr, &value_size);
                     if (res == ERROR_SUCCESS || res == ERROR_MORE_DATA) {
-                        boost::scoped_array<TCHAR> tmp (new TCHAR[value_size + 1]);
-                        res = RegQueryValueEx (key, TEXT ("Path"), nullptr, &dummy, (LPBYTE)tmp.get (), &value_size);
+                        pfc::array_t<TCHAR> tmp; tmp.set_size (value_size + 1);
+                        res = RegQueryValueEx (key, TEXT ("Path"), nullptr, &dummy, (LPBYTE)tmp.get_ptr (), &value_size);
                         if (res == ERROR_SUCCESS)
-                            try_folder (pfc::stringcvt::string_ansi_from_wide (tmp.get ()));
+                            try_folder (pfc::stringcvt::string_ansi_from_wide (tmp.get_ptr ()));
                     }
 
                     RegCloseKey (key);

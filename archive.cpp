@@ -7,25 +7,20 @@ namespace unpack_7z
 {
     void archive::open (file_ptr const &p_file, abort_callback &p_abort)
     {
-        try {
-            CMyComPtr<IInArchive> archive_new (dll::create_archive_object ());
-            CMyComPtr<IInStream> stream_new (new file_streams::in (p_file, p_abort));
+        CMyComPtr<IInArchive> archive_new (dll::create_archive_object ());
+        CMyComPtr<IInStream> stream_new (new file_streams::in (p_file, p_abort));
 
-            if (archive_new->Open (stream_new, 0, NULL) != S_OK)
-                throw exception_arch_open ();
+        if (archive_new->Open (stream_new, 0, NULL) != S_OK)
+            throw exception_arch_open ();
 
-            close ();
+        close ();
 
-            m_archive = archive_new;
-            m_stream = stream_new;
+        m_archive = archive_new;
+        m_stream = stream_new;
 
-            m_timestamp = p_file->get_timestamp (p_abort);
-            m_path.reset ();
-            list_archive ();
-        }
-        catch (...) {
-            throw;
-        }
+        m_timestamp = p_file->get_timestamp (p_abort);
+        m_path.reset ();
+        list_archive ();
     }
 
     void archive::open (const char *p_archive, abort_callback &p_abort)
