@@ -20,13 +20,12 @@
 #include "Common/StringConvert.h"
 
 // boost includes
-//#include "boost/smart_ptr/scoped_array.hpp"
 #include "boost/function.hpp"
 
 // plugin includes
 #include "resource.h"
 #include "utils.h"
 #include "archive.h"
-#include "disk_cache.h"
+#include "cache_system.h"
 
 #define _7Z_EXT "7z"

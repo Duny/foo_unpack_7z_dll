@@ -48,9 +48,6 @@
     <ClCompile Include="archive.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="disk_cache.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="preferences.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -61,6 +58,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="archive_impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cache_system.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,13 +80,13 @@
     <ClInclude Include="archive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="disk_cache.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dll.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cache_system.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

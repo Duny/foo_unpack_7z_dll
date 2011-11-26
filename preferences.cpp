@@ -46,7 +46,7 @@ namespace unpack_7z
                 // attach windows to members
                 m_disc_cache_size.Attach (GetDlgItem (IDC_SPIN_CACHE_SIZE));
                 m_disc_cache_size.SetBuddy (GetDlgItem (IDC_EDIT_SPIN_CTRL_BUDDY));
-                m_disc_cache_size.SetRange32 (0, unpack_7z::disk_cache::max_cache_size);
+                m_disc_cache_size.SetRange32 (0, unpack_7z::cache_system::cache_max_files);
 
                 // initialize controls
                 uButton_SetCheck (*this, IDC_CHECK_DEBUG_LOG, cfg::debug_log);

@@ -26,7 +26,8 @@ namespace unpack_7z
             check_is_our_type (p_archive);
             operation_timer timer (pfc::string_formatter () << "open_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")");
 
-            disk_cache::fetch_or_unpack (p_archive, p_file, p_out, p_abort);
+            //disk_cache::fetch_or_unpack (p_archive, p_file, p_out, p_abort);
+            static_api_ptr_t<cache_system>()->extract (p_out, p_archive, p_file, p_abort);
         }
 
         void archive_list (const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) override
@@ -44,7 +45,8 @@ namespace unpack_7z
 
                 file_ptr temp;
                 if (p_want_readers)
-                    disk_cache::fetch_or_unpack (archive, p_file, temp, p_out);
+                    static_api_ptr_t<cache_system>()->extract (temp, p_archive, p_file, p_out);
+                    //disk_cache::fetch_or_unpack (archive, p_file, temp, p_out);
 
                 return p_out.on_entry (this, m_url, p_stats, temp);
             });
