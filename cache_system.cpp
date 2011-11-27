@@ -230,6 +230,7 @@ namespace unpack_7z
                 }
 
                 auto index = info.find_item (archive::file_info (p_file));
+                if (index == pfc_infinite) throw exception_arch_file_not_found ();
                 extract_internal (p_out, arch, info, index, p_abort);
             }
         }
@@ -248,7 +249,6 @@ namespace unpack_7z
             // optimization for multiple listing of the same archive
             if (!p_want_readers) {
                 m_archive_info_cache.archive_list_fast (owner, p_archive, p_out);
-                debug_log () << "archive_list (" << p_archive << ") fast cache hit";
                 return;
             }
             else {
@@ -265,7 +265,6 @@ namespace unpack_7z
 
                 for (t_size i = 0, max = info.get_size (); i < max; i++) {
                     file_ptr temp;
-                    //extract (temp, p_archive, info[i].m_file_path, p_out);
                     extract_internal (temp, arch, info, i, p_out);
                     if (!p_out.on_entry (owner, info[i].m_unpack_path, info[i].m_stats, temp))
                         return;
