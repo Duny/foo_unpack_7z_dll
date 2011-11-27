@@ -21,6 +21,7 @@
 
 // plugin includes
 #include "resource.h"
+#include "PerfTimer.h"
 #include "utils.h"
 #include "archive.h"
 #include "cache_system.h"
