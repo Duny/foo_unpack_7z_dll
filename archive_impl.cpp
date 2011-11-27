@@ -17,7 +17,6 @@ namespace unpack_7z
         {
             check_is_our_type (p_archive);
             operation_timer timer (pfc::string_formatter () << "get_stats_in_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")");
-
             return static_api_ptr_t<cache_system>()->get_stats (p_archive, p_file, p_abort);
         }
 
@@ -25,7 +24,6 @@ namespace unpack_7z
         {
             check_is_our_type (p_archive);
             operation_timer timer (pfc::string_formatter () << "open_archive(" << pfc::string_filename_ext (p_archive) << ", " << p_file << ")");
-
             static_api_ptr_t<cache_system>()->extract (p_out, p_archive, p_file, p_abort);
         }
 
@@ -33,7 +31,6 @@ namespace unpack_7z
         {
             check_is_our_type (p_archive);
             operation_timer timer (pfc::string_formatter () << "archive_list(" << pfc::string_filename_ext (p_archive));
-
             static_api_ptr_t<cache_system>()->archive_list (this, p_archive, p_reader, p_out, p_want_readers);
         }
     };

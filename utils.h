@@ -76,16 +76,16 @@ namespace unpack_7z
         CPerfTimer m_timer;
     public:
         operation_timer (const char *p_message) : m_message (p_message), m_timer (TRUE) {}
-        ~operation_timer () { debug_log () << m_message << " took " << (int)m_timer.Elapsedus () << " microseconds\n"; }
+        ~operation_timer () { m_timer.Stop (); debug_log () << m_message << " took " << (int)m_timer.Elapsedus () << " microseconds\n"; }
     };
 
     class tempmem_with_timestamp : public file
     {
         file_ptr m_file_mem;
-        t_filetimestamp m_timestamp;
+        t_filestats m_stats;
 
     public:
-        tempmem_with_timestamp (const t_filetimestamp &timestamp) : m_timestamp (timestamp)
+        tempmem_with_timestamp (const t_filestats &stats) : m_stats (stats)
         { filesystem::g_open_tempmem (m_file_mem, abort_callback_dummy ()); }
 
         t_size read (void *p_buffer, t_size p_bytes, abort_callback &p_abort) override 
@@ -94,16 +94,16 @@ namespace unpack_7z
         { m_file_mem->write (p_buffer, p_bytes, p_abort); }
 
         t_filesize get_size (abort_callback &p_abort) override 
-        { return m_file_mem->get_size (p_abort); }
+        { return m_stats.m_size; }
         t_filesize get_position (abort_callback &p_abort) override 
         { return m_file_mem->get_position (p_abort); }
         void resize (t_filesize p_size, abort_callback &p_abort) override 
-        { m_file_mem->resize (p_size, p_abort); }
+        { m_file_mem->resize (p_size, p_abort); m_stats.m_size = p_size; }
         void seek (t_filesize p_position, abort_callback &p_abort) override 
         { m_file_mem->seek (p_position, p_abort); }
 
         void on_idle (abort_callback &) override {}
-        t_filetimestamp get_timestamp (abort_callback &) override { return m_timestamp; }
+        t_filetimestamp get_timestamp (abort_callback &) override { return m_stats.m_timestamp; }
         void reopen (abort_callback &p_abort) override { m_file_mem->reopen (p_abort); }
 
         bool is_in_memory () override { return true; }
