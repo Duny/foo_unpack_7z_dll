@@ -5,7 +5,7 @@
 
 namespace unpack_7z
 {
-    void archive::open (file_ptr const &p_file, abort_callback &p_abort)
+    void archive::open (file_ptr const &p_file, abort_callback &p_abort, bool read_file_list)
     {
         CMyComPtr<IInArchive> archive_new (dll::create_archive_object ());
         CMyComPtr<IInStream> stream_new (new file_streams::in (p_file, p_abort));
@@ -19,16 +19,16 @@ namespace unpack_7z
         m_stream = stream_new;
 
         m_timestamp = p_file->get_timestamp (p_abort);
-        m_path.reset ();
-        list_archive ();
+        if (read_file_list)
+            get_file_list ();
     }
 
-    void archive::open (const char *p_archive, abort_callback &p_abort)
+    void archive::open (const char *p_archive, abort_callback &p_abort, bool read_file_list)
     {
 	    file_ptr file;
 
 	    filesystem::g_open (file, p_archive, filesystem::open_mode_read, p_abort);
-	    open (file, p_abort);
+	    open (file, p_abort, read_file_list);
         m_path = p_archive;
     }
 
@@ -42,21 +42,17 @@ namespace unpack_7z
             m_archive.Release ();
         } 
 		
-	    m_items.clear ();
+	    m_items.remove_all ();
 	    m_timestamp = filetimestamp_invalid;
         m_path.reset ();
     }
 
-    const t_filestats& archive::get_stats (const char *p_file) const
+    /*const t_filestats& archive::get_stats (const char *p_file) const
     {
-	    auto pos = std::find_if (m_items.begin (), m_items.end (), [p_file] (const file_in_archive &p_item) { return pfc::stricmp_ascii (p_item.m_path, p_file) == 0; });
-	    if (pos != m_items.end ())
-		    return (*pos).m_stats;
-	    else
-		    throw exception_arch_file_not_found ();
-    }
+	    
+    }*/
 
-    void archive::extract_file (t_size i, const file_ptr &p_out, abort_callback &p_abort) const
+    void archive::extract_file (const file_ptr &p_out, t_size i, abort_callback &p_abort) const
     {
         CMyComPtr<IArchiveExtractCallback> archive_extract_callback (new extract_callback (p_out, p_abort));
 	
@@ -67,38 +63,38 @@ namespace unpack_7z
         p_out->seek (0, p_abort);
     }
 
-    void archive::extract_file (const char *p_file, const file_ptr &p_out, abort_callback &p_abort) const
+    void archive::extract_file (const file_ptr &p_out, const char *p_file, abort_callback &p_abort) const
     {
-        auto begin = m_items.begin (), end = m_items.end ();
-        auto pos = std::find_if (begin, end, [p_file] (const file_in_archive &p_item) { return pfc::stricmp_ascii (p_item.m_path, p_file) == 0; });
-        if (pos != end)
-            extract_file (pos - begin, p_out, p_abort);
+        auto n = m_items.find_item (file_info (p_file));
+        if (n != pfc_infinite)
+            extract_file (p_out, n, p_abort);
         else
             throw exception_arch_file_not_found ();
     }
 
-    void archive::list_archive ()
+    // m_items must be clear before calling this
+    void archive::get_file_list ()
     {
         UInt32 num_items = 0;
 	    if (m_archive->GetNumberOfItems (&num_items) != S_OK)
 		    throw exception_arch_num_items_error ();
 
-        m_items.reserve (num_items);
-
-	    file_in_archive file_desc;
+	    file_info file_desc;
 	    NWindows::NCOM::CPropVariant prop;
 
-        for (UInt32 i = 0; i < num_items; i++) {
-            m_archive->GetProperty (i, kpidPath, &prop);
+        while (num_items --> 0) {
+            m_archive->GetProperty (num_items, kpidPath, &prop);
             if (prop.vt != VT_BSTR) continue;
-		    file_desc.m_path = pfc::stringcvt::string_utf8_from_os (ConvertPropVariantToString (prop));
+		    file_desc.m_file_path = pfc::stringcvt::string_utf8_from_os (ConvertPropVariantToString (prop));
 
-            m_archive->GetProperty (i, kpidSize, &prop);
+            m_archive->GetProperty (num_items, kpidSize, &prop);
             if (prop.vt != VT_UI8) continue;
             file_desc.m_stats.m_size = ConvertPropVariantToUInt64 (prop);
 		    file_desc.m_stats.m_timestamp = m_timestamp;
 
-            m_items.push_back (file_desc);
+            archive_impl::g_make_unpack_path (file_desc.m_unpack_path, m_path, file_desc.m_file_path, _7Z_EXT);
+
+            m_items.add_item (file_desc);
         }
     }
 }

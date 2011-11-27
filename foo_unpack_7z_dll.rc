@@ -37,7 +37,7 @@ BEGIN
     GROUPBOX        "7z.dll location",IDC_STATIC,1,35,330,58
     CONTROL         "&Enable debug log",IDC_CHECK_DEBUG_LOG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,257,273,70,10
     ICON            IDI_7ZIP_LOGO,IDC_STATIC,7,4,20,20
-    GROUPBOX        "Extracted files cache",IDC_STATIC,1,100,330,92
+    GROUPBOX        "File cache",IDC_STATIC,1,100,330,92
     EDITTEXT        IDC_EDIT_SPIN_CTRL_BUDDY,260,110,47,13,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "",IDC_SPIN_CACHE_SIZE,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_HOTTRACK,309,110,11,14
     LTEXT           "&Number of cache items (0 to disable caching):",IDC_STATIC,12,112,156,8

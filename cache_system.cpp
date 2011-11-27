@@ -2,6 +2,87 @@
 
 namespace unpack_7z
 {
+    class archive_info_cache
+    {
+        struct cache_entry
+        {
+            pfc::string8 m_archive;
+            pfc::list_t<archive::file_info> m_items;
+
+            cache_entry () {}
+            // constructor used for entry compare when searching by the list_t::find () function
+            cache_entry (const char *p_archive) : m_archive (p_archive) {} 
+
+            inline void set (const char *p_archive, const pfc::list_base_const_t<archive::file_info> &p_infos)
+            {
+                m_archive = p_archive;
+                m_items = p_infos;
+            }
+
+            inline bool operator== (const cache_entry &other) const
+            { return stricmp_utf8 (other.m_archive, m_archive) == 0; }
+        };
+
+        // must be called under insync (m_lock);
+        inline t_size add_entry (const char *p_archive, const pfc::list_base_const_t<archive::file_info> &p_infos)
+        {
+            m_data[m_next_entry].set (p_archive, p_infos);
+            auto ret = m_next_entry;
+            m_next_entry = (m_next_entry + 1) % m_cache_size;
+            return ret;
+        }
+
+        pfc::list_t<cache_entry> m_data;
+        mutable critical_section m_lock;
+        t_size m_next_entry, m_cache_size;
+    public:
+
+        archive_info_cache (t_size p_cache_size) : m_cache_size (p_cache_size) { m_data.set_size (p_cache_size); }
+
+        t_filestats get_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
+        {
+            insync (m_lock);
+            auto n = m_data.find_item (cache_entry (p_archive));
+            if (n == pfc_infinite)
+                n = add_entry (p_archive, unpack_7z::archive(p_archive, p_abort).get_info ());
+
+            auto m = m_data[n].m_items.find_item (archive::file_info (p_file));
+            if (m != pfc_infinite)
+                return m_data[n].m_items[m].m_stats;
+            else
+                throw exception_arch_file_not_found ();
+        }
+
+        inline bool get_info (const char *p_archive, pfc::list_base_t<archive::file_info> &p_out)
+        {
+            insync (m_lock);
+            auto n = m_data.find_item (cache_entry (p_archive));
+            if (n != pfc_infinite)
+                p_out = m_data[n].m_items;
+            return n != pfc_infinite;
+        }
+
+        inline void add_info (const unpack_7z::archive &p_archive)
+        {
+            insync (m_lock);
+            add_entry (p_archive.get_path (), p_archive.get_info ());
+        }
+
+        inline void archive_list_fast (foobar2000_io::archive *owner, const char *p_archive, archive_callback &p_out)
+        {
+            insync (m_lock);
+                
+            auto n = m_data.find_item (cache_entry (p_archive));
+            if (n == pfc_infinite)
+                n = add_entry (p_archive, unpack_7z::archive (p_archive, p_out).get_info ());
+
+            file_ptr dummy;
+            for (t_size i = 0, max = m_data[n].m_items.get_size (); i < max; i++)
+                if (!p_out.on_entry (owner, m_data[n].m_items[i].m_unpack_path, m_data[n].m_items[i].m_stats, dummy))
+                    break;
+        }
+    };
+
     class file_cache
     {
         // information about location of file being cached
@@ -12,6 +93,7 @@ namespace unpack_7z
             t_filetimestamp m_timestamp;
 
             archive_file_info () {}
+            // constructor used for entry compare when searching by the list_t::find () function
             archive_file_info (const char *p_archive, const char *p_file) : m_archive (p_archive), m_file (p_file) {}
 
             inline void set (const char *p_archive, const char *p_file, t_filetimestamp p_timestamp)
@@ -93,11 +175,7 @@ namespace unpack_7z
 
                 // do not store the same file twice
                 if (m_data.find_item (archive_file_info (p_archive, p_file)) == pfc_infinite) {
-                    auto entry_index = m_next_entry % cfg::cache_size;
-                    cache_entry &entry = m_data[entry_index];
-
-                    m_next_entry = (m_next_entry + 1) % cfg::cache_size;
-
+                    cache_entry &entry = m_data[m_next_entry];
                     try {
                         if (!entry.is_valid ()) // initialize entry on demand
                             entry.init (p_file, p_abort);
@@ -110,6 +188,7 @@ namespace unpack_7z
                         error_log () << "disk cache store exception:" << e.what ();
                         entry.free ();
                     }
+                    m_next_entry = (m_next_entry + 1) % cfg::cache_size;
                 }
             }
         }
@@ -129,7 +208,7 @@ namespace unpack_7z
         {
             if (!fetch (p_out, p_archive.get_path (), p_file, p_abort)) {
                 p_out = new file_tempmem (p_archive.get_stats (p_file).m_timestamp);
-                p_archive.extract_file (p_file, p_out, p_abort);
+                p_archive.extract_file (p_out, p_file, p_abort);
                 store (p_out, p_archive.get_path (), p_file, p_abort);
             }
         }
@@ -139,14 +218,56 @@ namespace unpack_7z
     class cache_system_impl : public cache_system
     {
         // member variables
-        file_cache m_file_cache;
+        file_cache         m_file_cache;
+        archive_info_cache m_archive_info_cache;
 
 
         // cache_system overrides
+        t_filestats get_stats (const char *p_archive, const char *p_file, abort_callback &p_abort) override
+        {
+            return m_archive_info_cache.get_stats (p_archive, p_file, p_abort);
+        }
+        
         void extract (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
             m_file_cache.fetch_or_unpack (p_out, p_archive, p_file, p_abort);
         }
+
+        void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) override
+        {
+            // optimization for multiple listing of the same archive
+            if (!p_want_readers) {
+                m_archive_info_cache.archive_list_fast (owner, p_archive, p_out);
+                debug_log () << "archive_list (" << p_archive << ") fast cache hit";
+                return;
+            }
+            else {
+                pfc::list_t<archive::file_info> info;
+                bool info_avaliable = m_archive_info_cache.get_info (p_archive, info);
+                if (info_avaliable)
+                    debug_log () << "archive_list (" << p_archive << ") cache hit";
+
+                unpack_7z::archive arch;
+                p_reader.is_empty () ? arch.open (p_archive, p_out, !info_avaliable) : arch.open (p_reader, p_out, !info_avaliable);
+
+                if (!info_avaliable) {
+                    info = arch.get_info ();
+                    m_archive_info_cache.add_info (arch);
+                }
+
+                for (t_size i = 0, max = info.get_size (); i < max; i++) {
+                    file_ptr temp;
+                    extract (temp, p_archive, info[i].m_file_path, p_out);
+                    if (!p_out.on_entry (owner, info[i].m_unpack_path, info[i].m_stats, temp))
+                        return;
+                }
+            }
+        }
+    public:
+
+        enum { archive_info_cache_size = 20 };
+
+        cache_system_impl () : m_archive_info_cache (archive_info_cache_size) {}
     };
 
     namespace { service_factory_single_t<cache_system_impl> g_factory; }

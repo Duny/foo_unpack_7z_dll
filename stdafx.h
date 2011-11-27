@@ -3,10 +3,6 @@
 #define COMPONENT_NAME "foo_unpack_7z_dll"
 
 
-// crt includes
-#include <vector>
-#include <algorithm>
-
 // foobar2000 includes
 #include "foobar2000/ATLHelpers/ATLHelpers.h"
 
@@ -21,6 +17,7 @@
 
 // boost includes
 #include "boost/function.hpp"
+#include <boost/utility.hpp>
 
 // plugin includes
 #include "resource.h"

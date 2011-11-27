@@ -10,50 +10,61 @@ namespace unpack_7z
     PFC_DECLARE_EXCEPTION (exception_arch_file_not_found, exception_arch_7z, COMPONENT_NAME ": file not found in archive");
     PFC_DECLARE_EXCEPTION (exception_arch_num_items_error, exception_arch_7z, COMPONENT_NAME ": couldn't get number of items in the archive");
 
-    class archive
+    class archive : boost::noncopyable
     {
     public:
 	    archive () {}
-	    archive (const char *p_archive, abort_callback &p_abort) { open (p_archive, p_abort); }
+	    archive (const char *p_archive, abort_callback &p_abort, bool read_file_list = true) { open (p_archive, p_abort, read_file_list); }
 	    ~archive () { close (); }
 
-        void open (const file_ptr &p_file, abort_callback &p_abort);
-	    void open (const char *p_file, abort_callback &p_abort);
+        void open (const file_ptr &p_file, abort_callback &p_abort, bool read_file_list = true);
+	    void open (const char *p_file, abort_callback &p_abort, bool read_file_list = true);
         void close ();
 
-        const pfc::string8& get_path () const { return m_path; }
+        inline const pfc::string_base & get_path () const { return m_path; }
 
-	    const t_filestats& get_stats (const char *p_file) const;
 
-        typedef const boost::function<bool (const pfc::string_base &p_file_name, const t_filestats &p_file_stats)> archive_list_callback_t;
-	    inline void list (archive_list_callback_t &p_func) const
+        struct file_info
         {
-            for (t_size n = m_items.size (), i = 0; i < n; i++)
-                if (!p_func (m_items[i].m_path, m_items[i].m_stats))
-                    return;
+            pfc::string8 m_file_path, m_unpack_path;
+            t_filestats  m_stats;
+
+            file_info () {}
+            // constructor used for compare when searching by the list_t::find () function
+            file_info (const char *p_path) : m_file_path (p_path) {}
+
+            inline bool operator== (const file_info &other) const { return stricmp_utf8 (other.m_file_path, m_file_path) == 0; }
+        };
+
+
+	    inline const t_filestats & get_stats (const char *p_file) const
+        {
+            auto n = m_items.find_item (file_info (p_file));
+            if (n != pfc_infinite)
+                return m_items[n].m_stats;
+            else
+                throw exception_arch_file_not_found ();
         }
 
-	    void extract_file (const char *p_file, const file_ptr &p_out, abort_callback &p_abort) const;
+        inline const pfc::list_base_const_t<archive::file_info> & get_info () const { return m_items; }
 
+	    void extract_file (const file_ptr &p_out, const char *p_file, abort_callback &p_abort) const;
+        
     private:
-	    archive (const archive &);
-	    archive& operator= (const archive &);
-
-        void extract_file (t_size i, const file_ptr &p_out, abort_callback &p_abort) const;
-        void list_archive ();
+        void extract_file (const file_ptr &p_out, t_size i, abort_callback &p_abort) const;
+        void get_file_list ();
 
         CMyComPtr<IInStream> m_stream;
 	    CMyComPtr<IInArchive> m_archive;
 
-        pfc::string8 m_path;
-	    t_filetimestamp m_timestamp; // timestamp of archive itself
+        pfc::string8 m_path; // archive path
 
-        struct file_in_archive
-        {
-            t_filestats  m_stats;
-            pfc::string8 m_path;
-        };
-	    std::vector<file_in_archive> m_items;
+        // for some reasons foobar uses timestamp of archive itself instead of timestamps of files from archive
+        // each extracted file must have timestamp of m_timestamp
+	    t_filetimestamp m_timestamp; // archive timestamp
+
+        // archive files 
+	    pfc::list_t<file_info> m_items;
     };
 }
 #endif
