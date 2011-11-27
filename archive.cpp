@@ -5,7 +5,7 @@
 
 namespace unpack_7z
 {
-    void archive::open (file_ptr const &p_file, abort_callback &p_abort, bool read_file_list)
+    void archive::open (const char *p_archive, file_ptr const &p_file, abort_callback &p_abort, bool read_file_list)
     {
         CMyComPtr<IInArchive> archive_new (dll::create_archive_object ());
         CMyComPtr<IInStream> stream_new (new file_streams::in (p_file, p_abort));
@@ -17,6 +17,7 @@ namespace unpack_7z
 
         m_archive = archive_new;
         m_stream = stream_new;
+        m_path = p_archive;
 
         m_timestamp = p_file->get_timestamp (p_abort);
         if (read_file_list)
@@ -28,8 +29,7 @@ namespace unpack_7z
 	    file_ptr file;
 
 	    filesystem::g_open (file, p_archive, filesystem::open_mode_read, p_abort);
-	    open (file, p_abort, read_file_list);
-        m_path = p_archive;
+	    open (p_archive, file, p_abort, read_file_list);
     }
 
     void archive::close ()
@@ -79,22 +79,23 @@ namespace unpack_7z
 	    if (m_archive->GetNumberOfItems (&num_items) != S_OK)
 		    throw exception_arch_num_items_error ();
 
-	    file_info file_desc;
+	    file_info dummy;
 	    NWindows::NCOM::CPropVariant prop;
 
+        m_items.set_size (num_items);
         while (num_items --> 0) {
             m_archive->GetProperty (num_items, kpidPath, &prop);
             if (prop.vt != VT_BSTR) continue;
-		    file_desc.m_file_path = pfc::stringcvt::string_utf8_from_os (ConvertPropVariantToString (prop));
+		    dummy.m_file_path = pfc::stringcvt::string_utf8_from_os (ConvertPropVariantToString (prop));
 
             m_archive->GetProperty (num_items, kpidSize, &prop);
             if (prop.vt != VT_UI8) continue;
-            file_desc.m_stats.m_size = ConvertPropVariantToUInt64 (prop);
-		    file_desc.m_stats.m_timestamp = m_timestamp;
+            dummy.m_stats.m_size = ConvertPropVariantToUInt64 (prop);
+		    dummy.m_stats.m_timestamp = m_timestamp;
 
-            archive_impl::g_make_unpack_path (file_desc.m_unpack_path, m_path, file_desc.m_file_path, _7Z_EXT);
+            archive_impl::g_make_unpack_path (dummy.m_unpack_path, m_path, dummy.m_file_path, _7Z_EXT);
 
-            m_items.add_item (file_desc);
+            m_items[num_items] = dummy;
         }
     }
 }

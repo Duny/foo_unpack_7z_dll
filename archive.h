@@ -17,8 +17,8 @@ namespace unpack_7z
 	    archive (const char *p_archive, abort_callback &p_abort, bool read_file_list = true) { open (p_archive, p_abort, read_file_list); }
 	    ~archive () { close (); }
 
-        void open (const file_ptr &p_file, abort_callback &p_abort, bool read_file_list = true);
-	    void open (const char *p_file, abort_callback &p_abort, bool read_file_list = true);
+        void open (const char *p_archive, const file_ptr &p_file, abort_callback &p_abort, bool read_file_list = true);
+	    void open (const char *p_archive, abort_callback &p_abort, bool read_file_list = true);
         void close ();
 
         inline const pfc::string_base & get_path () const { return m_path; }
@@ -36,22 +36,13 @@ namespace unpack_7z
             inline bool operator== (const file_info &other) const { return stricmp_utf8 (other.m_file_path, m_file_path) == 0; }
         };
 
+        inline const pfc::list_t<archive::file_info> & get_info () const { return m_items; }
 
-	    inline const t_filestats & get_stats (const char *p_file) const
-        {
-            auto n = m_items.find_item (file_info (p_file));
-            if (n != pfc_infinite)
-                return m_items[n].m_stats;
-            else
-                throw exception_arch_file_not_found ();
-        }
-
-        inline const pfc::list_base_const_t<archive::file_info> & get_info () const { return m_items; }
 
 	    void extract_file (const file_ptr &p_out, const char *p_file, abort_callback &p_abort) const;
-        
+        void extract_file (const file_ptr &p_out, t_size index, abort_callback &p_abort) const;
+
     private:
-        void extract_file (const file_ptr &p_out, t_size i, abort_callback &p_abort) const;
         void get_file_list ();
 
         CMyComPtr<IInStream> m_stream;
@@ -64,7 +55,7 @@ namespace unpack_7z
 	    t_filetimestamp m_timestamp; // archive timestamp
 
         // archive files 
-	    pfc::list_t<file_info> m_items;
+	    pfc::list_t<archive::file_info> m_items;
     };
 }
 #endif

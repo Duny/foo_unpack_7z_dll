@@ -20,10 +20,10 @@ namespace unpack_7z
             }
 
             inline bool operator== (const cache_entry &other) const
-            { return stricmp_utf8 (other.m_archive, m_archive) == 0; }
+            { return !other.m_archive.is_empty () && stricmp_utf8 (other.m_archive, m_archive) == 0; }
         };
 
-        // must be called under insync (m_lock);
+        // must be called insync (m_lock);
         inline t_size add_entry (const char *p_archive, const pfc::list_base_const_t<archive::file_info> &p_infos)
         {
             m_data[m_next_entry].set (p_archive, p_infos);
@@ -104,7 +104,7 @@ namespace unpack_7z
             }
 
             inline bool operator== (const archive_file_info &other) const
-            { return stricmp_utf8 (other.m_archive, m_archive) == 0 && stricmp_utf8 (other.m_file, m_file) == 0; }
+            { return !other.m_archive.is_empty () && stricmp_utf8 (other.m_archive, m_archive) == 0 && stricmp_utf8 (other.m_file, m_file) == 0; }
         };
 
         struct cache_entry
@@ -143,6 +143,13 @@ namespace unpack_7z
             inline bool operator== (const archive_file_info &other) const { return is_valid () && m_archive_file_info == other; }
         };
 
+
+        
+
+        mutable critical_section m_lock;
+        pfc::list_t<cache_entry> m_data;
+        t_size m_next_entry;
+    public:
 
         bool fetch (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) const
         {
@@ -192,26 +199,6 @@ namespace unpack_7z
                 }
             }
         }
-
-        mutable critical_section m_lock;
-        pfc::list_t<cache_entry> m_data;
-        t_size m_next_entry;
-    public:
-
-        inline void fetch_or_unpack (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort)
-        {
-            if (!fetch (p_out, p_archive, p_file, p_abort))
-                fetch_or_unpack (p_out, unpack_7z::archive (p_archive, p_abort), p_file, p_abort);
-        }
-
-        inline void fetch_or_unpack (file_ptr &p_out, const unpack_7z::archive &p_archive, const char *p_file, abort_callback &p_abort)
-        {
-            if (!fetch (p_out, p_archive.get_path (), p_file, p_abort)) {
-                p_out = new file_tempmem (p_archive.get_stats (p_file).m_timestamp);
-                p_archive.extract_file (p_out, p_file, p_abort);
-                store (p_out, p_archive.get_path (), p_file, p_abort);
-            }
-        }
     };
 
 
@@ -230,7 +217,30 @@ namespace unpack_7z
         
         void extract (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
-            m_file_cache.fetch_or_unpack (p_out, p_archive, p_file, p_abort);
+            if (!m_file_cache.fetch (p_out, p_archive, p_file, p_abort)) {
+                pfc::list_t<archive::file_info> info;
+                bool info_avaliable = m_archive_info_cache.get_info (p_archive, info);
+
+                unpack_7z::archive arch;
+                arch.open (p_archive, p_abort, !info_avaliable);
+
+                if (!info_avaliable) {
+                    info = arch.get_info ();
+                    m_archive_info_cache.add_info (arch);
+                }
+
+                auto index = info.find_item (archive::file_info (p_file));
+                extract_internal (p_out, arch, info, index, p_abort);
+            }
+        }
+
+        void extract_internal (file_ptr &p_out, const unpack_7z::archive &arch, const pfc::list_t<archive::file_info> &p_info, t_size index, abort_callback &p_abort)
+        {
+            if (!m_file_cache.fetch (p_out, arch.get_path (), p_info[index].m_file_path, p_abort)) {
+                p_out = new file_tempmem (p_info[index].m_stats.m_timestamp);
+                arch.extract_file (p_out, index, p_abort);
+                m_file_cache.store (p_out, arch.get_path (), p_info[index].m_file_path, p_abort);
+            }
         }
 
         void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) override
@@ -244,11 +254,9 @@ namespace unpack_7z
             else {
                 pfc::list_t<archive::file_info> info;
                 bool info_avaliable = m_archive_info_cache.get_info (p_archive, info);
-                if (info_avaliable)
-                    debug_log () << "archive_list (" << p_archive << ") cache hit";
-
+                
                 unpack_7z::archive arch;
-                p_reader.is_empty () ? arch.open (p_archive, p_out, !info_avaliable) : arch.open (p_reader, p_out, !info_avaliable);
+                p_reader.is_empty () ? arch.open (p_archive, p_out, !info_avaliable) : arch.open (p_archive, p_reader, p_out, !info_avaliable);
 
                 if (!info_avaliable) {
                     info = arch.get_info ();
@@ -257,7 +265,8 @@ namespace unpack_7z
 
                 for (t_size i = 0, max = info.get_size (); i < max; i++) {
                     file_ptr temp;
-                    extract (temp, p_archive, info[i].m_file_path, p_out);
+                    //extract (temp, p_archive, info[i].m_file_path, p_out);
+                    extract_internal (temp, arch, info, i, p_out);
                     if (!p_out.on_entry (owner, info[i].m_unpack_path, info[i].m_stats, temp))
                         return;
                 }
@@ -265,7 +274,7 @@ namespace unpack_7z
         }
     public:
 
-        enum { archive_info_cache_size = 20 };
+        enum { archive_info_cache_size = 50 };
 
         cache_system_impl () : m_archive_info_cache (archive_info_cache_size) {}
     };
