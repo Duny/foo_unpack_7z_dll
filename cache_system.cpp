@@ -26,15 +26,22 @@ namespace unpack_7z
         // must be called insync (m_lock);
         inline t_size add_entry (const char *p_archive, const pfc::list_t<archive::file_info> &p_infos)
         {
-            //m_data2.set (p_archive, p_infos);
             m_data[m_next_entry].set (p_archive, p_infos);
             auto ret = m_next_entry;
             m_next_entry = (m_next_entry + 1) % m_cache_size;
             return ret;
         }
 
+        inline const pfc::list_t<archive::file_info> &find_or_add_info (const char *p_archive, abort_callback &p_abort)
+        {
+            auto n = m_data.find_item (cache_entry (p_archive));
+            if (n == pfc_infinite)
+                n = add_entry (p_archive, unpack_7z::archive(p_archive, p_abort).get_info ());
+            return m_data[n].m_items;
+        }
+
         pfc::list_t<cache_entry> m_data;
-        mutable critical_section m_lock;
+        critical_section m_lock;
         t_size m_next_entry, m_cache_size;
     public:
 
@@ -43,15 +50,10 @@ namespace unpack_7z
         t_filestats get_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
             insync (m_lock);
-            auto n = m_data.find_item (cache_entry (p_archive));
-            if (n == pfc_infinite)
-                n = add_entry (p_archive, unpack_7z::archive(p_archive, p_abort).get_info ());
-
-            auto m = m_data[n].m_items.find_item (archive::file_info (p_file));
-            if (m != pfc_infinite)
-                return m_data[n].m_items[m].m_stats;
-            else
-                throw exception_arch_file_not_found ();
+            auto info = find_or_add_info (p_archive, p_abort);
+            auto m = info.find_item (archive::file_info (p_file));
+            if (m == pfc_infinite) throw exception_arch_file_not_found ();
+            return info[m].m_stats;    
         }
 
         inline bool get_info (const char *p_archive, pfc::list_base_t<archive::file_info> &p_out)
@@ -73,13 +75,11 @@ namespace unpack_7z
         {
             insync (m_lock);
                 
-            auto n = m_data.find_item (cache_entry (p_archive));
-            if (n == pfc_infinite)
-                n = add_entry (p_archive, unpack_7z::archive (p_archive, p_out).get_info ());
+            auto info = find_or_add_info (p_archive, p_out);
                 
             file_ptr dummy;
-            for (t_size i = 0, max = m_data[n].m_items.get_size (); i < max; i++)
-                if (!p_out.on_entry (owner, m_data[n].m_items[i].m_unpack_path, m_data[n].m_items[i].m_stats, dummy))
+            for (t_size i = 0, max = info.get_size (); i < max; i++)
+                if (!p_out.on_entry (owner, info[i].m_unpack_path, info[i].m_stats, dummy))
                     break;
         }
     };
@@ -144,7 +144,7 @@ namespace unpack_7z
             inline bool operator== (const archive_file_info &other) const { return is_valid () && m_archive_file_info == other; }
         };
 
-        mutable critical_section m_lock;
+        critical_section m_lock;
         pfc::list_t<cache_entry> m_data;
         t_size m_next_entry;
     public:
@@ -233,15 +233,6 @@ namespace unpack_7z
             }
         }
 
-        void extract_internal (file_ptr &p_out, const unpack_7z::archive &arch, const pfc::list_t<archive::file_info> &p_info, t_size index, abort_callback &p_abort)
-        {
-            if (!m_file_cache.fetch (p_out, arch.get_path (), p_info[index].m_file_path, p_abort)) {
-                p_out = new file_tempmem (p_info[index].m_stats);
-                arch.extract_file (p_out, index, p_abort);
-                m_file_cache.store (p_out, arch.get_path (), p_info[index].m_file_path, p_abort);
-            }
-        }
-
         void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) override
         {
             // optimization for multiple listing of the same archive
@@ -267,6 +258,16 @@ namespace unpack_7z
                     if (!p_out.on_entry (owner, info[i].m_unpack_path, info[i].m_stats, temp))
                         return;
                 }
+            }
+        }
+
+        // helpers
+        void extract_internal (file_ptr &p_out, const unpack_7z::archive &arch, const pfc::list_t<archive::file_info> &p_info, t_size index, abort_callback &p_abort)
+        {
+            if (!m_file_cache.fetch (p_out, arch.get_path (), p_info[index].m_file_path, p_abort)) {
+                p_out = new file_tempmem (p_info[index].m_stats);
+                arch.extract_file (p_out, index, p_abort);
+                m_file_cache.store (p_out, arch.get_path (), p_info[index].m_file_path, p_abort);
             }
         }
     public:
