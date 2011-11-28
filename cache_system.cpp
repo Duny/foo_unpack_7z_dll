@@ -26,6 +26,7 @@ namespace unpack_7z
         // must be called insync (m_lock);
         inline t_size add_entry (const char *p_archive, const pfc::list_t<archive::file_info> &p_infos)
         {
+            m_data2.set (p_archive, p_infos);
             m_data[m_next_entry].set (p_archive, p_infos);
             auto ret = m_next_entry;
             m_next_entry = (m_next_entry + 1) % m_cache_size;
@@ -41,7 +42,7 @@ namespace unpack_7z
         }
 
         pfc::list_t<cache_entry> m_data;
-        pfc::map_t<pfc::string8, pfc::list_t<archive::file_info>, pfc::comparatorCaseInsensitive> m_data2;
+        //pfc::map_t<pfc::string8, pfc::list_t<archive::file_info>, pfc::string::comparatorCaseInsensitive> m_data2;
         critical_section m_lock;
         t_size m_next_entry, m_cache_size;
     public:
