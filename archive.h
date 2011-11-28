@@ -52,7 +52,7 @@ namespace unpack_7z
 
         // for some reasons foobar uses timestamp of archive itself instead of timestamps of files from archive
         // each extracted file must have timestamp of m_timestamp
-	    t_filetimestamp m_timestamp; // archive timestamp
+	    t_filetimestamp m_timestamp;
 
         // archive files 
 	    pfc::list_t<archive::file_info> m_items;

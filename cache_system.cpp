@@ -41,6 +41,7 @@ namespace unpack_7z
         }
 
         pfc::list_t<cache_entry> m_data;
+        pfc::map_t<pfc::string8, pfc::list_t<archive::file_info>, pfc::comparatorCaseInsensitive> m_data2;
         critical_section m_lock;
         t_size m_next_entry, m_cache_size;
     public:

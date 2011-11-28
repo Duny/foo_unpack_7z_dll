@@ -123,7 +123,7 @@
     <ClCompile Include="cache_system.cpp" />
     <ClCompile Include="file_streams.cpp" />
     <ClCompile Include="foo_unpack_7z_dll.cpp" />
-    <ClCompile Include="PerfTimer.cpp" />
+    <ClCompile Include="perf_timer.cpp" />
     <ClCompile Include="preferences.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -141,7 +141,7 @@
     <ClInclude Include="cache_system.h" />
     <ClInclude Include="extract_callback.h" />
     <ClInclude Include="file_streams.h" />
-    <ClInclude Include="PerfTimer.h" />
+    <ClInclude Include="perf_timer.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="utils.h" />

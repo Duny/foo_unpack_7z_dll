@@ -47,11 +47,6 @@ namespace unpack_7z
         m_path.reset ();
     }
 
-    /*const t_filestats& archive::get_stats (const char *p_file) const
-    {
-	    
-    }*/
-
     void archive::extract_file (const file_ptr &p_out, t_size i, abort_callback &p_abort) const
     {
         CMyComPtr<IArchiveExtractCallback> archive_extract_callback (new extract_callback (p_out, p_abort));

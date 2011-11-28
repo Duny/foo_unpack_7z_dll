@@ -63,7 +63,7 @@
     <ClCompile Include="cache_system.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PerfTimer.cpp">
+    <ClCompile Include="perf_timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -92,7 +92,7 @@
     <ClInclude Include="cache_system.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PerfTimer.h">
+    <ClInclude Include="perf_timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
