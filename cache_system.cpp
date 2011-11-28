@@ -26,7 +26,9 @@ namespace unpack_7z
         // must be called insync (m_lock);
         inline t_size add_entry (const char *p_archive, const pfc::list_t<archive::file_info> &p_infos)
         {
-            m_data2.set (p_archive, p_infos);
+            stream_formatter_hasher_md5<> hasher;
+            hasher << p_archive;
+            m_data2.set (hasher.resultGuid (), p_infos);
             m_data[m_next_entry].set (p_archive, p_infos);
             auto ret = m_next_entry;
             m_next_entry = (m_next_entry + 1) % m_cache_size;
@@ -35,14 +37,18 @@ namespace unpack_7z
 
         inline const pfc::list_t<archive::file_info> &find_or_add_info (const char *p_archive, abort_callback &p_abort)
         {
-            auto n = m_data.find_item (cache_entry (p_archive));
+            /*auto n = m_data.find_item (cache_entry (p_archive));
             if (n == pfc_infinite)
                 n = add_entry (p_archive, unpack_7z::archive(p_archive, p_abort).get_info ());
-            return m_data[n].m_items;
+            return m_data[n].m_items;*/
+            pfc::string8_fast p_name = p_archive;
+            if (!m_data2.have_item (p_name))
+                m_data2.set (p_name, unpack_7z::archive (p_archive, p_abort).get_info ());
+            return m_data2.find (p_name)->m_value;
         }
 
         pfc::list_t<cache_entry> m_data;
-        //pfc::map_t<pfc::string8, pfc::list_t<archive::file_info>, pfc::string::comparatorCaseInsensitive> m_data2;
+        pfc::map_t<GUID, pfc::list_t<archive::file_info>/*, pfc::string::comparatorCaseInsensitive*/> m_data2;
         critical_section m_lock;
         t_size m_next_entry, m_cache_size;
     public:
