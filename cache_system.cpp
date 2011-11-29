@@ -24,35 +24,34 @@ namespace unpack_7z
         };
 
         // must be called insync (m_lock);
-        inline t_size add_entry (const char *p_archive, const pfc::list_t<archive::file_info> &p_infos)
+        inline void add_entry_internal (const char *p_archive, const pfc::list_t<archive::file_info> &p_infos)
         {
-            stream_formatter_hasher_md5<> hasher;
-            hasher << p_archive;
-            m_data2.set (hasher.resultGuid (), p_infos);
-            m_data[m_next_entry].set (p_archive, p_infos);
-            auto ret = m_next_entry;
-            m_next_entry = (m_next_entry + 1) % m_cache_size;
-            return ret;
+            if (m_data2.get_count () >= m_cache_size)
+                m_data2.remove (m_data2.first ());
+            m_data2.set (make_key (p_archive), p_infos);
         }
 
         inline const pfc::list_t<archive::file_info> &find_or_add_info (const char *p_archive, abort_callback &p_abort)
         {
-            /*auto n = m_data.find_item (cache_entry (p_archive));
-            if (n == pfc_infinite)
-                n = add_entry (p_archive, unpack_7z::archive(p_archive, p_abort).get_info ());
-            return m_data[n].m_items;*/
-            pfc::string8_fast p_name = p_archive;
-            if (!m_data2.have_item (p_name))
-                m_data2.set (p_name, unpack_7z::archive (p_archive, p_abort).get_info ());
-            return m_data2.find (p_name)->m_value;
+            GUID key = make_key (p_archive);
+            if (!m_data2.have_item (key))
+                m_data2.set (key, unpack_7z::archive (p_archive, p_abort).get_info ());
+            return m_data2.find (key)->m_value;
+        }
+
+        inline GUID make_key (const char *p_archive)
+        {
+            stream_formatter_hasher_md5<> hasher;
+            hasher.write_string (p_archive);
+            return hasher.resultGuid ();
         }
 
         pfc::list_t<cache_entry> m_data;
-        pfc::map_t<GUID, pfc::list_t<archive::file_info>/*, pfc::string::comparatorCaseInsensitive*/> m_data2;
+        pfc::map_t<GUID, pfc::list_t<archive::file_info>> m_data2;
         critical_section m_lock;
         t_size m_next_entry, m_cache_size;
-    public:
 
+    public:
         archive_info_cache (t_size p_cache_size) : m_cache_size (p_cache_size) { m_data.set_size (p_cache_size); }
 
         t_filestats get_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
@@ -73,22 +72,16 @@ namespace unpack_7z
             return n != pfc_infinite;
         }
 
-        inline void add_info (const unpack_7z::archive &p_archive)
+        inline void add_entry (const unpack_7z::archive &p_archive)
         {
             insync (m_lock);
-            add_entry (p_archive.get_path (), p_archive.get_info ());
+            add_entry_internal (p_archive.get_path (), p_archive.get_info ());
         }
 
-        inline void archive_list_fast (foobar2000_io::archive *owner, const char *p_archive, archive_callback &p_out)
+        inline void get_file_list (const char *p_archive, pfc::list_t<archive::file_info> &p_out, abort_callback &p_abort)
         {
             insync (m_lock);
-                
-            auto info = find_or_add_info (p_archive, p_out);
-                
-            file_ptr dummy;
-            for (t_size i = 0, max = info.get_size (); i < max; i++)
-                if (!p_out.on_entry (owner, info[i].m_unpack_path, info[i].m_stats, dummy))
-                    break;
+            p_out = find_or_add_info (p_archive, p_abort);
         }
     };
 
@@ -232,7 +225,7 @@ namespace unpack_7z
 
                 if (!info_avaliable) {
                     info = arch.get_info ();
-                    m_archive_info_cache.add_info (arch);
+                    m_archive_info_cache.add_entry (arch);
                 }
 
                 auto index = info.find_item (archive::file_info (p_file));
@@ -245,8 +238,13 @@ namespace unpack_7z
         {
             // optimization for multiple listing of the same archive
             if (!p_want_readers) {
-                m_archive_info_cache.archive_list_fast (owner, p_archive, p_out);
-                return;
+                pfc::list_t<archive::file_info> files;
+                m_archive_info_cache.get_file_list (p_archive, files, p_out);
+
+                file_ptr dummy;
+                for (t_size i = 0, max = files.get_size (); i < max; i++)
+                    if (!p_out.on_entry (owner, files[i].m_unpack_path, files[i].m_stats, dummy))
+                        break;
             }
             else {
                 pfc::list_t<archive::file_info> info;
@@ -257,7 +255,7 @@ namespace unpack_7z
 
                 if (!info_avaliable) {
                     info = arch.get_info ();
-                    m_archive_info_cache.add_info (arch);
+                    m_archive_info_cache.add_entry (arch);
                 }
 
                 for (t_size i = 0, max = info.get_size (); i < max; i++) {
