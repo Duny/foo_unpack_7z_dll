@@ -4,84 +4,65 @@ namespace unpack_7z
 {
     class archive_info_cache
     {
-        struct cache_entry
-        {
-            pfc::string8 m_archive;
-            pfc::list_t<archive::file_info> m_items;
-
-            cache_entry () {}
-            // constructor used for entry compare when searching by the list_t::find () function
-            cache_entry (const char *p_archive) : m_archive (p_archive) {} 
-
-            inline void set (const char *p_archive, const pfc::list_t<archive::file_info> &p_infos)
-            {
-                m_archive = p_archive;
-                m_items = p_infos;
-            }
-
-            inline bool operator== (const cache_entry &other) const
-            { return !other.m_archive.is_empty () && stricmp_utf8 (other.m_archive, m_archive) == 0; }
-        };
-
         // must be called insync (m_lock);
-        inline void add_entry_internal (const char *p_archive, const pfc::list_t<archive::file_info> &p_infos)
+        inline archive::file_list_cref add_entry (const GUID &key, archive::file_list_cref p_info)
         {
-            if (m_data2.get_count () >= m_cache_size)
-                m_data2.remove (m_data2.first ());
-            m_data2.set (make_key (p_archive), p_infos);
+            if (m_data_size + 1 > m_max_entries)
+                m_data.remove (m_data.first ()); // FIXME: use random item instead of first
+            m_data.set (key, p_info);
+            m_data_size++;
+            return p_info;
         }
 
-        inline const pfc::list_t<archive::file_info> &find_or_add_info (const char *p_archive, abort_callback &p_abort)
+        inline archive::file_list_cref find_or_add (const char *p_archive, abort_callback &p_abort)
         {
-            GUID key = make_key (p_archive);
-            if (!m_data2.have_item (key))
-                m_data2.set (key, unpack_7z::archive (p_archive, p_abort).get_info ());
-            return m_data2.find (key)->m_value;
+            if (m_data_size + 1 > m_max_entries)
+                m_data.remove (m_data.first ());
+
+            GUID_from_text_md5 key = string_lower (p_archive);
+            bool is_new;
+            archive::file_list & info = m_data.find_or_add_ex (static_cast<const GUID &>(key), is_new);
+            if (is_new) {
+                info = unpack_7z::archive (p_archive, p_abort).get_info ();
+                m_data_size++;
+            }
+            return info;
         }
 
-        inline GUID make_key (const char *p_archive)
-        {
-            stream_formatter_hasher_md5<> hasher;
-            hasher.write_string (p_archive);
-            return hasher.resultGuid ();
-        }
-
-        pfc::list_t<cache_entry> m_data;
-        pfc::map_t<GUID, pfc::list_t<archive::file_info>> m_data2;
-        critical_section m_lock;
-        t_size m_next_entry, m_cache_size;
+        // GUID is md5 of full canonical path to archive
+        pfc::map_t<GUID, archive::file_list> m_data;
+        t_size                               m_data_size;
+        critical_section m_lock; // synchronization for accessing m_data
+        const t_size     m_max_entries;
 
     public:
-        archive_info_cache (t_size p_cache_size) : m_cache_size (p_cache_size) { m_data.set_size (p_cache_size); }
+        archive_info_cache (t_size cache_size) : m_data_size (0), m_max_entries (cache_size) {}
 
-        t_filestats get_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
+        inline t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
             insync (m_lock);
-            auto info = find_or_add_info (p_archive, p_abort);
-            auto m = info.find_item (archive::file_info (p_file));
-            if (m == pfc_infinite) throw exception_arch_file_not_found ();
-            return info[m].m_stats;    
+            auto info = find_or_add (p_archive, p_abort);
+            auto n = info.find_item (p_file);
+            if (n == pfc_infinite) throw exception_arch_file_not_found ();
+            return info[n].m_stats;    
         }
 
-        inline bool get_info (const char *p_archive, pfc::list_base_t<archive::file_info> &p_out)
+        inline void get_file_list (const char *p_archive, archive::file_list &p_out, abort_callback &p_abort)
         {
             insync (m_lock);
-            auto n = m_data.find_item (cache_entry (p_archive));
-            if (n != pfc_infinite)
-                p_out = m_data[n].m_items;
-            return n != pfc_infinite;
+            p_out = find_or_add (p_archive, p_abort);
+        }
+
+        inline bool query_file_list (const char *p_archive, archive::file_list &p_out)
+        {
+            insync (m_lock);
+            return m_data.query (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive))), p_out);
         }
 
         inline void add_entry (const unpack_7z::archive &p_archive)
         {
             insync (m_lock);
-            add_entry_internal (p_archive.get_path (), p_archive.get_info ());
-        }
-
-        inline void get_file_list (const char *p_archive, pfc::list_t<archive::file_info> &p_out, abort_callback &p_abort)
-        {
-            insync (m_lock);
-            p_out = find_or_add_info (p_archive, p_abort);
+            add_entry (GUID_from_text_md5 (p_archive.get_path ()), p_archive.get_info ());
         }
     };
 
@@ -211,32 +192,32 @@ namespace unpack_7z
         // cache_system overrides
         t_filestats get_stats (const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
-            return m_archive_info_cache.get_stats (p_archive, p_file, p_abort);
+            return m_archive_info_cache.get_file_stats (p_archive, p_file, p_abort);
         }
         
         void extract (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
             if (!m_file_cache.fetch (p_out, p_archive, p_file, p_abort)) {
-                pfc::list_t<archive::file_info> info;
-                bool info_avaliable = m_archive_info_cache.get_info (p_archive, info);
+                archive::file_list files;
+                bool files_valid = m_archive_info_cache.query_file_list (p_archive, files);
 
-                unpack_7z::archive arch;
-                arch.open (p_archive, p_abort, !info_avaliable);
+                unpack_7z::archive a;
+                a.open (p_archive, p_abort, !files_valid);
 
-                if (!info_avaliable) {
-                    info = arch.get_info ();
-                    m_archive_info_cache.add_entry (arch);
+                if (!files_valid) {
+                    files = a.get_info ();
+                    m_archive_info_cache.add_entry (a);
                 }
 
-                auto index = info.find_item (archive::file_info (p_file));
+                auto index = files.find_item (p_file);
                 if (index == pfc_infinite) throw exception_arch_file_not_found ();
-                extract_internal (p_out, arch, info, index, p_abort);
+                extract_internal (p_out, a, files, index, p_abort);
             }
         }
 
         void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) override
         {
-            // optimization for multiple listing of the same archive
+            // optimization for multiple listings of the same archive
             if (!p_want_readers) {
                 pfc::list_t<archive::file_info> files;
                 m_archive_info_cache.get_file_list (p_archive, files, p_out);
@@ -247,38 +228,38 @@ namespace unpack_7z
                         break;
             }
             else {
-                pfc::list_t<archive::file_info> info;
-                bool info_avaliable = m_archive_info_cache.get_info (p_archive, info);
+                archive::file_list files;
+                bool files_valid = m_archive_info_cache.query_file_list (p_archive, files);
                 
-                unpack_7z::archive arch;
-                p_reader.is_empty () ? arch.open (p_archive, p_out, !info_avaliable) : arch.open (p_archive, p_reader, p_out, !info_avaliable);
+                unpack_7z::archive a;
+                p_reader.is_empty () ? a.open (p_archive, p_out, !files_valid) : a.open (p_archive, p_reader, p_out, !files_valid);
 
-                if (!info_avaliable) {
-                    info = arch.get_info ();
-                    m_archive_info_cache.add_entry (arch);
+                if (!files_valid) {
+                    files = a.get_info ();
+                    m_archive_info_cache.add_entry (a);
                 }
 
-                for (t_size i = 0, max = info.get_size (); i < max; i++) {
+                for (t_size i = 0, max = files.get_size (); i < max; i++) {
                     file_ptr temp;
-                    extract_internal (temp, arch, info, i, p_out);
-                    if (!p_out.on_entry (owner, info[i].m_unpack_path, info[i].m_stats, temp))
+                    extract_internal (temp, a, files, i, p_out);
+                    if (!p_out.on_entry (owner, files[i].m_unpack_path, files[i].m_stats, temp))
                         return;
                 }
             }
         }
 
         // helpers
-        void extract_internal (file_ptr &p_out, const unpack_7z::archive &arch, const pfc::list_t<archive::file_info> &p_info, t_size index, abort_callback &p_abort)
+        void extract_internal (file_ptr &p_out, const unpack_7z::archive &a, archive::file_list_cref p_info, t_size index, abort_callback &p_abort)
         {
-            if (!m_file_cache.fetch (p_out, arch.get_path (), p_info[index].m_file_path, p_abort)) {
+            if (!m_file_cache.fetch (p_out, a.get_path (), p_info[index].m_file_path, p_abort)) {
                 p_out = new file_tempmem (p_info[index].m_stats);
-                arch.extract_file (p_out, index, p_abort);
-                m_file_cache.store (p_out, arch.get_path (), p_info[index].m_file_path, p_abort);
+                a.extract_file (p_out, index, p_abort);
+                m_file_cache.store (p_out, a.get_path (), p_info[index].m_file_path, p_abort);
             }
         }
     public:
 
-        enum { archive_info_cache_size = 50 };
+        enum { archive_info_cache_size = 500 };
 
         cache_system_impl () : m_archive_info_cache (archive_info_cache_size) {}
     };

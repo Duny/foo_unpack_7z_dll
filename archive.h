@@ -21,7 +21,8 @@ namespace unpack_7z
 	    void open (const char *p_archive, abort_callback &p_abort, bool read_file_list = true);
         void close ();
 
-        inline const pfc::string_base & get_path () const { return m_path; }
+        //inline const pfc::string_base & get_path () const { return m_path; }
+        inline const char *get_path () const { return m_path.get_ptr (); }
 
 
         struct file_info
@@ -35,8 +36,10 @@ namespace unpack_7z
 
             inline bool operator== (const file_info &other) const { return stricmp_utf8 (other.m_file_path, m_file_path) == 0; }
         };
+        typedef pfc::list_t<archive::file_info> file_list;
+        typedef file_list const & file_list_cref;
 
-        inline const pfc::list_t<archive::file_info> & get_info () const { return m_items; }
+        inline file_list_cref get_info () const { return m_items; }
 
 
 	    void extract_file (const file_ptr &p_out, const char *p_file, abort_callback &p_abort) const;
@@ -55,7 +58,7 @@ namespace unpack_7z
 	    t_filetimestamp m_timestamp;
 
         // archive files 
-	    pfc::list_t<archive::file_info> m_items;
+	    file_list m_items;
     };
 }
 #endif

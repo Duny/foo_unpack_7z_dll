@@ -70,6 +70,7 @@ namespace unpack_7z
         ~debug_log () { if (!is_empty() && cfg::debug_log) console::formatter () << "Debug("COMPONENT_NAME"):" << get_ptr (); }
     };
 
+    // timer class
     class operation_timer
     {
         pfc::string8_fast m_message;
@@ -79,6 +80,24 @@ namespace unpack_7z
         ~operation_timer () { m_timer.Stop (); debug_log () << m_message << " took " << (int)m_timer.Elapsedus () << " microseconds\n"; }
     };
 
+    // helper for creating GUID from any text using md5
+    class GUID_from_text_md5 : public GUID
+	{
+	public:
+		GUID_from_text_md5 (const char * text)
+        {
+            stream_writer_hasher_md5 hasher_md5;
+            hasher_md5.write_string_raw (text, abort_callback_dummy ());
+            GUID g = hasher_md5.resultGuid ();
+            this->Data1 = g.Data1;
+            this->Data2 = g.Data2;
+            this->Data3 = g.Data3;
+            t_size n = 8;
+            while (n --> 0) this->Data4[n] = g.Data4[n];
+        }
+	};
+
+    // wrapper of memory file with custom timestamp
     class tempmem_with_timestamp : public file
     {
         file_ptr m_file_mem;
