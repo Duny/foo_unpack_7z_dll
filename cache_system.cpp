@@ -1,5 +1,15 @@
 #include "stdafx.h"
 
+FB2K_STREAM_READER_OVERLOAD(t_filestats) { return stream >> value.m_size >> value.m_timestamp; }
+FB2K_STREAM_WRITER_OVERLOAD(t_filestats) { return stream << value.m_size << value.m_timestamp; }
+
+FB2K_STREAM_READER_OVERLOAD(unpack_7z::archive::file_info) { return stream >> value.m_file_path >> value.m_unpack_path >> value.m_stats; }
+FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_info) { return stream << value.m_file_path << value.m_unpack_path << value.m_stats; }
+
+FB2K_STREAM_READER_OVERLOAD(unpack_7z::archive::file_list) { t_size n; stream >> n; unpack_7z::archive::file_info info; while (n --> 0) { stream >> info; value.add_item (info); } return stream; }
+FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_list) { auto n = value.get_size (); stream << n; for (t_size i = 0; i < n; i++) stream << value[i]; return stream; }
+
+
 namespace unpack_7z
 {
     class archive_info_cache
@@ -30,13 +40,16 @@ namespace unpack_7z
         }
 
         // GUID is md5 of full canonical path to archive
-        pfc::map_t<GUID, archive::file_list> m_data;
+        cfg_objMap<pfc::map_t<GUID, archive::file_list>> m_data;
         t_size                               m_data_size;
         critical_section m_lock; // synchronization for accessing m_data
         const t_size     m_max_entries;
 
     public:
-        archive_info_cache (t_size cache_size) : m_data_size (0), m_max_entries (cache_size) {}
+        archive_info_cache (t_size cache_size) : 
+            m_data (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid),
+            m_data_size (0), 
+            m_max_entries (cache_size) {}
 
         inline t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
@@ -261,7 +274,7 @@ namespace unpack_7z
 
         enum { archive_info_cache_size = 500 };
 
-        cache_system_impl () : m_archive_info_cache (archive_info_cache_size) {}
+        cache_system_impl () :  m_archive_info_cache (archive_info_cache_size) {}
     };
 
     namespace { service_factory_single_t<cache_system_impl> g_factory; }
