@@ -70,6 +70,8 @@ namespace unpack_7z
     // m_items must be clear before calling this
     void archive::get_file_list ()
     {
+        if (m_items.get_size ()) return; // do not read twice
+
         UInt32 num_items = 0;
 	    if (m_archive->GetNumberOfItems (&num_items) != S_OK)
 		    throw exception_arch_num_items_error ();

@@ -12,58 +12,64 @@ FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_list) { auto n = value.get_
 
 namespace unpack_7z
 {
-    class archive_info_cache
+    class archive_info_cache : public cfg_var
     {
-        // must be called insync (m_lock);
-        inline archive::file_list_cref add_entry (const GUID &key, archive::file_list_cref p_info)
+        struct entry_t
         {
-            if (m_data_size + 1 > m_max_entries)
-                m_data.remove (m_data.first ()); // FIXME: use random item instead of first
-            m_data.set (key, p_info);
-            m_data_size++;
-            return p_info;
+            t_filetimestamp    m_timestamp; // archive timestamp
+            archive::file_list m_files; // archive contents
+        };
+
+        // cfg_var overrites
+        void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) 
+        {
         }
 
-        inline archive::file_list_cref find_or_add (const char *p_archive, abort_callback &p_abort)
+	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort)
         {
-            if (m_data_size + 1 > m_max_entries)
-                m_data.remove (m_data.first ());
+	    }
 
-            GUID_from_text_md5 key = string_lower (p_archive);
+        inline entry_t & find_or_add (const char *p_archive, abort_callback &p_abort)
+        {
             bool is_new;
-            archive::file_list & info = m_data.find_or_add_ex (static_cast<const GUID &>(key), is_new);
+            entry_t & e = m_data.find_or_add_ex (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive))), is_new);
             if (is_new) {
-                info = unpack_7z::archive (p_archive, p_abort).get_info ();
+                if (m_data_size + 1 > m_max_entries)
+                    m_data.remove (m_data.first ());
+
+                unpack_7z::archive a (p_archive, p_abort);
+                e.m_files = a.get_info ();
+                e.m_timestamp = a.get_timestamp ();
                 m_data_size++;
             }
-            return info;
+            return e;
         }
 
         // GUID is md5 of full canonical path to archive
-        cfg_objMap<pfc::map_t<GUID, archive::file_list>> m_data;
-        t_size                               m_data_size;
-        critical_section m_lock; // synchronization for accessing m_data
-        const t_size     m_max_entries;
+        pfc::map_t<GUID, entry_t> m_data;
+        t_size                    m_data_size;
+        critical_section          m_lock; // synchronization for accessing m_data
+        const t_size              m_max_entries;
 
     public:
         archive_info_cache (t_size cache_size) : 
-            m_data (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid),
+            cfg_var (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid),
             m_data_size (0), 
             m_max_entries (cache_size) {}
 
         inline t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
             insync (m_lock);
-            auto info = find_or_add (p_archive, p_abort);
-            auto n = info.find_item (p_file);
+            entry_t &e = find_or_add (p_archive, p_abort);
+            auto n = e.m_files.find_item (p_file);
             if (n == pfc_infinite) throw exception_arch_file_not_found ();
-            return info[n].m_stats;    
+            return e.m_files[n].m_stats;    
         }
 
         inline void get_file_list (const char *p_archive, archive::file_list &p_out, abort_callback &p_abort)
         {
             insync (m_lock);
-            p_out = find_or_add (p_archive, p_abort);
+            p_out = find_or_add (p_archive, p_abort).m_files;
         }
 
         inline bool query_file_list (const char *p_archive, archive::file_list &p_out)
@@ -75,7 +81,14 @@ namespace unpack_7z
         inline void add_entry (const unpack_7z::archive &p_archive)
         {
             insync (m_lock);
-            add_entry (GUID_from_text_md5 (p_archive.get_path ()), p_archive.get_info ());
+            //if (m_data_size + 1 > m_max_entries)
+            //    m_data.remove (m_data.first ()); // FIXME: use random item instead of first
+
+            //bool is_new;
+            //entry_t & e = m_data.find_or_add_ex (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive.get_path ()))), is_new);
+            //e.m_files = p_archive.get_info ();
+            //e.m_timestamp = p_archive.get_timestamp ();
+            //if (is_new) m_data_size++;      
         }
     };
 

@@ -21,7 +21,7 @@ namespace unpack_7z
 	    void open (const char *p_archive, abort_callback &p_abort, bool read_file_list = true);
         void close ();
 
-        //inline const pfc::string_base & get_path () const { return m_path; }
+        inline t_filetimestamp get_timestamp () const { return m_timestamp; }
         inline const char *get_path () const { return m_path.get_ptr (); }
 
 
@@ -41,13 +41,12 @@ namespace unpack_7z
 
         inline file_list_cref get_info () const { return m_items; }
 
+        void get_file_list ();
 
 	    void extract_file (const file_ptr &p_out, const char *p_file, abort_callback &p_abort) const;
         void extract_file (const file_ptr &p_out, t_size index, abort_callback &p_abort) const;
 
     private:
-        void get_file_list ();
-
         CMyComPtr<IInStream> m_stream;
 	    CMyComPtr<IInArchive> m_archive;
 
