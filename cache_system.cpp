@@ -21,8 +21,8 @@ namespace unpack_7z
         void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // called on shutdown for storing to disk
         {
             stream_writer_formatter<> out (*p_stream, p_abort);
-            out << pfc::downcast_guarded<t_uint32>(m_data.get_count ());
-            auto max_items = max (cfg::archive_history_size, m_data_size); // check max data size and truncate if needed
+            auto max_items = min (cfg::archive_history_size, m_data_size); // check max data size and truncate if needed
+            out << max_items;
             for (pfc::map_t<GUID, entry_t>::const_iterator walk = m_data.first (); walk.is_valid () && max_items; ++walk, --max_items)
                 out << walk->m_key << walk->m_value.m_timestamp << walk->m_value.m_files;
         }
@@ -39,10 +39,11 @@ namespace unpack_7z
             }
 	    }
 
+        // helpers
         inline entry_t & find_or_add (const char *p_archive, abort_callback &p_abort)
         {
             bool is_new;
-            entry_t & e = m_data.find_or_add_ex (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive))), is_new);
+            entry_t & e = m_data.find_or_add_ex (key_from_string (p_archive), is_new);
             if (is_new) {
                 if (m_data_size + 1 > cfg::archive_history_size)
                     remove_random_item ();
@@ -57,16 +58,21 @@ namespace unpack_7z
 
         inline void remove_random_item ()
         {
-            t_uint32 n = __rdtsc () % m_data_size;
-            auto walk = m_data.first ();
-            while (n --> 0) walk++;
-            m_data.remove (walk);
-            m_data_size--;
+            if (m_data_size) {
+                auto n = ReadTimeStampCounter () % m_data_size; // choose witch item to remove
+                auto walk = m_data.first ();
+                while (n --> 0) walk++; // go to it logical position
+                m_data.remove (walk); // and delete it
+                m_data_size--;
+            }
         }
 
-        // GUID is md5 of full canonical path to archive
-        pfc::map_t<GUID, entry_t> m_data;
-        t_size                    m_data_size;
+        inline GUID key_from_string (const char *p_str) const { return GUID_from_text_md5 (string_lower (p_str)); }
+
+
+        // member variables
+        pfc::map_t<GUID, entry_t> m_data; // GUID is made of md5 from canonical path to archive
+        t_uint32                  m_data_size;
         critical_section          m_lock; // synchronization for accessing m_data
 
     public:
@@ -91,11 +97,9 @@ namespace unpack_7z
         {
             insync (m_lock);
             entry_t e;
-            if (m_data.query (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive))), e)) {
-                p_out = e.m_files;
-                return true;
-            }
-            return false;
+            bool res = m_data.query (key_from_string (p_archive), e);
+            if (res) p_out = e.m_files;
+            return res;
         }
 
         inline void add_entry (const unpack_7z::archive &p_archive)
@@ -103,7 +107,7 @@ namespace unpack_7z
             insync (m_lock);
 
             bool is_new;
-            entry_t & e = m_data.find_or_add_ex (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive.get_path ()))), is_new);
+            entry_t & e = m_data.find_or_add_ex (key_from_string (p_archive.get_path ()), is_new);
             e.m_files = p_archive.get_info ();
             e.m_timestamp = p_archive.get_timestamp ();
             if (is_new) {
