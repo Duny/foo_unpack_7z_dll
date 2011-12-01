@@ -21,7 +21,7 @@ namespace unpack_7z
         void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // called on shutdown for storing to disk
         {
             stream_writer_formatter<> out (*p_stream, p_abort);
-            auto max_items = min (cfg::archive_history_size, m_data_size); // check max data size and truncate if needed
+            auto max_items = min (cfg::archive_history_max, m_data_size); // check max data size and truncate if needed
             out << max_items;
             for (pfc::map_t<GUID, entry_t>::const_iterator walk = m_data.first (); walk.is_valid () && max_items; ++walk, --max_items)
                 out << walk->m_key << walk->m_value.m_timestamp << walk->m_value.m_files;
@@ -45,7 +45,7 @@ namespace unpack_7z
             bool is_new;
             entry_t & e = m_data.find_or_add_ex (key_from_string (p_archive), is_new);
             if (is_new) {
-                if (m_data_size + 1 > cfg::archive_history_size)
+                if (m_data_size + 1 > cfg::archive_history_max)
                     remove_random_item ();
                 
                 unpack_7z::archive a (p_archive, p_abort);
@@ -111,7 +111,7 @@ namespace unpack_7z
             e.m_files = p_archive.get_info ();
             e.m_timestamp = p_archive.get_timestamp ();
             if (is_new) {
-                if (m_data_size + 1 > cfg::archive_history_size)
+                if (m_data_size + 1 > cfg::archive_history_max)
                     remove_random_item ();
                 else
                     m_data_size++;

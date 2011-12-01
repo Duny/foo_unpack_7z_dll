@@ -4,6 +4,10 @@ namespace unpack_7z
 {
     namespace preferences
     {
+        const t_uint32 archive_history_sizes[] = { 0, 100, 500, 1000, 10000, 50000, 100000 };
+        const t_uint32 num_sizes = sizeof (archive_history_sizes) / sizeof (archive_history_sizes[0]);
+
+
         class page : public CDialogImpl<page>, public preferences_page_instance
         {
         public:
@@ -37,6 +41,7 @@ namespace unpack_7z
                 COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION, on_browse_for_cache_location)
 
                 COMMAND_HANDLER_SIMPLE (IDC_EDIT_SPIN_CTRL_BUDDY, EN_CHANGE, on_state_changed)
+                
             END_MSG_MAP ()
 
 
@@ -57,6 +62,8 @@ namespace unpack_7z
                 
                 m_disc_cache_size.SetPos32 (cfg::cache_size);
 
+                init_archive_history_sizes ();
+                
                 return FALSE;
             }
 
@@ -105,6 +112,18 @@ namespace unpack_7z
                 uButton_SetCheck (*this, custom ? IDC_RADIO_CACHE_LOCATION_CUSTOM : IDC_RADIO_CACHE_LOCATION_SYSTEM_TEMP, true);
                 uSetDlgItemText (*this, IDC_STATIC_CACHE_LOCATION, location);
                 GetDlgItem (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION).EnableWindow (custom);
+            }
+
+            inline void init_archive_history_sizes ()
+            {
+                uSendDlgItemMessage (IDC_COMBO_ARCHIVE_HISTORY_SIZE, CB_RESETCONTENT);
+                int selected = CB_ERR;
+                for (t_uint32 i = 0; i < num_sizes; i++) {
+                    uSendDlgItemMessageText (*this, IDC_COMBO_ARCHIVE_HISTORY_SIZE, CB_ADDSTRING, 0, pfc::toString (archive_history_sizes[i]).get_ptr ());
+                    if (archive_history_sizes[i] <= cfg::archive_history_max)
+                        selected = i;
+                }
+                uSendDlgItemMessage (IDC_COMBO_ARCHIVE_HISTORY_SIZE, CB_SETCURSEL, selected);
             }
 
             // member variables

@@ -16,7 +16,7 @@ namespace unpack_7z
         extern cfg_string cache_location;
         extern cfg_uint   cache_size; // max number of files to keep in cache folder
 
-        extern cfg_uint   archive_history_size; // max number of archive contents remembered
+        extern cfg_uint   archive_history_max; // max number of archives remembered
 
         namespace defaults 
         {
@@ -29,7 +29,7 @@ namespace unpack_7z
                 cache_location_custom = false,
                 cache_size = 5,
 
-                archive_history_size = 500
+                archive_history_max = 500
             };
         };
     }
