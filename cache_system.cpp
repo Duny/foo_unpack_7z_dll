@@ -20,13 +20,25 @@ namespace unpack_7z
             archive::file_list m_files; // archive contents
         };
 
-        // cfg_var overrites
+        // cfg_var overrides
         void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) 
         {
+            stream_writer_formatter<> out (*p_stream, p_abort);
+            out << pfc::downcast_guarded<t_uint32>(m_data.get_count ());
+            for (pfc::map_t<GUID, entry_t>::const_iterator walk = m_data.first (); walk.is_valid (); ++walk) {
+                out << walk->m_key << walk->m_value.m_timestamp << walk->m_value.m_files;
+            }
         }
 
 	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort)
         {
+            stream_reader_formatter<> in (*p_stream, p_abort);
+            t_uint32 count; in >> count;
+            while (count --> 0) {
+                GUID key; in >> key;
+                entry_t &e = m_data.find_or_add (key);
+                in >> e.m_timestamp >> e.m_files;
+            }
 	    }
 
         inline entry_t & find_or_add (const char *p_archive, abort_callback &p_abort)
@@ -34,6 +46,7 @@ namespace unpack_7z
             bool is_new;
             entry_t & e = m_data.find_or_add_ex (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive))), is_new);
             if (is_new) {
+                // FIXME!!!!!!!!!!!!!!
                 if (m_data_size + 1 > m_max_entries)
                     m_data.remove (m_data.first ());
 
@@ -75,20 +88,28 @@ namespace unpack_7z
         inline bool query_file_list (const char *p_archive, archive::file_list &p_out)
         {
             insync (m_lock);
-            return m_data.query (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive))), p_out);
+            entry_t e;
+            if (m_data.query (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive))), e)) {
+                p_out = e.m_files;
+                return true;
+            }
+            return false;
         }
 
         inline void add_entry (const unpack_7z::archive &p_archive)
         {
             insync (m_lock);
-            //if (m_data_size + 1 > m_max_entries)
-            //    m_data.remove (m_data.first ()); // FIXME: use random item instead of first
 
-            //bool is_new;
-            //entry_t & e = m_data.find_or_add_ex (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive.get_path ()))), is_new);
-            //e.m_files = p_archive.get_info ();
-            //e.m_timestamp = p_archive.get_timestamp ();
-            //if (is_new) m_data_size++;      
+            bool is_new;
+            entry_t & e = m_data.find_or_add_ex (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive.get_path ()))), is_new);
+            e.m_files = p_archive.get_info ();
+            e.m_timestamp = p_archive.get_timestamp ();
+            if (is_new) {
+                if (m_data_size + 1 > m_max_entries)
+                    m_data.remove (m_data.first ()); // FIXME: use random item instead of first
+                else
+                    m_data_size++;
+            }
         }
     };
 
