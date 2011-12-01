@@ -119,7 +119,6 @@
     <ClCompile Include="archive_impl.cpp" />
     <ClCompile Include="dll.cpp" />
     <ClCompile Include="archive.cpp" />
-    <ClCompile Include="config.cpp" />
     <ClCompile Include="cache_system.cpp" />
     <ClCompile Include="file_streams.cpp" />
     <ClCompile Include="foo_unpack_7z_dll.cpp" />

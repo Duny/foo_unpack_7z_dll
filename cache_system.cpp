@@ -1,10 +1,7 @@
 #include "stdafx.h"
 
-FB2K_STREAM_READER_OVERLOAD(t_filestats) { return stream >> value.m_size >> value.m_timestamp; }
-FB2K_STREAM_WRITER_OVERLOAD(t_filestats) { return stream << value.m_size << value.m_timestamp; }
-
-FB2K_STREAM_READER_OVERLOAD(unpack_7z::archive::file_info) { return stream >> value.m_file_path >> value.m_unpack_path >> value.m_stats; }
-FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_info) { return stream << value.m_file_path << value.m_unpack_path << value.m_stats; }
+FB2K_STREAM_READER_OVERLOAD(unpack_7z::archive::file_info) { return stream >> value.m_file_path >> value.m_unpack_path >> value.m_stats.m_size >> value.m_stats.m_timestamp; }
+FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_info) { return stream << value.m_file_path << value.m_unpack_path << value.m_stats.m_size << value.m_stats.m_timestamp; }
 
 FB2K_STREAM_READER_OVERLOAD(unpack_7z::archive::file_list) { t_size n; stream >> n; unpack_7z::archive::file_info info; while (n --> 0) { stream >> info; value.add_item (info); } return stream; }
 FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_list) { auto n = value.get_size (); stream << n; for (t_size i = 0; i < n; i++) stream << value[i]; return stream; }
@@ -21,19 +18,20 @@ namespace unpack_7z
         };
 
         // cfg_var overrides
-        void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) 
+        void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // called on shutdown for storing to disk
         {
             stream_writer_formatter<> out (*p_stream, p_abort);
             out << pfc::downcast_guarded<t_uint32>(m_data.get_count ());
-            for (pfc::map_t<GUID, entry_t>::const_iterator walk = m_data.first (); walk.is_valid (); ++walk) {
+            auto max_items = max (cfg::archive_history_size, m_data_size); // check max data size and truncate if needed
+            for (pfc::map_t<GUID, entry_t>::const_iterator walk = m_data.first (); walk.is_valid () && max_items; ++walk, --max_items)
                 out << walk->m_key << walk->m_value.m_timestamp << walk->m_value.m_files;
-            }
         }
 
-	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort)
+	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort) // called on startup for reading from disk
         {
             stream_reader_formatter<> in (*p_stream, p_abort);
             t_uint32 count; in >> count;
+            m_data_size = count;
             while (count --> 0) {
                 GUID key; in >> key;
                 entry_t &e = m_data.find_or_add (key);
@@ -46,10 +44,9 @@ namespace unpack_7z
             bool is_new;
             entry_t & e = m_data.find_or_add_ex (static_cast<const GUID &>(GUID_from_text_md5 (string_lower (p_archive))), is_new);
             if (is_new) {
-                // FIXME!!!!!!!!!!!!!!
-                if (m_data_size + 1 > m_max_entries)
-                    m_data.remove (m_data.first ());
-
+                if (m_data_size + 1 > cfg::archive_history_size)
+                    remove_random_item ();
+                
                 unpack_7z::archive a (p_archive, p_abort);
                 e.m_files = a.get_info ();
                 e.m_timestamp = a.get_timestamp ();
@@ -58,17 +55,22 @@ namespace unpack_7z
             return e;
         }
 
+        inline void remove_random_item ()
+        {
+            t_uint32 n = __rdtsc () % m_data_size;
+            auto walk = m_data.first ();
+            while (n --> 0) walk++;
+            m_data.remove (walk);
+            m_data_size--;
+        }
+
         // GUID is md5 of full canonical path to archive
         pfc::map_t<GUID, entry_t> m_data;
         t_size                    m_data_size;
         critical_section          m_lock; // synchronization for accessing m_data
-        const t_size              m_max_entries;
 
     public:
-        archive_info_cache (t_size cache_size) : 
-            cfg_var (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid),
-            m_data_size (0), 
-            m_max_entries (cache_size) {}
+        archive_info_cache () : cfg_var (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid) {}
 
         inline t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
@@ -105,8 +107,8 @@ namespace unpack_7z
             e.m_files = p_archive.get_info ();
             e.m_timestamp = p_archive.get_timestamp ();
             if (is_new) {
-                if (m_data_size + 1 > m_max_entries)
-                    m_data.remove (m_data.first ()); // FIXME: use random item instead of first
+                if (m_data_size + 1 > cfg::archive_history_size)
+                    remove_random_item ();
                 else
                     m_data_size++;
             }
@@ -304,11 +306,6 @@ namespace unpack_7z
                 m_file_cache.store (p_out, a.get_path (), p_info[index].m_file_path, p_abort);
             }
         }
-    public:
-
-        enum { archive_info_cache_size = 500 };
-
-        cache_system_impl () :  m_archive_info_cache (archive_info_cache_size) {}
     };
 
     namespace { service_factory_single_t<cache_system_impl> g_factory; }
