@@ -42,10 +42,10 @@ BEGIN
     CONTROL         "",IDC_SPIN_CACHE_SIZE,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_HOTTRACK,309,110,11,14
     LTEXT           "&Number of cache items (0 to disable caching):",IDC_STATIC,12,112,156,8
     GROUPBOX        "Cache location",IDC_STATIC,12,124,308,59
-    CONTROL         "&System temp folder",IDC_RADIO_CACHE_LOCATION_SYSTEM_TEMP,
-                    "Button",BS_AUTORADIOBUTTON,23,136,149,10
+    CONTROL         "Default (&system temp folder",IDC_RADIO_CACHE_LOCATION_SYSTEM_TEMP,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,23,136,149,10
     CONTROL         "C&ustom (specify location):",IDC_RADIO_CACHE_LOCATION_CUSTOM,
-                    "Button",BS_AUTORADIOBUTTON,23,148,149,10
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,23,148,149,10
     PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION,23,160,33,14
     LTEXT           "cache directory path here",IDC_STATIC_CACHE_LOCATION,61,163,248,8
     LTEXT           "Remember opened archives:",IDC_STATIC,1,201,97,8

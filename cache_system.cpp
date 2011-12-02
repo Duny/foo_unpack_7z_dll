@@ -45,7 +45,8 @@ namespace unpack_7z
             t_filestats stats;
             bool is_new, dummy;
 
-            entry_t & e = m_data.find_or_add_ex (key_from_string (p_archive), is_new);
+            GUID key = key_from_string (p_archive);
+            entry_t & e = m_data.find_or_add_ex (key, is_new);
             filesystem::g_get_stats (p_archive, stats, dummy, p_abort);
 
             if (!is_new && e.m_timestamp != stats.m_timestamp)
@@ -55,12 +56,15 @@ namespace unpack_7z
                 if (m_data_size + 1 > cfg::archive_history_max)
                     remove_random_item ();
                 
+                entry_t & new_entry = m_data.find_or_add (key);
                 unpack_7z::archive a (p_archive, p_abort);
-                e.m_files = a.get_info ();
-                e.m_timestamp = a.get_timestamp ();
+                new_entry.m_files = a.get_info ();
+                new_entry.m_timestamp = stats.m_timestamp;
                 m_data_size++;
+                return new_entry;
             }
-            return e;
+            else
+                return e;
         }
 
         inline void remove_random_item ()
