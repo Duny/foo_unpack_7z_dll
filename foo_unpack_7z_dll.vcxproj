@@ -140,7 +140,7 @@
     <ClInclude Include="cache_system.h" />
     <ClInclude Include="extract_callback.h" />
     <ClInclude Include="file_cache.h" />
-    <ClInclude Include="file_streams.h" />
+    <ClInclude Include="7z_file_streams.h" />
     <ClInclude Include="perf_timer.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />

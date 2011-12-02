@@ -65,9 +65,6 @@
     <ClInclude Include="extract_callback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="file_streams.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -93,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="file_cache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="7z_file_streams.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
