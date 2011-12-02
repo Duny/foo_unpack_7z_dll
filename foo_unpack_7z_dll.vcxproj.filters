@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="file_streams.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="foo_unpack_7z_dll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

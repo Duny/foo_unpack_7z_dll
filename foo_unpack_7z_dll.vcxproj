@@ -120,7 +120,6 @@
     <ClCompile Include="dll.cpp" />
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="cache_system.cpp" />
-    <ClCompile Include="file_streams.cpp" />
     <ClCompile Include="foo_unpack_7z_dll.cpp" />
     <ClCompile Include="perf_timer.cpp" />
     <ClCompile Include="preferences.cpp" />
