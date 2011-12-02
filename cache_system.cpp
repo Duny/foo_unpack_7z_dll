@@ -84,7 +84,7 @@ namespace unpack_7z
         // member variables
         pfc::map_t<GUID, entry_t> m_data; // GUID is made of md5 from canonical path to archive
         t_uint32                  m_data_size;
-        mutable critical_section          m_lock; // synchronization for accessing m_data
+        mutable critical_section  m_lock; // synchronization for accessing m_data
             
     public:
         archive_info_cache () : cfg_var (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid) {}
@@ -124,15 +124,15 @@ namespace unpack_7z
             if (is_new) {
                 if (m_data_size + 1 > cfg::archive_history_max)
                     remove_random_item ();
-                else
-                    m_data_size++;
+                
+                m_data_size++;
             }
         }
 
         inline void print_stats () const
         {
             insync (m_lock);
-            console::formatter() << "Archive info cache size: " << m_data.get_count ();;
+            console::formatter() << "Archive info cache: " << m_data.get_count () << " item(s)";
         }
     };
 
