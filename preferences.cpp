@@ -24,7 +24,7 @@ namespace unpack_7z
             //
             t_uint32 get_state () override;
             void apply () override;
-            void reset () override;
+            void reset () override; 
 
 
             // CDialogImpl
@@ -33,18 +33,13 @@ namespace unpack_7z
 
                 COMMAND_ID_HANDLER_SIMPLE (IDC_CHECK_DEBUG_LOG, on_state_changed)
 
-                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_DLL_LOCATION_DEFAULT, on_dll_and_cache_mode_change)
-                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_DLL_LOCATION_CUSTOM, on_dll_and_cache_mode_change)
-
-                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_CACHE_LOCATION_SYSTEM_TEMP, on_dll_and_cache_mode_change)
-                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_CACHE_LOCATION_CUSTOM, on_dll_and_cache_mode_change)
-
-                COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_BROWSE_FOR_DLL_LOCATION, on_browse_for_dll)
                 COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION, on_browse_for_cache_location)
                 COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_PRINT_CACHE_STATS, on_print_cache_stats)
 
                 COMMAND_HANDLER_SIMPLE (IDC_EDIT_SPIN_CTRL_BUDDY, EN_CHANGE, on_state_changed)
                 COMMAND_HANDLER_SIMPLE (IDC_COMBO_ARCHIVE_HISTORY_SIZE, CBN_SELCHANGE, on_state_changed)
+                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_USE_DEFAULT_CACHE_LOCATION, on_state_changed)
+                COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_USE_CUSTOM_CACHE_LOCATION, on_state_changed)
                 
             END_MSG_MAP ()
 
@@ -53,73 +48,50 @@ namespace unpack_7z
 	        BOOL on_init_dialog (CWindow, LPARAM)
             {
                 // attach windows to members
-                m_disc_cache_size.Attach (GetDlgItem (IDC_SPIN_CACHE_SIZE));
-                m_disc_cache_size.SetBuddy (GetDlgItem (IDC_EDIT_SPIN_CTRL_BUDDY));
-                m_disc_cache_size.SetRange32 (0, unpack_7z::cache_system::cache_max_files);
+                m_cache_size.Attach (GetDlgItem (IDC_SPIN_CACHE_SIZE));
+                m_cache_size.SetBuddy (GetDlgItem (IDC_EDIT_SPIN_CTRL_BUDDY));
+                m_cache_size.SetRange32 (0, INT_MAX);
 
                 // initialize controls
                 uButton_SetCheck (*this, IDC_CHECK_DEBUG_LOG, cfg::debug_log);
 
-                set_dll_custom_mode (cfg::dll_path_custom, cfg::dll_path);
-
-                set_cache_custom_mode (cfg::cache_location_custom, cfg::cache_location);
+                set_cache_mode (cfg::use_sys_tmp_for_cache, cfg::custom_cache_path);
                 
-                m_disc_cache_size.SetPos32 (cfg::cache_size);
+                m_cache_size.SetPos32 (cfg::file_cache_max);
 
                 init_archive_history_sizes (cfg::archive_history_max);
                 
                 return FALSE;
             }
 
-            inline void on_state_changed () { m_callback->on_state_changed (); }
-
-            inline void on_browse_for_dll ()
-            {
-                pfc::string8 tmp;
-                if (uGetOpenFileName (*this, "Dlls|*.dll|All files|*.*", 0, "dll", "Locate 7z.dll", pfc::string_directory (cfg::dll_path), tmp, FALSE)) {
-                    uSetDlgItemText (*this, IDC_STATIC_DLL_LOCATION, tmp);
-                    m_callback->on_state_changed ();
-                }
+            inline void on_state_changed ()
+            { 
+                GetDlgItem (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION).EnableWindow (!is_default_cache_mode ());
+                m_callback->on_state_changed ();
             }
 
             inline void on_browse_for_cache_location ()
             {
-                if (auto result = uBrowseForFolderEx (*this, "Select cache location", cfg::cache_location)) {
+                if (auto result = uBrowseForFolderEx (*this, "Select cache location", cfg::custom_cache_path)) {
                     pfc::string8_fast tmp = result->GetFileName (0);
                     if (!tmp.ends_with ('\\')) tmp.add_char ('\\');
-                    uSetDlgItemText (*this, IDC_STATIC_CACHE_LOCATION, tmp);
+                    uSetDlgItemText (*this, IDC_STATIC_CUSTOM_CACHE_LOCATION, tmp);
                     m_callback->on_state_changed ();
                 }
             }
 
             inline void on_print_cache_stats () { static_api_ptr_t<cache_system>()->print_stats (); }
 
-            inline void on_dll_and_cache_mode_change ()
-            {
-                GetDlgItem (IDC_BUTTON_BROWSE_FOR_DLL_LOCATION).EnableWindow (dll_custom_mode ());
-                GetDlgItem (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION).EnableWindow (cache_custom_mode ());
-                m_callback->on_state_changed ();
-            }
-
             // helpers
-            inline bool dll_custom_mode () const { return uButton_GetCheck (*this, IDC_RADIO_DLL_LOCATION_CUSTOM); }
 
-            inline void set_dll_custom_mode (bool custom, const pfc::string8 &path)
+            inline bool is_default_cache_mode () const { return uButton_GetCheck (*this, IDC_RADIO_USE_DEFAULT_CACHE_LOCATION); }
+
+            inline void set_cache_mode (bool mode_default, const pfc::string8 &custom_path)
             {
-                uButton_SetCheck (*this, custom ? IDC_RADIO_DLL_LOCATION_CUSTOM : IDC_RADIO_DLL_LOCATION_DEFAULT, true);
-                uButton_SetCheck (*this, !custom ? IDC_RADIO_DLL_LOCATION_CUSTOM : IDC_RADIO_DLL_LOCATION_DEFAULT, false);
-                uSetDlgItemText (*this, IDC_STATIC_DLL_LOCATION, path);
-                GetDlgItem (IDC_BUTTON_BROWSE_FOR_DLL_LOCATION).EnableWindow (custom);
-            }
-
-            inline bool cache_custom_mode () const { return uButton_GetCheck (*this, IDC_RADIO_CACHE_LOCATION_CUSTOM); }
-
-            inline void set_cache_custom_mode (bool custom, const pfc::string8 &location)
-            {
-                uButton_SetCheck (*this, custom ? IDC_RADIO_CACHE_LOCATION_CUSTOM : IDC_RADIO_CACHE_LOCATION_SYSTEM_TEMP, true);
-                uButton_SetCheck (*this, !custom ? IDC_RADIO_CACHE_LOCATION_CUSTOM : IDC_RADIO_CACHE_LOCATION_SYSTEM_TEMP, false);
-                uSetDlgItemText (*this, IDC_STATIC_CACHE_LOCATION, location);
-                GetDlgItem (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION).EnableWindow (custom);
+                uButton_SetCheck (*this, mode_default ? IDC_RADIO_USE_DEFAULT_CACHE_LOCATION : IDC_RADIO_USE_CUSTOM_CACHE_LOCATION, true);
+                uButton_SetCheck (*this, !mode_default ? IDC_RADIO_USE_DEFAULT_CACHE_LOCATION : IDC_RADIO_USE_CUSTOM_CACHE_LOCATION, false);
+                uSetDlgItemText (*this, IDC_STATIC_CUSTOM_CACHE_LOCATION, custom_path);
+                GetDlgItem (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION).EnableWindow (!mode_default);
             }
 
             inline void init_archive_history_sizes (t_uint32 history_max)
@@ -142,43 +114,36 @@ namespace unpack_7z
 
             // member variables
 	        const preferences_page_callback::ptr m_callback;
-            CUpDownCtrl m_disc_cache_size;
+            CUpDownCtrl m_cache_size;
         };
 
         t_uint32 page::get_state ()
         {
+            const t_size flags = preferences_state::changed | preferences_state::needs_restart;
+
 	        t_uint32 state = preferences_state::resettable;
 
             if (uButton_GetCheck (*this, IDC_CHECK_DEBUG_LOG) != cfg::debug_log)
                 state |= preferences_state::changed;
 
-            if (dll_custom_mode () != cfg::dll_path_custom)
-                state |= (preferences_state::changed | preferences_state::needs_restart);
+            if (!(state & preferences_state::needs_restart) && is_default_cache_mode () != cfg::use_sys_tmp_for_cache)
+                state |= flags;
 
-            pfc::string8_fast path;
-            uGetDlgItemText (*this, IDC_STATIC_DLL_LOCATION, path);
-            if (cfg::dll_path != path) {
-                state |= preferences_state::changed;
-                if (dll_custom_mode ())
-                    state |= preferences_state::needs_restart;
+            if (!(state & preferences_state::needs_restart)) {
+                pfc::string8_fast path;
+                uGetDlgItemText (*this, IDC_STATIC_CUSTOM_CACHE_LOCATION, path);
+                if (cfg::custom_cache_path != path) {
+                    state |= preferences_state::changed;
+                    if (!is_default_cache_mode ())
+                        state |= preferences_state::needs_restart;
+                }
             }
 
-            if (cache_custom_mode () != cfg::cache_location_custom)
-                state |= (preferences_state::changed | preferences_state::needs_restart);
+            if (!(state & preferences_state::needs_restart) && m_cache_size.GetPos32 () != cfg::file_cache_max)
+                state |= flags;
 
-            uGetDlgItemText (*this, IDC_STATIC_CACHE_LOCATION, path);
-            if (cfg::cache_location != path) {
-                state |= preferences_state::changed;
-                if (cache_custom_mode ())
-                    state |= preferences_state::needs_restart;
-            }
-
-            if (m_disc_cache_size.GetPos32 () != cfg::cache_size)
-                state |= (preferences_state::changed | preferences_state::needs_restart);
-
-            
-            if (get_sel_archive_history_size () != cfg::archive_history_max)
-                state |= (preferences_state::changed | preferences_state::needs_restart);
+            if (!(state & preferences_state::needs_restart) && get_sel_archive_history_size () != cfg::archive_history_max)
+                state |= flags;
 
 	        return state;
         }
@@ -187,12 +152,9 @@ namespace unpack_7z
         {	
             cfg::debug_log = uButton_GetCheck (*this, IDC_CHECK_DEBUG_LOG);
 
-            cfg::dll_path_custom = dll_custom_mode ();
-            uGetDlgItemText (*this, IDC_STATIC_DLL_LOCATION, cfg::dll_path);
-
-            cfg::cache_location_custom = cache_custom_mode ();
-            uGetDlgItemText (*this, IDC_STATIC_CACHE_LOCATION, cfg::cache_location);
-            cfg::cache_size = m_disc_cache_size.GetPos32 ();
+            cfg::use_sys_tmp_for_cache = is_default_cache_mode ();
+            uGetDlgItemText (*this, IDC_STATIC_CUSTOM_CACHE_LOCATION, cfg::custom_cache_path);
+            cfg::file_cache_max = m_cache_size.GetPos32 ();
 
             cfg::archive_history_max = get_sel_archive_history_size ();
 
@@ -203,10 +165,8 @@ namespace unpack_7z
         {
             uButton_SetCheck (*this, IDC_CHECK_DEBUG_LOG, cfg::defaults::debug_log);
 
-            set_dll_custom_mode (cfg::defaults::dll_path_custom, "");
-
-            set_cache_custom_mode (cfg::defaults::cache_location_custom, "");
-            m_disc_cache_size.SetPos32 (cfg::defaults::cache_size);
+            set_cache_mode (cfg::defaults::use_sys_tmp_for_cache, "");
+            m_cache_size.SetPos32 (cfg::defaults::file_cache_max);
 
             init_archive_history_sizes (cfg::defaults::archive_history_max);
 

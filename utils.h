@@ -9,15 +9,11 @@ namespace unpack_7z
     {
         extern cfg_bool   debug_log;
 
-        extern cfg_bool   dll_path_custom; // using custom path to 7z.dll, if true (instead of searching for 7-zip installation folder)
-        extern cfg_string dll_path;
+        extern cfg_bool   use_sys_tmp_for_cache; // Using custom directory for disk cache (default is system temp folder)
+        extern cfg_string custom_cache_path;
+        extern cfg_uint   file_cache_max; // Max allowed disk space use (in Mb)
 
-        extern cfg_bool   cache_location_custom; // using custom directory for disk cache. (default is system temp folder)
-        extern cfg_string cache_location;
-        extern cfg_uint   cache_size; // max number of files to keep in cache folder
-        extern cfg_uint   file_cache_size_max; // max allowed disk space usage (in Mb)
-
-        extern cfg_uint   archive_history_max; // max number of archives remembered
+        extern cfg_uint   archive_history_max; // Max number of archives remembered
 
         namespace defaults 
         {
@@ -25,12 +21,8 @@ namespace unpack_7z
             {
                 debug_log = false,
 
-                dll_path_custom = false,
-
-                cache_location_custom = false,
-                cache_size = 5,
-
-                file_cache_size_max = 100,
+                use_sys_tmp_for_cache = true,
+                file_cache_max = 100, // 100 Mb
                 archive_history_max = 500
             };
         };
@@ -68,12 +60,12 @@ namespace unpack_7z
     // Console logging helpers
     struct error_log : public pfc::string_formatter
     {
-        ~error_log () { if (!is_empty()) console::formatter () << "Error("COMPONENT_NAME"):" << get_ptr (); }
+        ~error_log () { if (!is_empty()) console::formatter () << "Error(7z.dll unpacker):" << get_ptr (); }
     };
 
     struct debug_log : public pfc::string_formatter
     {
-        ~debug_log () { if (!is_empty() && cfg::debug_log) console::formatter () << "Debug("COMPONENT_NAME"):" << get_ptr (); }
+        ~debug_log () { if (!is_empty() && cfg::debug_log) console::formatter () << "Debug(7z.dll unpacker):" << get_ptr (); }
     };
 
     // timer class

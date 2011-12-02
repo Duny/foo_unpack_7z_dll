@@ -42,16 +42,7 @@ namespace unpack_7z
 
         void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) override
         {
-            if (!p_want_readers) { // optimization for listings of archive
-                pfc::list_t<archive::file_info> files;
-                m_archive_info_cache.get_file_list (p_archive, files, p_out);
-
-                file_ptr dummy;
-                for (t_size i = 0, max = files.get_size (); i < max; i++)
-                    if (!p_out.on_entry (owner, files[i].m_unpack_path, files[i].m_stats, dummy))
-                        break;
-            }
-            else {
+            if (p_want_readers) {
                 archive::file_list files;
                 bool files_valid = m_archive_info_cache.query_file_list (p_archive, files);
                 
@@ -69,6 +60,15 @@ namespace unpack_7z
                     if (!p_out.on_entry (owner, files[i].m_unpack_path, files[i].m_stats, temp))
                         return;
                 }
+            }
+            else { // special case for fast listing
+                pfc::list_t<archive::file_info> files;
+                m_archive_info_cache.get_file_list (p_archive, files, p_out);
+
+                file_ptr dummy;
+                for (t_size i = 0, max = files.get_size (); i < max; i++)
+                    if (!p_out.on_entry (owner, files[i].m_unpack_path, files[i].m_stats, dummy))
+                        return;
             }
         }
 

@@ -52,52 +52,39 @@ namespace unpack_7z
 
 		    pfc::string8 path;
 
-		    if (cfg::dll_path_custom) {
-                if (cfg::dll_path.is_empty ())
-                    error_log () << "Custom 7z.dll location is not specified";
-                else if (!filesystem::g_exists (cfg::dll_path, abort_callback_dummy ()))
-                    error_log () << "File \"" << cfg::dll_path << "\" not found";
+            pfc::string8 triedPaths;
 
-                if (!m_dll.load (cfg::dll_path))
-                    error_log () << "Couldn't load \"" << cfg::dll_path << "\" as dynamic library";
-                else
-                    path = cfg::dll_path;
-		    }
-		    else {
-                pfc::string8 triedPaths;
+            auto try_folder = [&] (const char *folder) {
+                path = folder;
+                if (!path.ends_with ('\\'))
+                    path.add_char ('\\');
+                path += "7z.dll";
+                triedPaths += path;
+                triedPaths.add_char ('\n');
 
-                auto try_folder = [&] (const char *folder) {
-                    path = folder;
-                    if (!path.ends_with ('\\'))
-                        path.add_char ('\\');
-                    path += "7z.dll";
-                    triedPaths += path;
-                    triedPaths.add_char ('\n');
+                m_dll.load (path);
+            };
 
-                    m_dll.load (path);
-                };
-
-                // 1. search for 7-zip installation folder
-                HKEY key;
-                if (RegOpenKeyEx (HKEY_CURRENT_USER, L"Software\\7-Zip", 0, KEY_READ, &key) == ERROR_SUCCESS) {
-                    DWORD value_size = 0, dummy = 0;
-                    LONG res = RegQueryValueEx (key, TEXT ("Path"), nullptr, &dummy, nullptr, &value_size);
-                    if (res == ERROR_SUCCESS || res == ERROR_MORE_DATA) {
-                        pfc::array_t<TCHAR> tmp; tmp.set_size (value_size + 1);
-                        res = RegQueryValueEx (key, TEXT ("Path"), nullptr, &dummy, (LPBYTE)tmp.get_ptr (), &value_size);
-                        if (res == ERROR_SUCCESS)
-                            try_folder (pfc::stringcvt::string_ansi_from_wide (tmp.get_ptr ()));
-                    }
-
-                    RegCloseKey (key);
+            // 1. search for 7-zip installation folder
+            HKEY key;
+            if (RegOpenKeyEx (HKEY_CURRENT_USER, L"Software\\7-Zip", 0, KEY_READ, &key) == ERROR_SUCCESS) {
+                DWORD value_size = 0, dummy = 0;
+                LONG res = RegQueryValueEx (key, TEXT ("Path"), nullptr, &dummy, nullptr, &value_size);
+                if (res == ERROR_SUCCESS || res == ERROR_MORE_DATA) {
+                    pfc::array_t<TCHAR> tmp; tmp.set_size (value_size + 1);
+                    res = RegQueryValueEx (key, TEXT ("Path"), nullptr, &dummy, (LPBYTE)tmp.get_ptr (), &value_size);
+                    if (res == ERROR_SUCCESS) 
+                        try_folder (pfc::stringcvt::string_ansi_from_wide (tmp.get_ptr ()));
                 }
+                RegCloseKey (key);
+            }
 
-                if (!m_dll.is_loaded ()) // 2. look in component's installation folder
-                    try_folder (pfc::string_directory (core_api::get_my_full_path ()));
+            // 2. look in component's installation folder
+            if (!m_dll.is_loaded ()) 
+                try_folder (pfc::string_directory (core_api::get_my_full_path ()));
 
-                if (!m_dll.is_loaded ())
-                    error_log () << "Couldn't load any 7z.dll. Tried:\n" << triedPaths;
-		    }
+            if (!m_dll.is_loaded ())
+                error_log () << "Couldn't load 7z.dll. Tried:\n" << triedPaths;
 
 		    if (m_dll.is_loaded ()) {
 			    debug_log () << "Loaded \"" << path << "\"";

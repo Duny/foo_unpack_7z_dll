@@ -35,5 +35,7 @@ namespace unpack_7z
             static_api_ptr_t<cache_system>()->archive_list (this, p_archive, p_reader, p_out, p_want_readers);
         }
     };
-    static archive_factory_t<archive_type_7z> g_archive_7z;
+
+
+    namespace { archive_factory_t<archive_type_7z> g_factory; }
 }

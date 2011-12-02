@@ -4,11 +4,11 @@
 namespace unpack_7z
 {
     PFC_DECLARE_EXCEPTION (exception_arch_7z, pfc::exception, COMPONENT_NAME);
-    PFC_DECLARE_EXCEPTION (exception_arch_close, exception_arch_7z, COMPONENT_NAME ": couldn't close archive");
-    PFC_DECLARE_EXCEPTION (exception_arch_open, exception_arch_7z, COMPONENT_NAME ": archive open error");
-    PFC_DECLARE_EXCEPTION (exception_arch_extract_error, exception_arch_7z, COMPONENT_NAME ": error extracting file");
-    PFC_DECLARE_EXCEPTION (exception_arch_file_not_found, exception_arch_7z, COMPONENT_NAME ": file not found in archive");
-    PFC_DECLARE_EXCEPTION (exception_arch_num_items_error, exception_arch_7z, COMPONENT_NAME ": couldn't get number of items in the archive");
+    PFC_DECLARE_EXCEPTION (exception_arch_close, exception_arch_7z, "couldn't close archive");
+    PFC_DECLARE_EXCEPTION (exception_arch_open, exception_arch_7z, "archive open error");
+    PFC_DECLARE_EXCEPTION (exception_arch_extract_error, exception_arch_7z, "error extracting file");
+    PFC_DECLARE_EXCEPTION (exception_arch_file_not_found, exception_arch_7z, "file not found in archive");
+    PFC_DECLARE_EXCEPTION (exception_arch_num_items_error, exception_arch_7z, "couldn't get number of items in the archive");
 
     class archive : boost::noncopyable
     {

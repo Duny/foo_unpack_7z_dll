@@ -7,21 +7,21 @@ namespace unpack_7z
     {
         struct entry_t
         {
-            t_filetimestamp    m_timestamp; // archive timestamp
-            archive::file_list m_files; // archive contents
+            t_filetimestamp    m_timestamp; // Archive timestamp
+            archive::file_list m_files; // Archive contents
         };
 
         // cfg_var overrides
-        void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // called on shutdown for storing to disk
+        void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // Called on shutdown for storing to disk
         {
             stream_writer_formatter<> out (*p_stream, p_abort);
-            auto max_items = min (cfg::archive_history_max, m_data_size); // check max data size and truncate if needed
+            auto max_items = min (cfg::archive_history_max, m_data_size); // Check max data size and truncate if needed
             out << max_items;
             for (pfc::map_t<GUID, entry_t>::const_iterator walk = m_data.first (); walk.is_valid () && max_items; ++walk, --max_items)
                 out << walk->m_key << walk->m_value.m_timestamp << walk->m_value.m_files;
         }
 
-	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort) // called on startup for reading from disk
+	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort) // Called on startup for reading from disk
         {
             stream_reader_formatter<> in (*p_stream, p_abort);
             t_uint32 count; in >> count;
@@ -64,10 +64,10 @@ namespace unpack_7z
         inline void remove_random_item ()
         {
             if (m_data_size) {
-                auto n = ReadTimeStampCounter () % m_data_size; // choose witch item to remove
+                auto n = ReadTimeStampCounter () % m_data_size; // Choose witch item to remove
                 auto walk = m_data.first ();
-                while (n --> 0) walk++; // go to it logical position
-                m_data.remove (walk); // and delete it
+                while (n --> 0) walk++; // Go to it logical position
+                m_data.remove (walk); // And delete it
                 m_data_size--;
             }
         }
@@ -75,10 +75,10 @@ namespace unpack_7z
         inline GUID key_from_string (const char *p_str) const { return GUID_from_text_md5 (string_lower (p_str)); }
 
 
-        // member variables
+        // Member variables
         pfc::map_t<GUID, entry_t> m_data; // GUID is made of md5 from canonical path to archive
         t_uint32                  m_data_size;
-        mutable critical_section  m_lock; // synchronization for accessing m_data
+        mutable critical_section  m_lock; // Synchronization for accessing m_data
             
     public:
         archive_info_cache () : cfg_var (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid) {}
