@@ -35,29 +35,34 @@ namespace unpack_7z
 //            inline bool operator== (const archive_file_info &other) const { return is_valid () && m_archive_file_info == other; }
         };
 
-        critical_section m_lock;
-        pfc::map_t<GUID, entry_t> m_data;  // GUID is made of md5 from concat of canonical path to archive and file path in archive
-        t_size m_next_entry;
+        // Helpers
+        inline GUID make_key (const char *p_archive, const char *p_file) const 
+        { 
+            pfc::string8_fast str = string_lower (p_archive);
+            str.add_string (string_lower (p_file));
+            return GUID_from_text_md5 (str);
+        }
+
+        pfc::map_t<GUID, entry_t> m_data;  // GUID is made of md5 from canonical path to archive+file path in archive
+        mutable critical_section  m_lock;
+
     public:
-
-        bool fetch (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort)
+        bool fetch (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) const
         {
-            /*if (cfg::cache_size != 0) {
-                insync (m_lock);
+            insync (m_lock);
 
-                auto n = m_data.find_item (archive_file_info (p_archive, p_file));
-                if (n != pfc_infinite) {
-                    p_out = new file_tempmem (m_data[n].m_archive_file_info.m_stats);
-                    try {
-                        file::g_transfer_file (m_data[n].m_file, p_out, p_abort);
-                        p_out->seek (0, p_abort);
-                        return true;
-                    } catch (const std::exception &e) {
-                        error_log () << "disk cache fetch exception:" << e.what ();
-                        p_out.release ();
-                    }
+            const entry_t *e;
+            if (m_data.query_ptr (make_key (p_archive, p_file), e)) {
+                p_out = new file_tempmem (e->m_stats);
+                try {
+                    file::g_transfer_file (e->m_file, p_out, p_abort);
+                    p_out->seek (0, p_abort);
+                    return true;
+                } catch (const std::exception &e) {
+                    error_log () << "disk cache fetch exception:" << e.what ();
+                    p_out.release ();
                 }
-            }*/
+            }
             return false;
         }
 

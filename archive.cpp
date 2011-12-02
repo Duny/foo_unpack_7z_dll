@@ -14,7 +14,7 @@ namespace unpack_7z
         if (new_archive->Open (new_stream, 0, NULL) != S_OK)
             throw exception_arch_open ();
 
-        close ();
+        this->close ();
 
         m_archive = new_archive;
         m_stream = new_stream;
@@ -30,7 +30,7 @@ namespace unpack_7z
 	    file_ptr file;
 
 	    filesystem::g_open (file, p_archive, filesystem::open_mode_read, p_abort);
-	    open (p_archive, file, p_abort, read_file_list);
+	    this->open (p_archive, file, p_abort, read_file_list);
     }
 
     void archive::close ()
@@ -50,10 +50,8 @@ namespace unpack_7z
 
     void archive::extract_file (const file_ptr &p_out, t_size i, abort_callback &p_abort) const
     {
-        CMyComPtr<IArchiveExtractCallback> archive_extract_callback (new extract_callback (p_out, p_abort));
-	
-        HRESULT result = m_archive->Extract (&i, 1, false, archive_extract_callback);
-	    if (result != S_OK)
+        HRESULT res = m_archive->Extract (&i, 1, FALSE, CMyComPtr<IArchiveExtractCallback> (new extract_callback (p_out, p_abort)));
+	    if (res != S_OK)
 		    throw exception_arch_extract_error ();
 
         p_out->seek (0, p_abort);
@@ -91,6 +89,7 @@ namespace unpack_7z
             dummy.m_stats.m_size = ConvertPropVariantToUInt64 (prop);
 		    dummy.m_stats.m_timestamp = m_timestamp;
 
+            // precalculate unpack path
             archive_impl::g_make_unpack_path (dummy.m_unpack_path, m_path, dummy.m_file_path, _7Z_EXT);
 
             m_items[num_items] = dummy;

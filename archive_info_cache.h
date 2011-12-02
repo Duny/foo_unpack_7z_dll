@@ -9,6 +9,12 @@ namespace unpack_7z
         {
             t_filetimestamp    m_timestamp; // Archive timestamp
             archive::file_list m_files; // Archive contents
+
+            inline void init (const unpack_7z::archive &p_archive)
+            {
+                m_files = p_archive.get_info ();
+                m_timestamp = p_archive.get_timestamp ();
+            }
         };
 
         // cfg_var overrides
@@ -49,32 +55,30 @@ namespace unpack_7z
             }
 
             if (is_new) {
-                if (m_data_size + 1 > cfg::archive_history_max)
-                    remove_random_item ();
-                
-                entry_t & new_entry = m_data.find_or_add (key);
-                unpack_7z::archive a (p_archive, p_abort);
-                new_entry.m_files = a.get_info ();
-                new_entry.m_timestamp = a.get_timestamp ();
-                m_data_size++;
+                make_room_for_new_item ();
+                entry_t & new_entry = m_data.find_or_add_ex (key, is_new);
+                new_entry.init (unpack_7z::archive (p_archive, p_abort));
+                if (is_new) m_data_size++;
                 return &new_entry;
             }
             
             return e;
         }
 
-        inline void remove_random_item ()
+        inline GUID make_key (const char *p_str) const { return GUID_from_text_md5 (string_lower (p_str)); }
+
+        inline void make_room_for_new_item ()
         {
-            if (m_data_size) {
-                auto n = ReadTimeStampCounter () % m_data_size; // Choose witch item to remove
-                auto walk = m_data.first ();
-                while (n --> 0) walk++; // Go to it logical position
-                m_data.remove (walk); // And delete it
-                m_data_size--;
+            if (m_data_size + 1 > cfg::archive_history_max) {
+                if (m_data_size > 0) { // remove random item
+                    auto n = ReadTimeStampCounter () % m_data_size; // Pick item to remove
+                    auto walk = m_data.first ();
+                    while (n --> 0) walk++; // Go to its logical position
+                    m_data.remove (walk); // And delete
+                    m_data_size--;
+                }
             }
         }
-
-        inline GUID make_key (const char *p_str) const { return GUID_from_text_md5 (string_lower (p_str)); }
 
         // Member variables
         pfc::map_t<GUID, entry_t> m_data; // GUID is made of md5 from canonical path to archive
@@ -114,12 +118,9 @@ namespace unpack_7z
 
             bool is_new;
             entry_t & e = m_data.find_or_add_ex (make_key (p_archive.get_path ()), is_new);
-            e.m_files = p_archive.get_info ();
-            e.m_timestamp = p_archive.get_timestamp ();
+            e.init (p_archive);
             if (is_new) {
-                if (m_data_size + 1 > cfg::archive_history_max)
-                    remove_random_item ();
-                
+                make_room_for_new_item ();
                 m_data_size++;
             }
         }
@@ -127,8 +128,7 @@ namespace unpack_7z
         inline void print_stats (pfc::string_formatter & out) const
         {
             insync (m_lock);
-
-            out << "Archive info cache: " << m_data.get_count () << " item(s)";
+            out << "Archive info cache: " << m_data.get_count () << " item(s)\n";
         }
     };
 }   

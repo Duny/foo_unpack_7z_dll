@@ -14,7 +14,7 @@ namespace unpack_7z
         {
         public:
 	        page (preferences_page_callback::ptr callback) : m_callback (callback) {}
-
+            
 	        //dialog resource ID
 	        enum { IDD = IDD_PREFERENCES };
 
