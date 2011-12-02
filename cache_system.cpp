@@ -42,8 +42,15 @@ namespace unpack_7z
         // helpers
         inline entry_t & find_or_add (const char *p_archive, abort_callback &p_abort)
         {
-            bool is_new;
+            t_filestats stats;
+            bool is_new, dummy;
+
             entry_t & e = m_data.find_or_add_ex (key_from_string (p_archive), is_new);
+            filesystem::g_get_stats (p_archive, stats, dummy, p_abort);
+
+            if (!is_new && e.m_timestamp != stats.m_timestamp)
+                is_new = true;
+
             if (is_new) {
                 if (m_data_size + 1 > cfg::archive_history_max)
                     remove_random_item ();
