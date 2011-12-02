@@ -123,10 +123,10 @@ namespace unpack_7z
             }
         }
 
-        inline void print_stats () const
+        inline void print_stats (pfc::string_formatter & out) const
         {
             insync (m_lock);
-            console::formatter() << "Archive info cache: " << m_data.get_count () << " item(s)";
+            out << "Archive info cache: " << m_data.get_count () << " item(s)";
         }
     };
 }   

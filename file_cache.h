@@ -89,7 +89,7 @@ namespace unpack_7z
             //}
         }
 
-        inline void print_stats () const
+        inline void print_stats (pfc::string_formatter & out) const
         {
         }
     };

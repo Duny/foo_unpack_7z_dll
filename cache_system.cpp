@@ -74,8 +74,11 @@ namespace unpack_7z
 
         void print_stats () const override
         {
-            m_file_cache.print_stats ();
-            m_archive_info_cache.print_stats ();
+            pfc::string_formatter f;
+
+            m_file_cache.print_stats (f);
+            m_archive_info_cache.print_stats (f);
+            popup_message::g_show (f.get_ptr (), "Unpack 7z cache status");
         }
 
 
