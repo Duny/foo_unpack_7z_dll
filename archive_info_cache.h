@@ -21,7 +21,7 @@ namespace unpack_7z
         void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // Called on shutdown for storing to disk
         {
             stream_writer_formatter<> out (*p_stream, p_abort);
-            auto max_items = min (cfg::archive_history_max, m_data_size); // Check max data size and truncate if needed
+            auto max_items = min (cfg::archive_history_max, m_size); // Check max data size and truncate if needed
             out << max_items;
             for (pfc::map_t<GUID, entry_t>::const_iterator walk = m_data.first (); walk.is_valid () && max_items; ++walk, --max_items)
                 out << walk->m_key << walk->m_value.m_timestamp << walk->m_value.m_files;
@@ -31,7 +31,7 @@ namespace unpack_7z
         {
             stream_reader_formatter<> in (*p_stream, p_abort);
             t_uint32 count; in >> count;
-            m_data_size = count;
+            m_size = count;
             while (count --> 0) {
                 GUID key; in >> key;
                 entry_t &e = m_data.find_or_add (key);
@@ -58,7 +58,7 @@ namespace unpack_7z
                 make_room_for_new_item ();
                 entry_t & new_entry = m_data.find_or_add_ex (key, is_new);
                 new_entry.init (unpack_7z::archive (p_archive, p_abort));
-                if (is_new) m_data_size++;
+                if (is_new) m_size++;
                 return &new_entry;
             }
             
@@ -69,20 +69,20 @@ namespace unpack_7z
 
         inline void make_room_for_new_item ()
         {
-            if (m_data_size + 1 > cfg::archive_history_max) {
-                if (m_data_size > 0) { // remove random item
-                    auto n = ReadTimeStampCounter () % m_data_size; // Pick item to remove
+            if (m_size + 1 > cfg::archive_history_max) {
+                if (m_size > 0) { // remove random item
+                    auto n = ReadTimeStampCounter () % m_size; // Pick item to remove
                     auto walk = m_data.first ();
                     while (n --> 0) walk++; // Go to its logical position
                     m_data.remove (walk); // And delete
-                    m_data_size--;
+                    m_size--;
                 }
             }
         }
 
         // Member variables
         pfc::map_t<GUID, entry_t> m_data; // GUID is made of md5 from canonical path to archive
-        t_uint32                  m_data_size;
+        t_uint32                  m_size;
         mutable critical_section  m_lock; // Synchronization for accessing m_data
             
     public:
@@ -121,14 +121,14 @@ namespace unpack_7z
             e.init (p_archive);
             if (is_new) {
                 make_room_for_new_item ();
-                m_data_size++;
+                m_size++;
             }
         }
 
         inline void print_stats (pfc::string_formatter & out) const
         {
             insync (m_lock);
-            out << "Archive info cache: " << m_data.get_count () << " item(s)\n";
+            out << "Archive info cache: " << m_size << " item(s)\n";
         }
     };
 }   
