@@ -39,9 +39,9 @@ namespace unpack_7z
 
                 COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_BROWSE_FOR_DLL_LOCATION, on_browse_for_dll)
                 COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION, on_browse_for_cache_location)
+                COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_PRINT_CACHE_STATS, on_print_cache_stats)
 
                 COMMAND_HANDLER_SIMPLE (IDC_EDIT_SPIN_CTRL_BUDDY, EN_CHANGE, on_state_changed)
-
                 COMMAND_HANDLER_SIMPLE (IDC_COMBO_ARCHIVE_HISTORY_SIZE, CBN_SELCHANGE, on_state_changed)
                 
             END_MSG_MAP ()
@@ -89,6 +89,8 @@ namespace unpack_7z
                     m_callback->on_state_changed ();
                 }
             }
+
+            inline void on_print_cache_stats () { static_api_ptr_t<cache_system>()->print_stats (); }
 
             inline void on_dll_and_cache_mode_change ()
             {

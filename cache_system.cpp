@@ -84,8 +84,8 @@ namespace unpack_7z
         // member variables
         pfc::map_t<GUID, entry_t> m_data; // GUID is made of md5 from canonical path to archive
         t_uint32                  m_data_size;
-        critical_section          m_lock; // synchronization for accessing m_data
-
+        mutable critical_section          m_lock; // synchronization for accessing m_data
+            
     public:
         archive_info_cache () : cfg_var (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid) {}
 
@@ -127,6 +127,12 @@ namespace unpack_7z
                 else
                     m_data_size++;
             }
+        }
+
+        inline void print_stats () const
+        {
+            insync (m_lock);
+            console::formatter() << "Archive info cache size: " << m_data.get_count ();;
         }
     };
 
@@ -243,6 +249,10 @@ namespace unpack_7z
                 }
             }
         }
+
+        inline void print_stats () const
+        {
+        }
     };
 
 
@@ -254,12 +264,12 @@ namespace unpack_7z
 
 
         // cache_system overrides
-        t_filestats get_stats (const char *p_archive, const char *p_file, abort_callback &p_abort) override
+        t_filestats get_stats_in_archive (const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
             return m_archive_info_cache.get_file_stats (p_archive, p_file, p_abort);
         }
         
-        void extract (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) override
+        void open_archive (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
             if (!m_file_cache.fetch (p_out, p_archive, p_file, p_abort)) {
                 archive::file_list files;
@@ -311,6 +321,13 @@ namespace unpack_7z
                 }
             }
         }
+
+        void print_stats () const override
+        {
+            m_file_cache.print_stats ();
+            m_archive_info_cache.print_stats ();
+        }
+
 
         // helpers
         void extract_internal (file_ptr &p_out, const unpack_7z::archive &a, archive::file_list_cref p_info, t_size index, abort_callback &p_abort)

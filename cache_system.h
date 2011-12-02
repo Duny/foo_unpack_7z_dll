@@ -7,12 +7,13 @@ namespace unpack_7z
     public:
         enum { cache_max_files = 20 };
 
+        virtual t_filestats get_stats_in_archive (const char *p_archive, const char *p_file, abort_callback &p_abort) = 0;
 
-        virtual t_filestats get_stats (const char *p_archive, const char *p_file, abort_callback &p_abort) = 0;
-
-        virtual void extract (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) = 0;
+        virtual void open_archive (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) = 0;
 
         virtual void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) = 0;
+
+        virtual void print_stats () const = 0;
 
         FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(cache_system)
     };
