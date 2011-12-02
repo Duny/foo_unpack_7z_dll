@@ -34,17 +34,19 @@ namespace unpack_7z
 	    }
 
         // helpers
-        inline entry_t & find_or_add (const char *p_archive, abort_callback &p_abort)
+        inline entry_t * find_or_add (const char *p_archive, abort_callback &p_abort)
         {
-            t_filestats stats;
-            bool is_new, dummy;
-
-            GUID key = key_from_string (p_archive);
-            entry_t & e = m_data.find_or_add_ex (key, is_new);
-            filesystem::g_get_stats (p_archive, stats, dummy, p_abort);
-
-            if (!is_new && e.m_timestamp != stats.m_timestamp)
-                is_new = true;
+            GUID key = make_key (p_archive);
+            entry_t * e;
+            
+            bool is_new = m_data.query_ptr (key, e) == false;
+            if (!is_new) {
+                t_filestats stats;
+                bool is_writable;
+                filesystem::g_get_stats (p_archive, stats, is_writable, p_abort);
+                if (e->m_timestamp != stats.m_timestamp) // archive was updated, need to reload it
+                    is_new = true;
+            }
 
             if (is_new) {
                 if (m_data_size + 1 > cfg::archive_history_max)
@@ -53,12 +55,12 @@ namespace unpack_7z
                 entry_t & new_entry = m_data.find_or_add (key);
                 unpack_7z::archive a (p_archive, p_abort);
                 new_entry.m_files = a.get_info ();
-                new_entry.m_timestamp = stats.m_timestamp;
+                new_entry.m_timestamp = a.get_timestamp ();
                 m_data_size++;
-                return new_entry;
+                return &new_entry;
             }
-            else
-                return e;
+            
+            return e;
         }
 
         inline void remove_random_item ()
@@ -72,8 +74,7 @@ namespace unpack_7z
             }
         }
 
-        inline GUID key_from_string (const char *p_str) const { return GUID_from_text_md5 (string_lower (p_str)); }
-
+        inline GUID make_key (const char *p_str) const { return GUID_from_text_md5 (string_lower (p_str)); }
 
         // Member variables
         pfc::map_t<GUID, entry_t> m_data; // GUID is made of md5 from canonical path to archive
@@ -86,24 +87,24 @@ namespace unpack_7z
         inline t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
             insync (m_lock);
-            entry_t &e = find_or_add (p_archive, p_abort);
-            auto n = e.m_files.find_item (p_file);
+            entry_t *e = find_or_add (p_archive, p_abort);
+            auto n = e->m_files.find_item (p_file);
             if (n == pfc_infinite) throw exception_arch_file_not_found ();
-            return e.m_files[n].m_stats;    
+            return e->m_files[n].m_stats;    
         }
 
         inline void get_file_list (const char *p_archive, archive::file_list &p_out, abort_callback &p_abort)
         {
             insync (m_lock);
-            p_out = find_or_add (p_archive, p_abort).m_files;
+            p_out = find_or_add (p_archive, p_abort)->m_files;
         }
 
-        inline bool query_file_list (const char *p_archive, archive::file_list &p_out)
+        inline bool query_file_list (const char *p_archive, archive::file_list &p_out) const
         {
             insync (m_lock);
-            entry_t e;
-            bool res = m_data.query (key_from_string (p_archive), e);
-            if (res) p_out = e.m_files;
+            const entry_t *e;
+            bool res = m_data.query_ptr (make_key (p_archive), e);
+            if (res) p_out = e->m_files;
             return res;
         }
 
@@ -112,7 +113,7 @@ namespace unpack_7z
             insync (m_lock);
 
             bool is_new;
-            entry_t & e = m_data.find_or_add_ex (key_from_string (p_archive.get_path ()), is_new);
+            entry_t & e = m_data.find_or_add_ex (make_key (p_archive.get_path ()), is_new);
             e.m_files = p_archive.get_info ();
             e.m_timestamp = p_archive.get_timestamp ();
             if (is_new) {
@@ -126,6 +127,7 @@ namespace unpack_7z
         inline void print_stats (pfc::string_formatter & out) const
         {
             insync (m_lock);
+
             out << "Archive info cache: " << m_data.get_count () << " item(s)";
         }
     };
