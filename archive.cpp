@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include "archive.h"
 #include "dll.h"
 #include "extract_callback.h"
 

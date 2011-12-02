@@ -60,4 +60,11 @@ namespace unpack_7z
 	    file_list m_items;
     };
 }
+
+FB2K_STREAM_READER_OVERLOAD(unpack_7z::archive::file_info) { return stream >> value.m_file_path >> value.m_unpack_path >> value.m_stats.m_size >> value.m_stats.m_timestamp; }
+FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_info) { return stream << value.m_file_path << value.m_unpack_path << value.m_stats.m_size << value.m_stats.m_timestamp; }
+
+FB2K_STREAM_READER_OVERLOAD(unpack_7z::archive::file_list) { t_size n; stream >> n; unpack_7z::archive::file_info info; while (n --> 0) { stream >> info; value.add_item (info); } return stream; }
+FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_list) { auto n = value.get_size (); stream << n; for (t_size i = 0; i < n; i++) stream << value[i]; return stream; }
+
 #endif

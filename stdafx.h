@@ -16,14 +16,12 @@
 #include "Common/StringConvert.h"
 
 // boost includes
-#include "boost/function.hpp"
+#include <boost/function.hpp>
 #include <boost/utility.hpp>
 
 // plugin includes
 #include "resource.h"
 #include "perf_timer.h"
 #include "utils.h"
-#include "archive.h"
-#include "cache_system.h"
 
 #define _7Z_EXT "7z"

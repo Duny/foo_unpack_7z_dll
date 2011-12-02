@@ -92,6 +92,9 @@
     <ClInclude Include="perf_timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="archive_info_cache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="7zipLogo.ico">

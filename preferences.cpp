@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include "cache_system.h"
+
 namespace unpack_7z
 {
     namespace preferences

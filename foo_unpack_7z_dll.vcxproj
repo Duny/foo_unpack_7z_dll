@@ -136,6 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="archive.h" />
+    <ClInclude Include="archive_info_cache.h" />
     <ClInclude Include="dll.h" />
     <ClInclude Include="cache_system.h" />
     <ClInclude Include="extract_callback.h" />
