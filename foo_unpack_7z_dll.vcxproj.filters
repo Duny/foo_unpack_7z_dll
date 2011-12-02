@@ -95,6 +95,9 @@
     <ClInclude Include="archive_info_cache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="file_cache.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="7zipLogo.ico">
