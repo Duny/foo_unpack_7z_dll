@@ -42,8 +42,7 @@ namespace unpack_7z
 
         void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) override
         {
-            // optimization for multiple listings of the same archive
-            if (!p_want_readers) {
+            if (!p_want_readers) { // optimization for listings of archive
                 pfc::list_t<archive::file_info> files;
                 m_archive_info_cache.get_file_list (p_archive, files, p_out);
 

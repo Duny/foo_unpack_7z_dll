@@ -15,6 +15,7 @@ namespace unpack_7z
         extern cfg_bool   cache_location_custom; // using custom directory for disk cache. (default is system temp folder)
         extern cfg_string cache_location;
         extern cfg_uint   cache_size; // max number of files to keep in cache folder
+        extern cfg_uint   file_cache_size_max; // max allowed disk space usage (in Mb)
 
         extern cfg_uint   archive_history_max; // max number of archives remembered
 
@@ -29,6 +30,7 @@ namespace unpack_7z
                 cache_location_custom = false,
                 cache_size = 5,
 
+                file_cache_size_max = 100,
                 archive_history_max = 500
             };
         };
