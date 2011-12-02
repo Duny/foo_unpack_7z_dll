@@ -1,15 +1,14 @@
 #ifndef _FOO_UNPACK_7Z_DLL_EXTRACT_CALLBACK_H_
 #define _FOO_UNPACK_7Z_DLL_EXTRACT_CALLBACK_H_
 
-#include "file_streams.h"
+#include "7z_file_streams.h"
 
 namespace unpack_7z
 {
     class extract_callback : public IArchiveExtractCallback, public CMyUnknownImp
     {
     public:
-        extract_callback (const file_ptr &p_stream, abort_callback &p_abort)
-            : m_stream (new file_streams::out (p_stream, p_abort)) { }
+        extract_callback (const file_ptr &p_stream, abort_callback &p_abort) : m_stream (new file_streams::out (p_stream, p_abort)) {}
 
         MY_UNKNOWN_IMP1(IArchiveOpenCallback)
 
