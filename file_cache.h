@@ -13,27 +13,60 @@ namespace unpack_7z
 
             ~entry_t () { free (); }
 
-            inline void init (const char *p_file, abort_callback &p_abort)
+            inline void init (const char *p_file, const t_filestats &p_stats, abort_callback &p_abort)
             {
-                if (cfg::use_sys_tmp_for_cache) {
+                free ();
+                if (cfg::use_sys_tmp_for_cache)
+                    filesystem::g_open_temp (m_file, p_abort);
+                else {
                     generate_temp_location_for_file (m_path, cfg::custom_cache_path, "tmp", p_file);
                     filesystem::g_open_write_new (m_file, m_path, p_abort);
                 }
-                else
-                    filesystem::g_open_temp (m_file, p_abort);
+                m_stats = p_stats;
             }
 
             inline void free ()
             {
                 if (m_file.is_valid ()) m_file.release ();
                 // delete file if not system temp
-                if (!m_path.is_empty ()) uDeleteFile (m_path);
+                if (!m_path.is_empty ()) { uDeleteFile (m_path); m_path.reset (); }
             }
-
-            inline bool is_valid () const { return m_file.is_valid (); }
-
-//            inline bool operator== (const archive_file_info &other) const { return is_valid () && m_archive_file_info == other; }
         };
+
+        inline entry_t * alloc_entry (const char *p_archive, const char *p_file, t_filesize file_size)
+        {
+            t_filesize max_size = cfg::file_cache_max; max_size <<= 20;
+            if (file_size > max_size) return nullptr;
+
+            auto new_size = m_size + file_size;
+            if (new_size > max_size) {
+                typedef boost::tuple<GUID, t_filesize> cache_file;
+                
+                pfc::list_t<cache_file> files;
+                m_data.enumerate ([&](const GUID &key, const entry_t &value) { files.add_item (boost::make_tuple (key, value.m_stats.m_size)); });
+                files.sort_t ([] (const cache_file &left, const cache_file &right) -> int { return pfc::compare_t (left.get<1>(), right.get<1>()); });
+
+                t_size i = 0, n = files.get_size ();
+                for (; i < n; i++) // search for the smallest possible file to delete
+                    if ((new_size - files[i].get<1> ()) < max_size) break;
+
+                if (i != n) { // file was found
+                    m_data.remove (files[i].get<0>());
+                    m_size -= files[i].get<1> ();
+                }
+                else { // there is no such big enough file in cache to accommodate our new file
+                    // Very ugly solution:
+                    // Delete each file starting from the end, until we reach desired cache size
+                    while ((n --> 0) && (new_size > max_size)) {
+                        m_data.remove (files[n].get<0>());
+                        m_size -= files[n].get<1> ();
+                        new_size -= files[n].get<1> ();
+                    }
+                }
+            }
+            
+            return &m_data.find_or_add (make_key (p_archive, p_file));
+        }
 
         // Helpers
         inline GUID make_key (const char *p_archive, const char *p_file) const 
@@ -43,7 +76,8 @@ namespace unpack_7z
             return GUID_from_text_md5 (str);
         }
 
-        pfc::map_t<GUID, entry_t> m_data;  // GUID is made of md5 from canonical path to archive+file path in archive
+        pfc::map_t<GUID, entry_t> m_data; // GUID is made of md5 from canonical path to archive+file path in archive
+        t_filesize                m_size; // size in bytes of used space
         mutable critical_section  m_lock;
 
     public:
@@ -59,7 +93,7 @@ namespace unpack_7z
                     p_out->seek (0, p_abort);
                     return true;
                 } catch (const std::exception &e) {
-                    error_log () << "disk cache fetch exception:" << e.what ();
+                    error_log () << "Disk cache fetch exception \"" << e.what () << "\"";
                     p_out.release ();
                 }
             }
@@ -68,34 +102,27 @@ namespace unpack_7z
 
         void store (const file_ptr &p_in, const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
-            //if (cfg::cache_size != 0) {
-            //    insync (m_lock);
+            insync (m_lock);            
 
-            //    // setup cache on first call
-            //    if (!m_data.get_size ()) m_data.set_size (cfg::cache_size);
-
-            //    // do not store the same file twice
-            //    if (m_data.find_item (archive_file_info (p_archive, p_file)) == pfc_infinite) {
-            //        cache_entry &entry = m_data[m_next_entry];
-            //        try {
-            //            if (!entry.is_valid ()) // initialize entry on demand
-            //                entry.init (p_file, p_abort);
-
-            //            file::g_transfer_file (p_in, entry.m_file, p_abort);
-            //            p_in->seek (0, p_abort);
-
-            //            entry.m_archive_file_info.set (p_archive, p_file, p_in->get_stats (p_abort));
-            //        } catch (const std::exception &e) {
-            //            error_log () << "disk cache store exception:" << e.what ();
-            //            entry.free ();
-            //        }
-            //        m_next_entry = (m_next_entry + 1) % cfg::cache_size;
-            //    }
-            //}
+            auto stats = p_in->get_stats (p_abort);
+            entry_t *e = alloc_entry (p_archive, p_file, stats.m_size);
+            if (e) {
+                try {
+                    e->init (p_file, stats, p_abort);
+                    file::g_transfer_file (p_in, e->m_file, p_abort);
+                    p_in->seek (0, p_abort);
+                    m_size += stats.m_size;
+                } catch (const std::exception &ex) {
+                    error_log () << "Disk cache store exception \"" << ex.what () << "\"";
+                    m_data.remove (make_key (p_archive, p_file));
+                }
+            }
         }
 
-        inline void print_stats (pfc::string_formatter & out) const
+        inline void print_stats () const
         {
+            t_filesize max_size = cfg::file_cache_max; max_size <<= 20;
+            console::formatter () << "File cache disk usage: " << pfc::format_file_size_short (m_size) << " of " << pfc::format_file_size_short (max_size) << "\n";
         }
     };
 }

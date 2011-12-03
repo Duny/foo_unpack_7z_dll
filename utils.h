@@ -57,6 +57,22 @@ namespace unpack_7z
     __declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11>::guid = { d1, d2, d3, { d4, d5, d6, d7, d8, d9, d10, d11 } };
 
 
+    inline t_uint64 hash (const char *str)
+    {
+        t_uint64 h = 0;
+        while (*str) {
+            /*unsigned c = 0;
+            auto d = pfc::utf8_decode_char (str, c);
+            if (d > 0) {
+                h = 31 * h + uCharLower (c);
+                str += d;
+            }
+            else break;*/
+            h = 31 * h + *str++;
+        }
+        return h;
+    }
+
     // Console logging helpers
     struct error_log : public pfc::string_formatter
     {
@@ -75,7 +91,7 @@ namespace unpack_7z
         CPerfTimer m_timer;
     public:
         operation_timer (const char *p_message) : m_message (p_message), m_timer (TRUE) {}
-        ~operation_timer () { m_timer.Stop (); debug_log () << m_message << " took " << (int)m_timer.Elapsedus () << " microseconds\n"; }
+        ~operation_timer () { m_timer.Stop (); console::formatter () << m_message << " took " << (int)m_timer.Elapsedus () << " microseconds\n"; }
     };
 
     // helper for creating GUID from any text using md5

@@ -13,7 +13,7 @@ namespace unpack_7z
 
         virtual void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) = 0;
 
-        virtual void print_stats () const = 0;
+        virtual void print_stats () = 0;
 
         FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(cache_system)
     };

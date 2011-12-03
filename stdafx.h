@@ -18,6 +18,7 @@
 // boost includes
 #include <boost/function.hpp>
 #include <boost/utility.hpp>
+#include "boost/tuple/tuple.hpp"
 
 // plugin includes
 #include "resource.h"
