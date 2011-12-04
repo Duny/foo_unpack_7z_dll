@@ -53,7 +53,7 @@ namespace unpack_7z
             }
 
             if (is_new) {
-                make_room_for_new_item ();
+                check_size_overflow ();
                 entry_t & new_entry = m_data.find_or_add_ex (key, is_new);
                 new_entry.init (unpack_7z::archive (p_archive, p_abort));
                 if (is_new) m_size++;
@@ -63,13 +63,13 @@ namespace unpack_7z
             return e;
         }
 
-        inline void make_room_for_new_item ()
+        inline void check_size_overflow ()
         {
             if (m_size > 0 && m_size + 1 > cfg::archive_history_max)
-                remove_random_item ();
+                remove_random_items ();
         }
 
-        inline void remove_random_item (t_uint32 count = 1)
+        inline void remove_random_items (t_uint32 count = 1)
         {
             auto r = genrand_service::g_create ();
             r->seed (static_cast<unsigned>(ReadTimeStampCounter ()));
@@ -124,7 +124,7 @@ namespace unpack_7z
             entry_t & e = m_data.find_or_add_ex (hash (p_archive.get_path ()), is_new);
             e.init (p_archive);
             if (is_new) {
-                make_room_for_new_item ();
+                check_size_overflow ();
                 m_size++;
             }
         }
@@ -132,7 +132,7 @@ namespace unpack_7z
         inline void set_history_size_max (t_uint32 new_size)
         {
             insync (m_lock);
-            if (m_size > new_size) remove_random_item (m_size - new_size);
+            if (m_size > new_size) remove_random_items (m_size - new_size);
             cfg::archive_history_max = new_size;
         }
 

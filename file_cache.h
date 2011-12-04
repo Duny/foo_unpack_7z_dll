@@ -19,7 +19,7 @@ namespace unpack_7z
                 if (cfg::use_sys_tmp_for_cache)
                     filesystem::g_open_temp (m_file, p_abort);
                 else {
-                    generate_temp_location_for_file (m_path, cfg::custom_cache_path, "tmp", p_file);
+                    generate_temp_location_for_file (m_path, cfg::custom_cache_path, "tmp", pfc::string_formatter () << ReadTimeStampCounter ());
                     filesystem::g_open_write_new (m_file, m_path, p_abort);
                 }
                 m_stats = p_stats;

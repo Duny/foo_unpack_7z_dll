@@ -101,6 +101,26 @@ namespace unpack_7z
         }
 	};
 
+    // helper: wraps pfc::thread
+    typedef boost::function<void ()> new_thread_callback;
+    inline void run_in_separate_thread (const new_thread_callback &p_func)
+    {
+        class new_thread_t : pfc::thread
+        {
+            new_thread_callback m_func;
+            void threadProc () override
+            {
+                m_func ();
+                delete this;
+            }
+            ~new_thread_t () { waitTillDone (); }
+        public:
+            new_thread_t (const new_thread_callback &p_func) : m_func (p_func) { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
+        };
+
+        new new_thread_t (p_func);
+    }
+
     // wrapper of memory file with custom timestamp
     class tempmem_with_timestamp : public file
     {
