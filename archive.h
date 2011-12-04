@@ -27,19 +27,20 @@ namespace unpack_7z
 
         struct file_info
         {
-            pfc::string8 m_file_path, m_unpack_path;
+            pfc::string8 m_path; // path inside archive (dir\file.mp3)
+            pfc::string8 m_unpack_path;
             t_filestats  m_stats;
 
             file_info () {}
             // constructor used for compare when searching by the list_t::find () function
-            file_info (const char *p_path) : m_file_path (p_path) {}
+            file_info (const char *p_path) : m_path (p_path) {}
 
-            inline bool operator== (const file_info &other) const { return stricmp_utf8 (other.m_file_path, m_file_path) == 0; }
+            inline bool operator== (const file_info &other) const { return stricmp_utf8 (other.m_path, m_path) == 0; }
         };
         typedef pfc::list_t<archive::file_info> file_list;
         typedef file_list const & file_list_cref;
 
-        inline file_list_cref get_info () const { return m_items; }
+        inline file_list_cref get_list () const { return m_items; }
 
         void get_file_list ();
 
@@ -61,8 +62,8 @@ namespace unpack_7z
     };
 }
 
-FB2K_STREAM_READER_OVERLOAD(unpack_7z::archive::file_info) { return stream >> value.m_file_path >> value.m_unpack_path >> value.m_stats.m_size >> value.m_stats.m_timestamp; }
-FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_info) { return stream << value.m_file_path << value.m_unpack_path << value.m_stats.m_size << value.m_stats.m_timestamp; }
+FB2K_STREAM_READER_OVERLOAD(unpack_7z::archive::file_info) { return stream >> value.m_path >> value.m_unpack_path >> value.m_stats.m_size >> value.m_stats.m_timestamp; }
+FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_info) { return stream << value.m_path << value.m_unpack_path << value.m_stats.m_size << value.m_stats.m_timestamp; }
 
 FB2K_STREAM_READER_OVERLOAD(unpack_7z::archive::file_list) { t_size n; stream >> n; unpack_7z::archive::file_info info; while (n --> 0) { stream >> info; value.add_item (info); } return stream; }
 FB2K_STREAM_WRITER_OVERLOAD(unpack_7z::archive::file_list) { auto n = value.get_size (); stream << n; for (t_size i = 0; i < n; i++) stream << value[i]; return stream; }

@@ -30,7 +30,7 @@ namespace unpack_7z
                 a.open (p_archive, p_abort, !files_valid);
 
                 if (!files_valid) {
-                    files = a.get_info ();
+                    files = a.get_list ();
                     m_archive_info_cache.add_entry (a);
                 }
 
@@ -50,7 +50,7 @@ namespace unpack_7z
                 p_reader.is_empty () ? a.open (p_archive, p_out, !files_valid) : a.open (p_archive, p_reader, p_out, !files_valid);
 
                 if (!files_valid) {
-                    files = a.get_info ();
+                    files = a.get_list ();
                     m_archive_info_cache.add_entry (a);
                 }
 
@@ -72,6 +72,11 @@ namespace unpack_7z
             }
         }
 
+        void set_history_size_max (t_uint32 new_size) override
+        {
+            m_archive_info_cache.set_history_size_max (new_size);
+        }
+
         void print_stats () override
         {
             m_file_cache.print_stats ();
@@ -82,10 +87,10 @@ namespace unpack_7z
         // helpers
         void extract_internal (file_ptr &p_out, const unpack_7z::archive &a, archive::file_list_cref p_info, t_size index, abort_callback &p_abort)
         {
-            if (!m_file_cache.fetch (p_out, a.get_path (), p_info[index].m_file_path, p_abort)) {
+            if (!m_file_cache.fetch (p_out, a.get_path (), p_info[index].m_path, p_abort)) {
                 p_out = new file_tempmem (p_info[index].m_stats);
                 a.extract_file (p_out, index, p_abort);
-                m_file_cache.store (p_out, a.get_path (), p_info[index].m_file_path, p_abort);
+                m_file_cache.store (p_out, a.get_path (), p_info[index].m_path, p_abort);
             }
         }
     };

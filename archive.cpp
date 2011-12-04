@@ -57,15 +57,6 @@ namespace unpack_7z
         p_out->seek (0, p_abort);
     }
 
-    void archive::extract_file (const file_ptr &p_out, const char *p_file, abort_callback &p_abort) const
-    {
-        auto n = m_items.find_item (file_info (p_file));
-        if (n != pfc_infinite)
-            extract_file (p_out, n, p_abort);
-        else
-            throw exception_arch_file_not_found ();
-    }
-
     // m_items must be clear before calling this
     void archive::get_file_list ()
     {
@@ -82,7 +73,7 @@ namespace unpack_7z
         while (num_items --> 0) {
             m_archive->GetProperty (num_items, kpidPath, &prop);
             if (prop.vt != VT_BSTR) continue;
-		    dummy.m_file_path = pfc::stringcvt::string_utf8_from_os (ConvertPropVariantToString (prop));
+		    dummy.m_path = pfc::stringcvt::string_utf8_from_os (ConvertPropVariantToString (prop));
 
             m_archive->GetProperty (num_items, kpidSize, &prop);
             if (prop.vt != VT_UI8) continue;
@@ -90,7 +81,7 @@ namespace unpack_7z
 		    dummy.m_stats.m_timestamp = m_timestamp;
 
             // precalculate unpack path
-            archive_impl::g_make_unpack_path (dummy.m_unpack_path, m_path, dummy.m_file_path, _7Z_EXT);
+            archive_impl::g_make_unpack_path (dummy.m_unpack_path, m_path, dummy.m_path, _7Z_EXT);
 
             m_items[num_items] = dummy;
         }

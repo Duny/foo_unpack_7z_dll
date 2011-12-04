@@ -142,8 +142,8 @@ namespace unpack_7z
             if (!(state & preferences_state::needs_restart) && m_cache_size.GetPos32 () != cfg::file_cache_max)
                 state |= flags;
 
-            if (!(state & preferences_state::needs_restart) && get_sel_archive_history_size () != cfg::archive_history_max)
-                state |= flags;
+            if (!(state & preferences_state::changed) && get_sel_archive_history_size () != cfg::archive_history_max)
+                state |= preferences_state::changed;
 
 	        return state;
         }
@@ -156,7 +156,7 @@ namespace unpack_7z
             uGetDlgItemText (*this, IDC_STATIC_CUSTOM_CACHE_LOCATION, cfg::custom_cache_path);
             cfg::file_cache_max = m_cache_size.GetPos32 ();
 
-            cfg::archive_history_max = get_sel_archive_history_size ();
+            static_api_ptr_t<cache_system>()->set_history_size_max (get_sel_archive_history_size ());
 
             m_callback->on_state_changed ();
         }

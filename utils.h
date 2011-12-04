@@ -57,19 +57,9 @@ namespace unpack_7z
     __declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11>::guid = { d1, d2, d3, { d4, d5, d6, d7, d8, d9, d10, d11 } };
 
 
-    inline t_uint64 hash (const char *str)
+    inline t_uint64 hash (const char *str, t_uint64 h = 0)
     {
-        t_uint64 h = 0;
-        while (*str) {
-            /*unsigned c = 0;
-            auto d = pfc::utf8_decode_char (str, c);
-            if (d > 0) {
-                h = 31 * h + uCharLower (c);
-                str += d;
-            }
-            else break;*/
-            h = 31 * h + *str++;
-        }
+        while (*str) h = 31 * h + *str++;
         return h;
     }
 

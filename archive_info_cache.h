@@ -12,7 +12,7 @@ namespace unpack_7z
 
             inline void init (const unpack_7z::archive &p_archive)
             {
-                m_files = p_archive.get_info ();
+                m_files = p_archive.get_list ();
                 m_timestamp = p_archive.get_timestamp ();
             }
         };
@@ -21,10 +21,8 @@ namespace unpack_7z
         void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // Called on shutdown for storing to disk
         {
             stream_writer_formatter<> out (*p_stream, p_abort);
-            auto max_items = min (cfg::archive_history_max, m_size); // Check max data size and truncate if needed
-            out << max_items;
-            for (t_hash_map::const_iterator walk = m_data.first (); walk.is_valid () && max_items; ++walk, --max_items)
-                out << walk->m_key << walk->m_value.m_timestamp << walk->m_value.m_files;
+            out << m_size;
+            m_data.enumerate ([&](const t_key &key, const t_value &val) { out << key << val.m_timestamp << val.m_files; });
         }
 
 	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort) // Called on startup for reading from disk
@@ -33,7 +31,7 @@ namespace unpack_7z
             t_uint32 count; in >> count;
             m_size = count;
             while (count --> 0) {
-                t_hash_map::t_key key; in >> key;
+                t_key key; in >> key;
                 entry_t &e = m_data.find_or_add (key);
                 in >> e.m_timestamp >> e.m_files;
             }
@@ -42,7 +40,7 @@ namespace unpack_7z
         // helpers
         inline entry_t * find_or_add (const char *p_archive, abort_callback &p_abort)
         {
-            t_hash_map::t_key key = hash (p_archive);
+            t_key key = hash (p_archive);
             entry_t * e;
             
             bool is_new = m_data.query_ptr (key, e) == false;
@@ -67,19 +65,26 @@ namespace unpack_7z
 
         inline void make_room_for_new_item ()
         {
-            if (m_size + 1 > cfg::archive_history_max) {
-                if (m_size > 0) { // remove random item
-                    auto n = ReadTimeStampCounter () % m_size; // Pick item to remove
-                    auto walk = m_data.first ();
-                    while (n --> 0) walk++; // Go to its logical position
-                    m_data.remove (walk); // And delete
-                    m_size--;
-                }
+            if (m_size > 0 && m_size + 1 > cfg::archive_history_max)
+                remove_random_item ();
+        }
+
+        inline void remove_random_item (t_uint32 count = 1)
+        {
+            auto r = genrand_service::g_create ();
+            r->seed (static_cast<unsigned>(ReadTimeStampCounter ()));
+            while (count --> 0) {
+                auto n = r->genrand (m_size);
+                auto walk = m_data.first ();
+                while (n --> 0) walk++;
+                m_data.remove (walk);
+                m_size--;
             }
         }
 
         // Member variables
         typedef pfc::map_t<t_uint64, entry_t> t_hash_map;
+        typedef t_hash_map::t_key t_key; typedef t_hash_map::t_value t_value;
         t_hash_map       m_data; // t_uint64 is made of hash () from canonical path to archive
         t_uint32         m_size;
         critical_section m_lock; // Synchronization for accessing m_data
@@ -92,8 +97,8 @@ namespace unpack_7z
             insync (m_lock);
             entry_t *e = find_or_add (p_archive, p_abort);
             auto n = e->m_files.find_item (p_file);
-            if (n == pfc_infinite) throw exception_arch_file_not_found ();
-            return e->m_files[n].m_stats;    
+            //if (n == pfc_infinite) throw exception_arch_file_not_found ();
+            return n == pfc_infinite ? filestats_invalid : e->m_files[n].m_stats;    
         }
 
         inline void get_file_list (const char *p_archive, archive::file_list &p_out, abort_callback &p_abort)
@@ -124,10 +129,17 @@ namespace unpack_7z
             }
         }
 
+        inline void set_history_size_max (t_uint32 new_size)
+        {
+            insync (m_lock);
+            if (m_size > new_size) remove_random_item (m_size - new_size);
+            cfg::archive_history_max = new_size;
+        }
+
         inline void print_stats ()
         {
             insync (m_lock);
-            console::formatter () << "Archive info cache contains " << m_size << " archives(s)\n";
+            console::formatter () << "Archive info cache contains " << m_size << " / " << cfg::archive_history_max << " archives\n";
         }
     };
 }   

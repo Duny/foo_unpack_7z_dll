@@ -33,7 +33,7 @@ namespace unpack_7z
             }
         };
 
-        inline entry_t * alloc_entry (const char *p_archive, const char *p_file, t_filesize file_size)
+        inline entry_t * alloc_entry (const char *p_archive, const char *p_file, t_filesize file_size, bool & is_new)
         {
             t_filesize max_size = cfg::file_cache_max; max_size <<= 20;
             if (file_size > max_size) return nullptr;
@@ -65,7 +65,7 @@ namespace unpack_7z
                 }
             }
             
-            return &m_data.find_or_add (make_key (p_archive, p_file));
+            return &m_data.find_or_add_ex (make_key (p_archive, p_file), is_new);
         }
 
         // Helpers
@@ -105,8 +105,9 @@ namespace unpack_7z
             insync (m_lock);            
 
             auto stats = p_in->get_stats (p_abort);
-            entry_t *e = alloc_entry (p_archive, p_file, stats.m_size);
-            if (e) {
+            bool is_new;
+            entry_t *e = alloc_entry (p_archive, p_file, stats.m_size, is_new);
+            if (e && is_new) {
                 try {
                     e->init (p_file, stats, p_abort);
                     file::g_transfer_file (p_in, e->m_file, p_abort);

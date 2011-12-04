@@ -41,11 +41,11 @@ BEGIN
     PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION,152,119,33,14
     LTEXT           "cache directory path here",IDC_STATIC_CUSTOM_CACHE_LOCATION,82,137,168,8
     COMBOBOX        IDC_COMBO_ARCHIVE_HISTORY_SIZE,186,207,68,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Cache status",IDC_BUTTON_PRINT_CACHE_STATS,190,266,59,14
+    PUSHBUTTON      "Print cache stats",IDC_BUTTON_PRINT_CACHE_STATS,190,266,59,14
     LTEXT           "Mb",IDC_STATIC,246,73,11,8
     GROUPBOX        "Remember opened archives",IDC_STATIC,57,190,217,43
     LTEXT           "Max number of archives:",IDC_STATIC,76,208,78,8
-    LTEXT           "Plugin tries to load 7z.dll from 7-zip installation folder. If 7-zip is not installed or error occured, than components installation folder is used",IDC_STATIC,16,30,299,16
+    LTEXT           "Firstly, plugin tries to load 7z.dll from 7-Zip program installation folder. If 7-Zip is not installed or some error occured, than it tries components installation folder.",IDC_STATIC,16,30,299,16
 END
 
 
@@ -106,8 +106,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 3,0,9,9
- PRODUCTVERSION 3,0,9,9
+ FILEVERSION 3,1,9,9
+ PRODUCTVERSION 3,1,9,9
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x5L
@@ -125,12 +125,12 @@ BEGIN
             VALUE "Comments", "Requires 7z.dll (32 bit) to work"
             VALUE "CompanyName", "Duny"
             VALUE "FileDescription", "7z archive support for foobar2000"
-            VALUE "FileVersion", "3.0.9.9"
+            VALUE "FileVersion", "3.1.9.9"
             VALUE "InternalName", "foo_unpack_7z_dll.dll"
             VALUE "LegalCopyright", "© 2009-2011 Efimenko Dmitry"
             VALUE "OriginalFilename", "foo_unpack_7z_dll.dll"
             VALUE "ProductName", "7z archive support for foobar2000"
-            VALUE "ProductVersion", "3.0.9.9"
+            VALUE "ProductVersion", "3.1.9.9"
         END
     END
     BLOCK "VarFileInfo"
