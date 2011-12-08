@@ -81,7 +81,7 @@ namespace unpack_7z
         CPerfTimer m_timer;
     public:
         operation_timer (const char *p_message) : m_message (p_message), m_timer (TRUE) {}
-        ~operation_timer () { m_timer.Stop (); console::formatter () << m_message << " took " << (int)m_timer.Elapsedus () << " microseconds\n"; }
+        ~operation_timer () { m_timer.Stop (); debug_log () << m_message << " took " << (int)m_timer.Elapsedus () << " microseconds\n"; }
     };
 
     // helper for creating GUID from any text using md5

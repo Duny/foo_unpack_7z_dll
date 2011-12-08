@@ -7,13 +7,15 @@ namespace unpack_7z
     {
         struct entry_t
         {
+            pfc::string8       m_path; // Archive path
             t_filetimestamp    m_timestamp; // Archive timestamp
             archive::file_list m_files; // Archive contents
-
+            
             inline void init (const unpack_7z::archive &p_archive)
             {
-                m_files = p_archive.get_list ();
+                m_path = p_archive.get_path ();
                 m_timestamp = p_archive.get_timestamp ();
+                m_files = p_archive.get_list ();
             }
         };
 
@@ -22,7 +24,7 @@ namespace unpack_7z
         {
             stream_writer_formatter<> out (*p_stream, p_abort);
             out << m_size;
-            m_data.enumerate ([&](const t_key &key, const t_value &val) { out << key << val.m_timestamp << val.m_files; });
+            m_data.enumerate ([&](const t_key &key, const t_value &val) { out << key << val.m_path << val.m_timestamp << val.m_files; });
         }
 
 	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort) // Called on startup for reading from disk
@@ -33,7 +35,7 @@ namespace unpack_7z
             while (count --> 0) {
                 t_key key; in >> key;
                 entry_t &e = m_data.find_or_add (key);
-                in >> e.m_timestamp >> e.m_files;
+                in >> e.m_path >> e.m_timestamp >> e.m_files;
             }
 	    }
 
@@ -97,8 +99,8 @@ namespace unpack_7z
             insync (m_lock);
             entry_t *e = find_or_add (p_archive, p_abort);
             auto n = e->m_files.find_item (p_file);
-            //if (n == pfc_infinite) throw exception_arch_file_not_found ();
-            return n == pfc_infinite ? filestats_invalid : e->m_files[n].m_stats;    
+            if (n == pfc_infinite) throw exception_arch_file_not_found ();
+            return e->m_files[n].m_stats;    
         }
 
         inline void get_file_list (const char *p_archive, archive::file_list &p_out, abort_callback &p_abort)
@@ -129,7 +131,7 @@ namespace unpack_7z
             }
         }
 
-        inline void set_history_size_max (t_uint32 new_size)
+        inline void set_max_size (t_uint32 new_size)
         {
             insync (m_lock);
             if (m_size > new_size) remove_random_items (m_size - new_size);
@@ -140,6 +142,17 @@ namespace unpack_7z
         {
             insync (m_lock);
             console::formatter () << "Archive info cache contains " << m_size << " / " << cfg::archive_history_max << " archives\n";
+        }
+
+        inline void remove_dead_items ()
+        {
+            insync (m_lock);
+            abort_callback_dummy p_abort;
+            m_data.enumerate ([&](const t_key &key, const t_value &val)
+            {
+                if (!filesystem::g_exists (val.m_path, p_abort))
+                    m_data.remove (key);
+            });
         }
     };
 }   

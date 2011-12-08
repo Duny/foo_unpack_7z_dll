@@ -21,7 +21,6 @@
 #include "boost/tuple/tuple.hpp"
 
 // plugin includes
-#include "resource.h"
 #include "perf_timer.h"
 #include "utils.h"
 

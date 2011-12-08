@@ -11,7 +11,10 @@ namespace unpack_7z
         virtual void open_archive (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) = 0;
         virtual void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) = 0;
 
+        virtual void set_cache_size_max (t_uint32 new_size) = 0; // In Mb
+
         virtual void set_history_size_max (t_uint32 new_size) = 0;
+        virtual void remove_dead_history_items () = 0;
 
         virtual void print_stats () = 0;
 

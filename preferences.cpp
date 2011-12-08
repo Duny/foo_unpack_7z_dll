@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "resource.h"
 
 #include "cache_system.h"
 
@@ -6,7 +7,7 @@ namespace unpack_7z
 {
     namespace preferences
     {
-        const t_uint32 archive_history_sizes[] = { 1, 100, 500, 1000, 10000, 50000, 100000 };
+        const t_uint32 archive_history_sizes[] = { 1, 100, 500, 1000, 10000, 50000, 100000, pfc_infinite };
         const t_uint32 num_sizes = sizeof (archive_history_sizes) / sizeof (archive_history_sizes[0]);
 
 
@@ -67,6 +68,7 @@ namespace unpack_7z
             inline void on_state_changed ()
             { 
                 GetDlgItem (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION).EnableWindow (!is_default_cache_mode ());
+                GetDlgItem (IDC_BUTTON_PRINT_CACHE_STATS).EnableWindow (uButton_GetCheck (*this, IDC_CHECK_DEBUG_LOG));
                 m_callback->on_state_changed ();
             }
 
@@ -99,7 +101,8 @@ namespace unpack_7z
                 uSendDlgItemMessage (IDC_COMBO_ARCHIVE_HISTORY_SIZE, CB_RESETCONTENT);
                 int selected = CB_ERR;
                 for (t_uint32 i = 0; i < num_sizes; i++) {
-                    uSendDlgItemMessageText (*this, IDC_COMBO_ARCHIVE_HISTORY_SIZE, CB_ADDSTRING, 0, pfc::toString (archive_history_sizes[i]).get_ptr ());
+                    uSendDlgItemMessageText (*this, IDC_COMBO_ARCHIVE_HISTORY_SIZE, CB_ADDSTRING, 0, 
+                        (archive_history_sizes[i] == pfc_infinite ? "Infinity" : pfc::toString (archive_history_sizes[i]).get_ptr ()));
                     if (archive_history_sizes[i] <= history_max)
                         selected = i;
                 }
@@ -119,15 +122,13 @@ namespace unpack_7z
 
         t_uint32 page::get_state ()
         {
-            const t_size flags = preferences_state::changed | preferences_state::needs_restart;
-
 	        t_uint32 state = preferences_state::resettable;
 
             if (uButton_GetCheck (*this, IDC_CHECK_DEBUG_LOG) != cfg::debug_log)
                 state |= preferences_state::changed;
 
-            if (!(state & preferences_state::needs_restart) && is_default_cache_mode () != cfg::use_sys_tmp_for_cache)
-                state |= flags;
+            if (is_default_cache_mode () != cfg::use_sys_tmp_for_cache)
+                state |= (preferences_state::changed | preferences_state::needs_restart);
 
             if (!(state & preferences_state::needs_restart)) {
                 pfc::string8_fast path;
@@ -139,8 +140,8 @@ namespace unpack_7z
                 }
             }
 
-            if (!(state & preferences_state::needs_restart) && m_cache_size.GetPos32 () != cfg::file_cache_max)
-                state |= flags;
+            if (!(state & preferences_state::changed) && m_cache_size.GetPos32 () != cfg::file_cache_max)
+                state |= preferences_state::changed;
 
             if (!(state & preferences_state::changed) && get_sel_archive_history_size () != cfg::archive_history_max)
                 state |= preferences_state::changed;
@@ -154,7 +155,7 @@ namespace unpack_7z
 
             cfg::use_sys_tmp_for_cache = is_default_cache_mode ();
             uGetDlgItemText (*this, IDC_STATIC_CUSTOM_CACHE_LOCATION, cfg::custom_cache_path);
-            cfg::file_cache_max = m_cache_size.GetPos32 ();
+            static_api_ptr_t<cache_system>()->set_cache_size_max (m_cache_size.GetPos32 ());
 
             static_api_ptr_t<cache_system>()->set_history_size_max (get_sel_archive_history_size ());
 

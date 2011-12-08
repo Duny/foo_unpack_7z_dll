@@ -38,33 +38,7 @@ namespace unpack_7z
             t_filesize max_size = cfg::file_cache_max; max_size <<= 20;
             if (file_size > max_size) return nullptr;
 
-            auto new_size = m_size + file_size;
-            if (new_size > max_size) {
-                typedef boost::tuple<GUID, t_filesize> cache_file;
-                
-                pfc::list_t<cache_file> files;
-                m_data.enumerate ([&](const GUID &key, const entry_t &value) { files.add_item (boost::make_tuple (key, value.m_stats.m_size)); });
-                files.sort_t ([] (const cache_file &left, const cache_file &right) -> int { return pfc::compare_t (left.get<1>(), right.get<1>()); });
-
-                t_size i = 0, n = files.get_size ();
-                for (; i < n; i++) // search for the smallest possible file to delete
-                    if ((new_size - files[i].get<1> ()) < max_size) break;
-
-                if (i != n) { // file was found
-                    m_data.remove (files[i].get<0>());
-                    m_size -= files[i].get<1> ();
-                }
-                else { // there is no such big enough file in cache to accommodate our new file
-                    // Very ugly solution:
-                    // Delete each file starting from the end, until we reach desired cache size
-                    while ((n --> 0) && (new_size > max_size)) {
-                        m_data.remove (files[n].get<0>());
-                        m_size -= files[n].get<1> ();
-                        new_size -= files[n].get<1> ();
-                    }
-                }
-            }
-            
+            if (m_size + file_size > max_size) free_space (file_size);
             return &m_data.find_or_add_ex (make_key (p_archive, p_file), is_new);
         }
 
@@ -74,6 +48,35 @@ namespace unpack_7z
             pfc::string8_fast str = string_lower (p_archive);
             str.add_string (string_lower (p_file));
             return GUID_from_text_md5 (str);
+        }
+
+        inline void free_space (t_filesize size) // in bytes
+        {
+            typedef boost::tuple<GUID, t_filesize> cache_file;
+                
+            // sort cache files by size (asc)
+            pfc::list_t<cache_file> files;
+            m_data.enumerate ([&](const GUID &key, const entry_t &value) { files.add_item (boost::make_tuple (key, value.m_stats.m_size)); });
+            files.sort_t ([] (const cache_file &left, const cache_file &right) -> int { return pfc::compare_t (left.get<1>(), right.get<1>()); });
+
+            t_size i = 0, n = files.get_size ();
+            for (; i < n; i++) // search for the smallest possible file to delete from the beginning
+                if (files[i].get<1> () >= size) break;
+
+            t_filesize freed = 0;
+            if (i != n) { // file was found
+                m_data.remove (files[i].get<0>());
+                freed = files[i].get<1> ();
+            }
+            else { // there is no such file in cache to accommodate our size
+                // Very ugly solution:
+                // Delete each file starting from the end, until we reach desired size
+                while ((n --> 0) && (freed < size)) {
+                    m_data.remove (files[n].get<0>());                    
+                    freed += files[n].get<1> ();
+                }
+            }
+            m_size -= freed;
         }
 
         pfc::map_t<GUID, entry_t> m_data; // GUID is made of md5 from canonical path to archive+file path in archive
@@ -119,6 +122,16 @@ namespace unpack_7z
                 }
             }
         }
+
+        inline void set_max_size (t_uint32 new_size) // In Mb
+        {
+            insync (m_lock);
+
+            cfg::file_cache_max = new_size;
+
+            t_filesize new_sizeB = new_size; new_sizeB <<= 20;
+            if (m_size > new_sizeB) free_space (m_size - new_sizeB);
+        } 
 
         inline void print_stats () const
         {

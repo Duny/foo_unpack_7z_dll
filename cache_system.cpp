@@ -74,7 +74,17 @@ namespace unpack_7z
 
         void set_history_size_max (t_uint32 new_size) override
         {
-            m_archive_info_cache.set_history_size_max (new_size);
+            m_archive_info_cache.set_max_size (new_size);
+        }
+
+        void set_cache_size_max (t_uint32 new_size) override
+        {
+            m_file_cache.set_max_size (new_size);
+        }
+
+        void remove_dead_history_items () override
+        {
+            m_archive_info_cache.remove_dead_items ();
         }
 
         void print_stats () override
@@ -82,7 +92,6 @@ namespace unpack_7z
             m_file_cache.print_stats ();
             m_archive_info_cache.print_stats ();
         }
-
 
         // helpers
         void extract_internal (file_ptr &p_out, const unpack_7z::archive &a, archive::file_list_cref p_info, t_size index, abort_callback &p_abort)
