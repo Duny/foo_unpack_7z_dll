@@ -30,7 +30,7 @@ namespace unpack_7z
 	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort) // Called on startup for reading from disk
         {
             stream_reader_formatter<> in (*p_stream, p_abort);
-            t_uint32 count; in >> count;
+            decltype(m_size) count; in >> count;
             m_size = count;
             while (count --> 0) {
                 t_key key; in >> key;
@@ -50,15 +50,17 @@ namespace unpack_7z
                 t_filestats stats;
                 bool is_writable;
                 filesystem::g_get_stats (p_archive, stats, is_writable, p_abort);
-                if (e->m_timestamp != stats.m_timestamp) // archive was updated, need to reload it
+                if (e->m_timestamp != stats.m_timestamp) { // archive was updated, need to reload it
+                    remove_one_item (key);
                     is_new = true;
+                }
             }
 
             if (is_new) {
                 check_size_overflow ();
-                entry_t & new_entry = m_data.find_or_add_ex (key, is_new);
+                entry_t & new_entry = m_data.find_or_add (key);
                 new_entry.init (unpack_7z::archive (p_archive, p_abort));
-                if (is_new) m_size++;
+                m_size++;
                 return &new_entry;
             }
             
@@ -67,8 +69,9 @@ namespace unpack_7z
 
         inline void check_size_overflow ()
         {
-            if (m_size > 0 && m_size + 1 > cfg::archive_history_max)
-                remove_random_items ();
+            if (cfg::archive_history_max != pfc_infinite)
+                if (m_size > 0 && m_size + 1 > cfg::archive_history_max)
+                    remove_random_items ();
         }
 
         inline void remove_random_items (t_uint32 count = 1)
@@ -79,16 +82,17 @@ namespace unpack_7z
                 auto n = r->genrand (m_size);
                 auto walk = m_data.first ();
                 while (n --> 0) walk++;
-                m_data.remove (walk);
-                m_size--;
+                remove_one_item (walk);
             }
         }
+
+        template <class T> inline void remove_one_item (const T & were) { m_data.remove (were); m_size--; }
 
         // Member variables
         typedef pfc::map_t<t_uint64, entry_t> t_hash_map;
         typedef t_hash_map::t_key t_key; typedef t_hash_map::t_value t_value;
-        t_hash_map       m_data; // t_uint64 is made of hash () from canonical path to archive
-        t_uint32         m_size;
+        t_hash_map       m_data; // t_uint64 key is made of hash () from canonical path to archive
+        t_size           m_size;
         critical_section m_lock; // Synchronization for accessing m_data
             
     public:
@@ -138,21 +142,29 @@ namespace unpack_7z
             cfg::archive_history_max = new_size;
         }
 
-        inline void print_stats ()
-        {
-            insync (m_lock);
-            console::formatter () << "Archive info cache contains " << m_size << " / " << cfg::archive_history_max << " archives\n";
-        }
-
         inline void remove_dead_items ()
         {
             insync (m_lock);
             abort_callback_dummy p_abort;
+            t_hash_map new_data;
             m_data.enumerate ([&](const t_key &key, const t_value &val)
             {
-                if (!filesystem::g_exists (val.m_path, p_abort))
-                    m_data.remove (key);
+                if (filesystem::g_exists (val.m_path, p_abort))
+                    new_data.set (key, val);
+                else
+                    m_size--;
             });
+            m_data = new_data;
+        }
+
+        inline void print_stats ()
+        {
+            insync (m_lock);
+            console::formatter f;
+            f << "Archive info cache contains " << m_size;
+            if (cfg::archive_history_max != pfc_infinite)
+                f << " / " << cfg::archive_history_max;
+            f << " archives\n";
         }
     };
 }   
