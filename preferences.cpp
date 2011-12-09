@@ -36,14 +36,14 @@ namespace unpack_7z
 
                 COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION, on_browse_for_cache_location)
                 COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_HISTORY_REMOVE_DEAD_ITEMS, on_remove_dead_items)
+                COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_CACHE_CLEAR, on_cache_clear)
+                COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_HISTORY_CLEAR, on_history_clear)
                 COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_PRINT_CACHE_STATS, on_print_cache_stats)
 
                 COMMAND_HANDLER_SIMPLE (IDC_EDIT_SPIN_CTRL_BUDDY, EN_CHANGE, on_state_changed)
                 COMMAND_HANDLER_SIMPLE (IDC_COMBO_ARCHIVE_HISTORY_SIZE, CBN_SELCHANGE, on_state_changed)
                 COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_USE_DEFAULT_CACHE_LOCATION, on_state_changed)
                 COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_USE_CUSTOM_CACHE_LOCATION, on_state_changed)
-                COMMAND_ID_HANDLER_SIMPLE (IDC_BUTTON_HISTORY_REMOVE_DEAD_ITEMS, on_remove_dead_items)
-                
             END_MSG_MAP ()
 
 
@@ -85,6 +85,10 @@ namespace unpack_7z
             }
 
             inline void on_remove_dead_items () { static_api_ptr_t<cache_system>()->remove_dead_history_items (); }
+
+            inline void on_cache_clear () { static_api_ptr_t<cache_system>()->cache_free (); }
+
+            inline void on_history_clear () { static_api_ptr_t<cache_system>()->history_clear (); }
 
             inline void on_print_cache_stats () { static_api_ptr_t<cache_system>()->print_stats (); }
 

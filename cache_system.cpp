@@ -82,9 +82,19 @@ namespace unpack_7z
             m_file_cache.set_max_size (new_size);
         }
 
+        void cache_free ()
+        {
+            m_file_cache.clear ();
+        }
+
         void remove_dead_history_items () override
         {
             m_archive_info_cache.remove_dead_items ();
+        }
+
+        void history_clear () override
+        {
+            m_archive_info_cache.clear ();
         }
 
         void print_stats () override

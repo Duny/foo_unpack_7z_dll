@@ -147,6 +147,7 @@ namespace unpack_7z
             insync (m_lock);
             abort_callback_dummy p_abort;
             t_hash_map new_data;
+            auto init_size = m_size;
             m_data.enumerate ([&](const t_key &key, const t_value &val)
             {
                 if (filesystem::g_exists (val.m_path, p_abort))
@@ -155,6 +156,14 @@ namespace unpack_7z
                     m_size--;
             });
             m_data = new_data;
+            debug_log () << "Removed " << init_size - m_size << " dead archives from history";
+        }
+
+        inline void clear ()
+        {
+            insync (m_lock);
+            m_data.remove_all ();
+            m_size = 0;
         }
 
         inline void print_stats ()

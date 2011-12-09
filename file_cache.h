@@ -38,7 +38,7 @@ namespace unpack_7z
             t_filesize max_size = cfg::file_cache_max; max_size <<= 20;
             if (file_size > max_size) return nullptr;
 
-            if (m_size + file_size > max_size) free_space (file_size);
+            if (m_size + file_size > max_size) free_space (file_size - (max_size - m_size));
             return &m_data.find_or_add_ex (make_key (p_archive, p_file), is_new);
         }
 
@@ -133,10 +133,18 @@ namespace unpack_7z
             if (m_size > new_sizeB) free_space (m_size - new_sizeB);
         } 
 
+        inline void clear ()
+        {
+            insync (m_lock);
+            m_data.remove_all ();
+            m_size = 0;
+        }
+
         inline void print_stats () const
         {
             t_filesize max_size = cfg::file_cache_max; max_size <<= 20;
-            console::formatter () << "File cache disk usage: " << pfc::format_file_size_short (m_size) << " of " << pfc::format_file_size_short (max_size) << "\n";
+            console::formatter () << "File cache disk usage: " << pfc::format_file_size_short (m_size)
+                << " in " << m_data.get_count ()  << " files of " << pfc::format_file_size_short (max_size) << " max\n";
         }
     };
 }
