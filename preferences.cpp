@@ -86,9 +86,17 @@ namespace unpack_7z
 
             inline void on_remove_dead_items () { static_api_ptr_t<cache_system>()->remove_dead_history_items (); }
 
-            inline void on_cache_clear () { static_api_ptr_t<cache_system>()->cache_free (); }
+            inline void on_cache_clear ()
+            {
+                auto res = uMessageBox (*this, "Clear disk cache?", COMPONENT_NAME, MB_YESNO | MB_ICONQUESTION);
+                if (res == IDYES) static_api_ptr_t<cache_system>()->cache_free ();
+            }
 
-            inline void on_history_clear () { static_api_ptr_t<cache_system>()->history_clear (); }
+            inline void on_history_clear ()
+            {
+                auto res = uMessageBox (*this, "Clear archive history?", COMPONENT_NAME, MB_YESNO | MB_ICONQUESTION);
+                if (res == IDYES) static_api_ptr_t<cache_system>()->history_clear ();
+            }
 
             inline void on_print_cache_stats () { static_api_ptr_t<cache_system>()->print_stats (); }
 

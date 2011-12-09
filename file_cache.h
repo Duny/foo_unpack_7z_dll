@@ -5,15 +5,15 @@ namespace unpack_7z
 {
     class file_cache
     {
-        struct entry_t
+        struct entry
         {
             t_filestats  m_stats; // Stats of file from archive
             pfc::string8 m_path; // Physical path of cache entry file. Empty if default system temp folder was used
             file_ptr     m_file; // Cache entry file
 
-            ~entry_t () { free (); }
+            ~entry () { free (); }
 
-            inline void init (const char *p_file, const t_filestats &p_stats, abort_callback &p_abort)
+            inline void set (const char *p_file, const t_filestats &p_stats, abort_callback &p_abort)
             {
                 free ();
                 if (cfg::use_sys_tmp_for_cache)
@@ -28,12 +28,12 @@ namespace unpack_7z
             inline void free ()
             {
                 if (m_file.is_valid ()) m_file.release ();
-                // delete file if not system temp
+                // delete file if not system temp (tmp files are removed by os at exit)
                 if (!m_path.is_empty ()) { uDeleteFile (m_path); m_path.reset (); }
             }
         };
 
-        inline entry_t * alloc_entry (const char *p_archive, const char *p_file, t_filesize file_size, bool & is_new)
+        inline entry * alloc_entry (const char *p_archive, const char *p_file, t_filesize file_size, bool & is_new)
         {
             t_filesize max_size = cfg::file_cache_max; max_size <<= 20;
             if (file_size > max_size) return nullptr;
@@ -56,7 +56,7 @@ namespace unpack_7z
                 
             // sort cache files by size (asc)
             pfc::list_t<cache_file> files;
-            m_data.enumerate ([&](const GUID &key, const entry_t &value) { files.add_item (boost::make_tuple (key, value.m_stats.m_size)); });
+            m_data.enumerate ([&](const GUID &key, const entry &value) { files.add_item (boost::make_tuple (key, value.m_stats.m_size)); });
             files.sort_t ([] (const cache_file &left, const cache_file &right) -> int { return pfc::compare_t (left.get<1>(), right.get<1>()); });
 
             t_size i = 0, n = files.get_size ();
@@ -79,16 +79,16 @@ namespace unpack_7z
             m_size -= freed;
         }
 
-        pfc::map_t<GUID, entry_t> m_data; // GUID is made of md5 from canonical path to archive+file path in archive
-        t_filesize                m_size; // size in bytes of used space
-        mutable critical_section  m_lock;
+        pfc::map_t<GUID, entry>  m_data; // GUID is made of md5 from canonical path to archive+file path in archive
+        t_filesize               m_size; // size in bytes of used space
+        mutable critical_section m_lock;
 
     public:
         bool fetch (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) const
         {
             insync (m_lock);
 
-            const entry_t *e;
+            const entry *e;
             if (m_data.query_ptr (make_key (p_archive, p_file), e)) {
                 p_out = new file_tempmem (e->m_stats);
                 try {
@@ -109,10 +109,10 @@ namespace unpack_7z
 
             auto stats = p_in->get_stats (p_abort);
             bool is_new;
-            entry_t *e = alloc_entry (p_archive, p_file, stats.m_size, is_new);
+            entry *e = alloc_entry (p_archive, p_file, stats.m_size, is_new);
             if (e && is_new) {
                 try {
-                    e->init (p_file, stats, p_abort);
+                    e->set (p_file, stats, p_abort);
                     file::g_transfer_file (p_in, e->m_file, p_abort);
                     p_in->seek (0, p_abort);
                     m_size += stats.m_size;
