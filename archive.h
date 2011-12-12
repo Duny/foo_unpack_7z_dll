@@ -17,8 +17,9 @@ namespace unpack_7z
 	    archive (const char *p_archive, abort_callback &p_abort, bool read_file_list = true) { open (p_archive, p_abort, read_file_list); }
 	    ~archive () { close (); }
 
+        // If p_file is not valid, then p_archive is opened
         void open (const char *p_archive, const file_ptr &p_file, abort_callback &p_abort, bool read_file_list = true);
-	    void open (const char *p_archive, abort_callback &p_abort, bool read_file_list = true);
+        inline void open (const char *p_archive, abort_callback &p_abort, bool read_file_list = true) { open (p_archive, file_ptr (), p_abort, read_file_list); }
         void close ();
 
         inline t_filetimestamp get_timestamp () const { return m_timestamp; }

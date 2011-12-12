@@ -26,6 +26,8 @@ namespace unpack_7z
         // cfg_var overrides
         void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // Called on shutdown for storing to disk
         {
+            insync (m_lock);
+
             stream_writer_formatter<> out (*p_stream, p_abort);
             out << m_size;
             m_data.enumerate ([&](const t_key &key, const t_value &val) { out << key << val.m_path << val.m_timestamp << val.m_files; });
@@ -33,6 +35,8 @@ namespace unpack_7z
 
 	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort) // Called on startup for reading from disk
         {
+            insync (m_lock);
+
             stream_reader_formatter<> in (*p_stream, p_abort);
             decltype(m_size) count; in >> count;
             m_size = count;
@@ -103,6 +107,7 @@ namespace unpack_7z
         inline t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
             insync (m_lock);
+            
             t_value *e = find_or_add (p_archive, p_abort);
             auto n = e->m_files.find_item (p_file);
             if (n == pfc_infinite) throw exception_arch_file_not_found ();
@@ -152,7 +157,7 @@ namespace unpack_7z
             auto init_size = m_size;
             m_data.enumerate ([&](const t_key &key, const t_value &val)
             {
-                if (filesystem::g_exists (val.m_path, p_abort))
+                if (!val.m_path.is_empty () && filesystem::g_exists (val.m_path, p_abort))
                     new_data.set (key, val);
                 else
                     m_size--;

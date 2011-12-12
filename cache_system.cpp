@@ -17,17 +17,26 @@ namespace unpack_7z
         // cache_system overrides
         t_filestats get_stats_in_archive (const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
-            return m_archive_info_cache.get_file_stats (p_archive, p_file, p_abort);
+            pfc::string8 path_canonical;
+            filesystem::g_get_canonical_path (p_archive, path_canonical);
+            return m_archive_info_cache.get_file_stats (path_canonical, p_file, p_abort);
         }
         
         void open_archive (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
-            if (!m_file_cache.fetch (p_out, p_archive, p_file, p_abort)) {
+            pfc::string8 path_canonical;
+            filesystem::g_get_canonical_path (p_archive, path_canonical);
+
+            if (pfc::stricmp_ascii (p_file, "\\front.jpg") == 0) {
+                int i = 0;
+            }
+
+            if (!m_file_cache.fetch (p_out, path_canonical, p_file, p_abort)) {
                 archive::file_list files;
-                bool files_valid = m_archive_info_cache.query_file_list (p_archive, files);
+                bool files_valid = m_archive_info_cache.query_file_list (path_canonical, files);
 
                 unpack_7z::archive a;
-                a.open (p_archive, p_abort, !files_valid);
+                a.open (path_canonical, p_abort, !files_valid);
 
                 if (!files_valid) {
                     files = a.get_list ();
@@ -42,12 +51,15 @@ namespace unpack_7z
 
         void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) override
         {
+            pfc::string8 path_canonical;
+            filesystem::g_get_canonical_path (p_archive, path_canonical);
+
             if (p_want_readers) {
                 archive::file_list files;
-                bool files_valid = m_archive_info_cache.query_file_list (p_archive, files);
+                bool files_valid = m_archive_info_cache.query_file_list (path_canonical, files);
                 
                 unpack_7z::archive a;
-                p_reader.is_empty () ? a.open (p_archive, p_out, !files_valid) : a.open (p_archive, p_reader, p_out, !files_valid);
+                a.open (path_canonical, p_reader, p_out, !files_valid);
 
                 if (!files_valid) {
                     files = a.get_list ();
@@ -63,7 +75,7 @@ namespace unpack_7z
             }
             else { // special case for fast listing
                 pfc::list_t<archive::file_info> files;
-                m_archive_info_cache.get_file_list (p_archive, files, p_out);
+                m_archive_info_cache.get_file_list (path_canonical, files, p_out);
 
                 file_ptr dummy;
                 for (t_size i = 0, max = files.get_size (); i < max; i++)

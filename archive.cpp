@@ -8,8 +8,12 @@ namespace unpack_7z
 {
     void archive::open (const char *p_archive, file_ptr const &p_file, abort_callback &p_abort, bool read_file_list)
     {
+        file_ptr file = p_file;
+        if (!file.is_valid ())
+	        filesystem::g_open (file, p_archive, filesystem::open_mode_read, p_abort);
+
         CMyComPtr<IInArchive> new_archive (dll::create_archive_object ());
-        CMyComPtr<IInStream> new_stream (new file_streams::in (p_file, p_abort));
+        CMyComPtr<IInStream> new_stream (new file_streams::in (file, p_abort));
 
         if (new_archive->Open (new_stream, 0, NULL) != S_OK)
             throw exception_arch_open ();
@@ -20,17 +24,9 @@ namespace unpack_7z
         m_stream = new_stream;
         m_path = p_archive;
 
-        m_timestamp = p_file->get_timestamp (p_abort);
+        m_timestamp = file->get_timestamp (p_abort);
         if (read_file_list)
             get_file_list ();
-    }
-
-    void archive::open (const char *p_archive, abort_callback &p_abort, bool read_file_list)
-    {
-	    file_ptr file;
-
-	    filesystem::g_open (file, p_archive, filesystem::open_mode_read, p_abort);
-	    this->open (p_archive, file, p_abort, read_file_list);
     }
 
     void archive::close ()

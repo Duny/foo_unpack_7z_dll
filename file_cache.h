@@ -28,7 +28,7 @@ namespace unpack_7z
             inline void free ()
             {
                 if (m_file.is_valid ()) m_file.release ();
-                // delete file if not system temp (tmp files are deleted by os)
+                // Delete file if not system temp (tmp files are deleted by OS)
                 if (!m_path.is_empty ()) { uDeleteFile (m_path); m_path.reset (); }
             }
         };
@@ -38,19 +38,16 @@ namespace unpack_7z
 
 
         // cfg_var overrides
-        void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // Called on shutdown for storing to disk
+        void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // Called for storing configuration
         {
+            insync (m_lock);
+
             stream_writer_formatter<> out (*p_stream, p_abort);
-            if (cfg::cache_clear_at_exit != true) {
-                decltype(m_data.get_count ()) num = 0; // Calculate number of cache files
-                m_data.enumerate ([&](const t_key &key, const t_value &val) { if (!val.m_path.is_empty ()) num++; });
-                out << num;
-                m_data.enumerate ([&](const t_key &key, t_value &val)
-                {
-                    if (!val.m_path.is_empty ()) {
+            if (cfg::cache_clear_at_exit != true && cfg::use_sys_tmp_for_cache != true) {
+                out << m_data.get_count ();
+                m_data.enumerate ([&](const t_key &key, const t_value &val) {
+                    if (!val.m_path.is_empty ())
                         out << key << val.m_stats.m_timestamp << val.m_stats.m_size << val.m_path;
-                        val.m_path.reset (); // Prevent file from being deleted at entry::~entry
-                    }
                 });
             }
             else
@@ -59,6 +56,8 @@ namespace unpack_7z
 
 	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort) // Called on startup for reading from disk
         {
+            insync (m_lock);
+
             stream_reader_formatter<> in (*p_stream, p_abort);
             decltype(m_data.get_count ()) count; in >> count;
             while (count --> 0) {
@@ -75,6 +74,12 @@ namespace unpack_7z
             }
 	    }
 
+        // Helpers
+        inline t_key make_key (const char *p_archive, const char *p_file) const 
+        { 
+            return hash (p_archive, hash (p_file));
+        }
+
         inline t_value * alloc_entry (const char *p_archive, const char *p_file, t_filesize file_size, bool & is_new)
         {
             t_filesize max_size = cfg::file_cache_max; max_size <<= 20;
@@ -83,12 +88,6 @@ namespace unpack_7z
             if (m_size > max_size) free_space (m_size - max_size);
             if (m_size + file_size > max_size) free_space (file_size - (max_size - m_size));
             return &m_data.find_or_add_ex (make_key (p_archive, p_file), is_new);
-        }
-
-        // Helpers
-        inline t_key make_key (const char *p_archive, const char *p_file) const 
-        { 
-            return hash (p_archive, hash (p_file));
         }
 
         inline void free_space (t_filesize size) // In bytes
@@ -128,7 +127,8 @@ namespace unpack_7z
 
     public:
         file_cache () : cfg_var (guid_inline<0x99e8aad3, 0xa107, 0x4495, 0x84, 0xf4, 0x08, 0x43, 0xc9, 0x88, 0x63, 0xa1>::guid) {}
-
+        ~file_cache () { m_data.enumerate ([&](const t_key &key, t_value &val) { if (!cfg::cache_clear_at_exit && !cfg::use_sys_tmp_for_cache) val.m_path.reset (); }); }
+        
         bool fetch (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) const
         {
             insync (m_lock);
