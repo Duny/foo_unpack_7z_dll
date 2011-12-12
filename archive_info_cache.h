@@ -5,7 +5,7 @@ namespace unpack_7z
 {
     class archive_info_cache : public cfg_var
     {
-        struct entry_t
+        struct entry
         {
             pfc::string8       m_path; // Archive path
             t_filetimestamp    m_timestamp; // Archive timestamp
@@ -18,6 +18,10 @@ namespace unpack_7z
                 m_files = p_archive.get_list ();
             }
         };
+
+        typedef pfc::map_t<t_uint64, entry> t_hash_map;
+        typedef t_hash_map::t_key t_key; typedef t_hash_map::t_value t_value;
+
 
         // cfg_var overrides
         void get_data_raw (stream_writer *p_stream, abort_callback &p_abort) // Called on shutdown for storing to disk
@@ -34,16 +38,16 @@ namespace unpack_7z
             m_size = count;
             while (count --> 0) {
                 t_key key; in >> key;
-                entry_t &e = m_data.find_or_add (key);
+                t_value &e = m_data.find_or_add (key);
                 in >> e.m_path >> e.m_timestamp >> e.m_files;
             }
 	    }
 
         // helpers
-        inline entry_t * find_or_add (const char *p_archive, abort_callback &p_abort)
+        inline t_value * find_or_add (const char *p_archive, abort_callback &p_abort)
         {
             t_key key = hash (p_archive);
-            entry_t * e;
+            t_value * e;
             
             bool is_new = m_data.query_ptr (key, e) == false;
             if (!is_new) {
@@ -58,7 +62,7 @@ namespace unpack_7z
 
             if (is_new) {
                 check_size_overflow ();
-                entry_t & new_entry = m_data.find_or_add (key);
+                t_value & new_entry = m_data.find_or_add (key);
                 new_entry.init (unpack_7z::archive (p_archive, p_abort));
                 m_size++;
                 return &new_entry;
@@ -89,8 +93,6 @@ namespace unpack_7z
         template <class T> inline void remove_one_item (const T & were) { m_data.remove (were); m_size--; }
 
         // Member variables
-        typedef pfc::map_t<t_uint64, entry_t> t_hash_map;
-        typedef t_hash_map::t_key t_key; typedef t_hash_map::t_value t_value;
         t_hash_map       m_data; // t_uint64 key is made of hash () from canonical path to archive
         t_size           m_size;
         critical_section m_lock; // Synchronization for accessing m_data
@@ -101,7 +103,7 @@ namespace unpack_7z
         inline t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
             insync (m_lock);
-            entry_t *e = find_or_add (p_archive, p_abort);
+            t_value *e = find_or_add (p_archive, p_abort);
             auto n = e->m_files.find_item (p_file);
             if (n == pfc_infinite) throw exception_arch_file_not_found ();
             return e->m_files[n].m_stats;    
@@ -116,7 +118,7 @@ namespace unpack_7z
         inline bool query_file_list (const char *p_archive, archive::file_list &p_out)
         {
             insync (m_lock);
-            const entry_t *e;
+            const t_value *e;
             bool res = m_data.query_ptr (hash (p_archive), e);
             if (res) p_out = e->m_files;
             return res;
@@ -127,7 +129,7 @@ namespace unpack_7z
             insync (m_lock);
 
             bool is_new;
-            entry_t & e = m_data.find_or_add_ex (hash (p_archive.get_path ()), is_new);
+            t_value & e = m_data.find_or_add_ex (hash (p_archive.get_path ()), is_new);
             e.init (p_archive);
             if (is_new) {
                 check_size_overflow ();

@@ -12,6 +12,7 @@ namespace unpack_7z
         extern cfg_bool   use_sys_tmp_for_cache; // Using custom directory for disk cache (default is system temp folder)
         extern cfg_string custom_cache_path;
         extern cfg_uint   file_cache_max; // Max allowed disk space use (in Mb)
+        extern cfg_bool   cache_clear_at_exit;
 
         extern cfg_uint   archive_history_max; // Max number of archives remembered
 
@@ -22,8 +23,10 @@ namespace unpack_7z
                 debug_log = false,
 
                 use_sys_tmp_for_cache = true,
-                file_cache_max = 100, // 100 Mb
-                archive_history_max = 500
+                file_cache_max = 0,
+                cache_clear_at_exit = true,
+
+                archive_history_max = 1
             };
         };
     }
@@ -71,7 +74,7 @@ namespace unpack_7z
 
     struct debug_log : public pfc::string_formatter
     {
-        ~debug_log () { if (!is_empty() && cfg::debug_log) console::formatter () << "Debug(7z.dll unpacker):" << get_ptr (); }
+        ~debug_log () { if (cfg::debug_log && !is_empty ()) console::formatter () << "Debug(7z.dll unpacker):" << get_ptr (); }
     };
 
     // timer class

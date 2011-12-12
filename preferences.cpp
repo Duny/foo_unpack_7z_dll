@@ -44,6 +44,7 @@ namespace unpack_7z
                 COMMAND_HANDLER_SIMPLE (IDC_COMBO_ARCHIVE_HISTORY_SIZE, CBN_SELCHANGE, on_state_changed)
                 COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_USE_DEFAULT_CACHE_LOCATION, on_state_changed)
                 COMMAND_ID_HANDLER_SIMPLE (IDC_RADIO_USE_CUSTOM_CACHE_LOCATION, on_state_changed)
+                COMMAND_ID_HANDLER_SIMPLE (IDC_CHECK_CACHE_EMPTY_AT_EXIT, on_state_changed)
             END_MSG_MAP ()
 
 
@@ -59,8 +60,8 @@ namespace unpack_7z
                 uButton_SetCheck (*this, IDC_CHECK_DEBUG_LOG, cfg::debug_log);
 
                 set_cache_mode (cfg::use_sys_tmp_for_cache, cfg::custom_cache_path);
-                
                 m_cache_size.SetPos32 (cfg::file_cache_max);
+                uButton_SetCheck (*this, IDC_CHECK_CACHE_EMPTY_AT_EXIT, cfg::cache_clear_at_exit);
 
                 init_archive_history_sizes (cfg::archive_history_max);
                 
@@ -70,6 +71,7 @@ namespace unpack_7z
             inline void on_state_changed ()
             { 
                 GetDlgItem (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION).EnableWindow (!is_default_cache_mode ());
+                GetDlgItem (IDC_CHECK_CACHE_EMPTY_AT_EXIT).EnableWindow (!is_default_cache_mode ());
                 GetDlgItem (IDC_BUTTON_PRINT_CACHE_STATS).EnableWindow (uButton_GetCheck (*this, IDC_CHECK_DEBUG_LOG));
                 m_callback->on_state_changed ();
             }
@@ -109,7 +111,6 @@ namespace unpack_7z
                 uButton_SetCheck (*this, mode_default ? IDC_RADIO_USE_DEFAULT_CACHE_LOCATION : IDC_RADIO_USE_CUSTOM_CACHE_LOCATION, true);
                 uButton_SetCheck (*this, !mode_default ? IDC_RADIO_USE_DEFAULT_CACHE_LOCATION : IDC_RADIO_USE_CUSTOM_CACHE_LOCATION, false);
                 uSetDlgItemText (*this, IDC_STATIC_CUSTOM_CACHE_LOCATION, custom_path);
-                GetDlgItem (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION).EnableWindow (!mode_default);
             }
 
             inline void init_archive_history_sizes (t_uint32 history_max)
@@ -118,7 +119,7 @@ namespace unpack_7z
                 int selected = CB_ERR;
                 for (t_uint32 i = 0; i < num_sizes; i++) {
                     uSendDlgItemMessageText (*this, IDC_COMBO_ARCHIVE_HISTORY_SIZE, CB_ADDSTRING, 0, 
-                        (archive_history_sizes[i] == pfc_infinite ? "Infinity" : pfc::toString (archive_history_sizes[i]).get_ptr ()));
+                        (archive_history_sizes[i] == pfc_infinite ? "Infinite" : pfc::toString (archive_history_sizes[i]).get_ptr ()));
                     if (archive_history_sizes[i] <= history_max)
                         selected = i;
                 }
@@ -159,6 +160,9 @@ namespace unpack_7z
             if (!(state & preferences_state::changed) && m_cache_size.GetPos32 () != cfg::file_cache_max)
                 state |= preferences_state::changed;
 
+            if (!(state & preferences_state::changed) && uButton_GetCheck (*this, IDC_CHECK_CACHE_EMPTY_AT_EXIT) != cfg::cache_clear_at_exit)
+                state |= preferences_state::changed;
+
             if (!(state & preferences_state::changed) && get_sel_archive_history_size () != cfg::archive_history_max)
                 state |= preferences_state::changed;
 
@@ -172,6 +176,7 @@ namespace unpack_7z
             cfg::use_sys_tmp_for_cache = is_default_cache_mode ();
             uGetDlgItemText (*this, IDC_STATIC_CUSTOM_CACHE_LOCATION, cfg::custom_cache_path);
             static_api_ptr_t<cache_system>()->set_cache_size_max (m_cache_size.GetPos32 ());
+            cfg::cache_clear_at_exit = uButton_GetCheck (*this, IDC_CHECK_CACHE_EMPTY_AT_EXIT);
 
             static_api_ptr_t<cache_system>()->set_history_size_max (get_sel_archive_history_size ());
 
@@ -184,6 +189,7 @@ namespace unpack_7z
 
             set_cache_mode (cfg::defaults::use_sys_tmp_for_cache, "");
             m_cache_size.SetPos32 (cfg::defaults::file_cache_max);
+            uButton_SetCheck (*this, IDC_CHECK_CACHE_EMPTY_AT_EXIT, cfg::defaults::cache_clear_at_exit);
 
             init_archive_history_sizes (cfg::defaults::archive_history_max);
 

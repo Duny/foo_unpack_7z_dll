@@ -29,26 +29,28 @@ STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
 FONT 8, "Microsoft Sans Serif", 400, 0, 0xCC
 BEGIN
     CONTROL         "D&ebug log",IDC_CHECK_DEBUG_LOG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,280,269,47,10
-    ICON            IDI_7ZIP_LOGO,IDC_STATIC,7,4,21,20
-    GROUPBOX        "Disk cache",IDC_STATIC,59,53,215,111
-    EDITTEXT        IDC_EDIT_SPIN_CTRL_BUDDY,169,68,40,13,ES_AUTOHSCROLL | ES_NUMBER,WS_EX_RIGHT
-    CONTROL         "",IDC_SPIN_CACHE_SIZE,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_HOTTRACK,157,68,11,14
+    PUSHBUTTON      "Print cache stats",IDC_BUTTON_PRINT_CACHE_STATS,206,266,59,14
+    LTEXT           "&History size:",IDC_STATIC,98,209,38,8
+    COMBOBOX        IDC_COMBO_ARCHIVE_HISTORY_SIZE,192,207,45,12,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Remove dead items",IDC_BUTTON_HISTORY_REMOVE_DEAD_ITEMS,98,222,75,14
+    PUSHBUTTON      "Clear",IDC_BUTTON_HISTORY_CLEAR,208,222,29,14
     LTEXT           "&Maxumum space to use:",IDC_STATIC,77,70,80,8
-    GROUPBOX        "Cache location",IDC_STATIC,77,89,179,61
+    EDITTEXT        IDC_EDIT_SPIN_CTRL_BUDDY,169,68,40,13,ES_AUTOHSCROLL | ES_NUMBER,WS_EX_RIGHT
+    PUSHBUTTON      "Clear",IDC_BUTTON_CACHE_CLEAR,227,68,29,14
     CONTROL         "Default (&system temp folder)",IDC_RADIO_USE_DEFAULT_CACHE_LOCATION,
                     "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,91,105,102,10
     CONTROL         "C&ustom",IDC_RADIO_USE_CUSTOM_CACHE_LOCATION,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,91,122,38,10
     PUSHBUTTON      "B&rowse",IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION,153,119,33,14
+    CONTROL         "&Empty cache at exit",IDC_CHECK_CACHE_EMPTY_AT_EXIT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,77,156,78,10
+    ICON            IDI_7ZIP_LOGO,IDC_STATIC,7,4,20,20
+    GROUPBOX        "Disk cache",IDC_STATIC,59,53,215,123
+    CONTROL         "",IDC_SPIN_CACHE_SIZE,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_HOTTRACK,157,68,11,14
+    GROUPBOX        "Cache location",IDC_STATIC,77,89,179,61
     LTEXT           "cache directory path here",IDC_STATIC_CUSTOM_CACHE_LOCATION,83,137,168,8
-    COMBOBOX        IDC_COMBO_ARCHIVE_HISTORY_SIZE,192,207,45,12,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Print cache stats",IDC_BUTTON_PRINT_CACHE_STATS,206,266,59,14
     LTEXT           "Mb",IDC_STATIC,212,73,11,8
     GROUPBOX        "Remember opened archives",IDC_STATIC,59,190,215,57
-    LTEXT           "&History size:",IDC_STATIC,98,209,38,8
-    LTEXT           "Firstly, plugin tries to load 7z.dll from 7-Zip program installation folder. If 7-Zip is not installed or some error occured, than it tries components installation folder.",IDC_STATIC,16,30,299,16
-    PUSHBUTTON      "Remove dead items",IDC_BUTTON_HISTORY_REMOVE_DEAD_ITEMS,98,222,75,14
-    PUSHBUTTON      "Clear",IDC_BUTTON_HISTORY_CLEAR,208,222,29,14
-    PUSHBUTTON      "Clear",IDC_BUTTON_CACHE_CLEAR,227,68,29,14
+    LTEXT           "Firstly plugin tries to load 7z.dll from 7-Zip program installation folder. If 7-Zip is not installed or some error occured, than it tries components installation folder.",IDC_STATIC,16,30,299,16
 END
 
 
