@@ -3,6 +3,11 @@
 
 namespace unpack_7z
 {
+    using boost::tuple;
+    using boost::tie;
+    using boost::make_tuple;
+    using boost::function;
+
     //
     // Plugin configuration
     namespace cfg
@@ -10,9 +15,9 @@ namespace unpack_7z
         extern cfg_bool   debug_log;
 
         extern cfg_bool   use_sys_tmp_for_cache; // Using custom directory for disk cache (default is system temp folder)
+        extern cfg_bool   keep_cache_at_exit; // Don't delete cache files, they will be reused on next foobar2000 launch. Work only with use_sys_tmp_for_cache = false
         extern cfg_string custom_cache_path;
         extern cfg_uint   file_cache_max; // Max allowed disk space use (in Mb)
-        extern cfg_bool   cache_clear_at_exit;
 
         extern cfg_uint   archive_history_max; // Max number of archives remembered
 
@@ -23,14 +28,13 @@ namespace unpack_7z
                 debug_log = false,
 
                 use_sys_tmp_for_cache = true,
+                keep_cache_at_exit = false,
                 file_cache_max = 0,
-                cache_clear_at_exit = true,
 
-                archive_history_max = 1
+                archive_history_max = 1 // There must be at least one position (for current processing archive)
             };
         };
     }
-
 
 #define COMMAND_ID_HANDLER_SIMPLE(id, func) \
 	if(uMsg == WM_COMMAND && id == LOWORD(wParam)) \
@@ -105,7 +109,7 @@ namespace unpack_7z
 	};
 
     // helper: wraps pfc::thread
-    typedef boost::function<void ()> new_thread_callback;
+    /*typedef function<void ()> new_thread_callback;
     inline void run_in_separate_thread (const new_thread_callback &p_func)
     {
         class new_thread_t : pfc::thread
@@ -122,7 +126,7 @@ namespace unpack_7z
         };
 
         new new_thread_t (p_func);
-    }
+    }*/
 
     // wrapper of memory file with custom timestamp
     class tempmem_with_timestamp : public file
@@ -160,4 +164,8 @@ namespace unpack_7z
 
     typedef service_impl_t<tempmem_with_timestamp> file_tempmem;
 }
+
+FB2K_STREAM_READER_OVERLOAD(t_filestats) { return stream >> value.m_size >> value.m_timestamp; }
+FB2K_STREAM_WRITER_OVERLOAD(t_filestats) { return stream << value.m_size << value.m_timestamp; }  
+
 #endif

@@ -13,7 +13,6 @@ namespace unpack_7z
             HMODULE m_module;
 
         public:
-            library () : m_module (nullptr) {}
             ~library() { free (); }
 
             bool load (const pfc::string8 &path) {
@@ -38,21 +37,15 @@ namespace unpack_7z
 
 	    create_object_func_t get_func ()
 	    {
-            static library m_dll;
+            static library g_dll;
 
-            if (m_dll.is_loaded ()) {
-                create_object_func_t func = m_dll.get_proc ();
-                if (func)
-                    return func;
-                else {
-                    if (!m_dll.free ())
-                        throw exception_dll_unload ();
-                }
+            if (g_dll.is_loaded ()) {
+                create_object_func_t func = g_dll.get_proc ();
+                if (func) return func;
+                else if (!g_dll.free ()) throw exception_dll_unload ();
             }
 
-		    pfc::string8 path;
-
-            pfc::string8 triedPaths;
+		    pfc::string8 path, triedPaths;
 
             auto try_folder = [&] (const char *folder) {
                 path = folder;
@@ -61,8 +54,7 @@ namespace unpack_7z
                 path += "7z.dll";
                 triedPaths += path;
                 triedPaths.add_char ('\n');
-
-                m_dll.load (path);
+                g_dll.load (path);
             };
 
             // 1. search for 7-zip installation folder
@@ -78,25 +70,23 @@ namespace unpack_7z
                 }
                 RegCloseKey (key);
             }
-
             // 2. look in component's installation folder
-            if (!m_dll.is_loaded ()) 
+            if (!g_dll.is_loaded ()) 
                 try_folder (pfc::string_directory (core_api::get_my_full_path ()));
 
-            if (!m_dll.is_loaded ())
-                error_log () << "Couldn't load 7z.dll. Tried:\n" << triedPaths;
-
-		    if (m_dll.is_loaded ()) {
+            
+		    if (g_dll.is_loaded ()) {
 			    debug_log () << "Loaded \"" << path << "\"";
-
-			    create_object_func_t func = m_dll.get_proc ();
+			    create_object_func_t func = g_dll.get_proc ();
 			    if (func == nullptr)
 				    throw exception_dll_func_not_found ();
                 else
                     return func;
 		    }
-            else
+            else {
+                error_log () << "Couldn't load 7z.dll. Tried:\n" << triedPaths;
                 throw exception_dll_not_loaded ();
+            }
 	    }
 
 

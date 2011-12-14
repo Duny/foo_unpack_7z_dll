@@ -8,14 +8,12 @@ namespace unpack_7z
         struct entry
         {
             pfc::string8       m_path; // Archive path
-            t_filetimestamp    m_timestamp; // Archive timestamp
+            t_filestats        m_stats; // Archive stats
             archive::file_list m_files; // Archive contents
             
             inline void init (const unpack_7z::archive &p_archive)
             {
-                m_path = p_archive.get_path ();
-                m_timestamp = p_archive.get_timestamp ();
-                m_files = p_archive.get_list ();
+                tie (m_path, m_stats, m_files) = make_tuple (p_archive.get_path (), p_archive.get_stats (), p_archive.get_list ());
             }
         };
 
@@ -30,7 +28,7 @@ namespace unpack_7z
 
             stream_writer_formatter<> out (*p_stream, p_abort);
             out << m_size;
-            m_data.enumerate ([&](const t_key &key, const t_value &val) { out << key << val.m_path << val.m_timestamp << val.m_files; });
+            m_data.enumerate ([&](const t_key &key, const t_value &val) { out << key << val.m_path << val.m_stats << val.m_files; });
         }
 
 	    void set_data_raw (stream_reader * p_stream, t_size p_sizehint, abort_callback & p_abort) // Called on startup for reading from disk
@@ -43,7 +41,7 @@ namespace unpack_7z
             while (count --> 0) {
                 t_key key; in >> key;
                 t_value &e = m_data.find_or_add (key);
-                in >> e.m_path >> e.m_timestamp >> e.m_files;
+                in >> e.m_path >> e.m_stats >> e.m_files;
             }
 	    }
 
@@ -56,9 +54,9 @@ namespace unpack_7z
             bool is_new = m_data.query_ptr (key, e) == false;
             if (!is_new) {
                 t_filestats stats;
-                bool is_writable;
-                filesystem::g_get_stats (p_archive, stats, is_writable, p_abort);
-                if (e->m_timestamp != stats.m_timestamp) { // archive was updated, need to reload it
+                bool dummy;
+                filesystem::g_get_stats (p_archive, stats, dummy, p_abort);
+                if (e->m_stats != stats) { // archive was updated, need to reload it
                     remove_one_item (key);
                     is_new = true;
                 }
@@ -98,7 +96,7 @@ namespace unpack_7z
 
         // Member variables
         t_hash_map       m_data; // t_uint64 key is made of hash () from canonical path to archive
-        t_size           m_size;
+        t_size           m_size; // Item count
         critical_section m_lock; // Synchronization for accessing m_data
             
     public:
@@ -107,7 +105,6 @@ namespace unpack_7z
         inline t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
             insync (m_lock);
-            
             t_value *e = find_or_add (p_archive, p_abort);
             auto n = e->m_files.find_item (p_file);
             if (n == pfc_infinite) throw exception_arch_file_not_found ();
@@ -118,28 +115,6 @@ namespace unpack_7z
         {
             insync (m_lock);
             p_out = find_or_add (p_archive, p_abort)->m_files;
-        }
-
-        inline bool query_file_list (const char *p_archive, archive::file_list &p_out)
-        {
-            insync (m_lock);
-            const t_value *e;
-            bool res = m_data.query_ptr (hash (p_archive), e);
-            if (res) p_out = e->m_files;
-            return res;
-        }
-
-        inline void add_entry (const unpack_7z::archive &p_archive)
-        {
-            insync (m_lock);
-
-            bool is_new;
-            t_value & e = m_data.find_or_add_ex (hash (p_archive.get_path ()), is_new);
-            e.init (p_archive);
-            if (is_new) {
-                check_size_overflow ();
-                m_size++;
-            }
         }
 
         inline void set_max_size (t_uint32 new_size)
@@ -155,8 +130,7 @@ namespace unpack_7z
             abort_callback_dummy p_abort;
             t_hash_map new_data;
             auto init_size = m_size;
-            m_data.enumerate ([&](const t_key &key, const t_value &val)
-            {
+            m_data.enumerate ([&](const t_key &key, const t_value &val) {
                 if (!val.m_path.is_empty () && filesystem::g_exists (val.m_path, p_abort))
                     new_data.set (key, val);
                 else
@@ -183,6 +157,5 @@ namespace unpack_7z
             f << " archives\n";
         }
     };
-}   
-
+}
 #endif

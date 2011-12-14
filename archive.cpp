@@ -2,7 +2,7 @@
 
 #include "archive.h"
 #include "dll.h"
-#include "extract_callback.h"
+#include "7z_extract_callback.h"
 
 namespace unpack_7z
 {
@@ -20,11 +20,8 @@ namespace unpack_7z
 
         this->close ();
 
-        m_archive = new_archive;
-        m_stream = new_stream;
-        m_path = p_archive;
+        tie (m_archive, m_stream, m_path, m_stats) = make_tuple (new_archive, new_stream, p_archive, file->get_stats (p_abort));
 
-        m_timestamp = file->get_timestamp (p_abort);
         if (read_file_list)
             get_file_list ();
     }
@@ -40,32 +37,28 @@ namespace unpack_7z
         } 
 		
 	    m_items.remove_all ();
-	    m_timestamp = filetimestamp_invalid;
+	    m_stats = filestats_invalid;
         m_path.reset ();
     }
 
     void archive::extract_file (const file_ptr &p_out, t_size i, abort_callback &p_abort) const
     {
-        HRESULT res = m_archive->Extract (&i, 1, FALSE, CMyComPtr<IArchiveExtractCallback> (new extract_callback (p_out, p_abort)));
-	    if (res != S_OK)
-		    throw exception_arch_extract_error ();
-
+        auto res = m_archive->Extract (&i, 1, FALSE, CMyComPtr<IArchiveExtractCallback> (new extract_callback (p_out, p_abort)));
+	    if (res != S_OK) throw exception_arch_extract_error ();
         p_out->seek (0, p_abort);
     }
 
     // m_items must be clear before calling this
     void archive::get_file_list ()
     {
-        if (m_items.get_size ()) return; // do not read twice
-
         UInt32 num_items = 0;
 	    if (m_archive->GetNumberOfItems (&num_items) != S_OK)
 		    throw exception_arch_num_items_error ();
 
+        m_items.set_size (num_items);
+
 	    file_info dummy;
 	    NWindows::NCOM::CPropVariant prop;
-
-        m_items.set_size (num_items);
         while (num_items --> 0) {
             m_archive->GetProperty (num_items, kpidPath, &prop);
             if (prop.vt != VT_BSTR) continue;
@@ -74,9 +67,9 @@ namespace unpack_7z
             m_archive->GetProperty (num_items, kpidSize, &prop);
             if (prop.vt != VT_UI8) continue;
             dummy.m_stats.m_size = ConvertPropVariantToUInt64 (prop);
-		    dummy.m_stats.m_timestamp = m_timestamp;
+		    dummy.m_stats.m_timestamp = m_stats.m_timestamp; // Files within the archive MUST have timestamp of archive itself
 
-            // precalculate unpack path
+            // Precalculate unpack path
             archive_impl::g_make_unpack_path (dummy.m_unpack_path, m_path, dummy.m_path, _7Z_EXT);
 
             m_items[num_items] = dummy;

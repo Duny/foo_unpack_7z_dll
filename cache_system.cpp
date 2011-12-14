@@ -17,55 +17,30 @@ namespace unpack_7z
         // cache_system overrides
         t_filestats get_stats_in_archive (const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
-            pfc::string8 path_canonical;
-            filesystem::g_get_canonical_path (p_archive, path_canonical);
-            return m_archive_info_cache.get_file_stats (path_canonical, p_file, p_abort);
+            return m_archive_info_cache.get_file_stats (file_path_canonical (p_archive), p_file, p_abort);
         }
         
         void open_archive (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) override
         {
-            pfc::string8 path_canonical;
-            filesystem::g_get_canonical_path (p_archive, path_canonical);
-
-            if (pfc::stricmp_ascii (p_file, "\\front.jpg") == 0) {
-                int i = 0;
-            }
-
-            if (!m_file_cache.fetch (p_out, path_canonical, p_file, p_abort)) {
+            file_path_canonical path (p_archive);
+            if (!m_file_cache.fetch (p_out, path, p_file, p_abort)) {
                 archive::file_list files;
-                bool files_valid = m_archive_info_cache.query_file_list (path_canonical, files);
-
-                unpack_7z::archive a;
-                a.open (path_canonical, p_abort, !files_valid);
-
-                if (!files_valid) {
-                    files = a.get_list ();
-                    m_archive_info_cache.add_entry (a);
-                }
-
+                m_archive_info_cache.get_file_list (path, files, p_abort);
                 auto index = files.find_item (p_file);
                 if (index == pfc_infinite) throw exception_arch_file_not_found ();
-                extract_internal (p_out, a, files, index, p_abort);
+                extract_internal (p_out, unpack_7z::archive (path, p_abort, false), files, index, p_abort);
             }
         }
 
         void archive_list (foobar2000_io::archive *owner, const char *p_archive, const file_ptr &p_reader, archive_callback &p_out, bool p_want_readers) override
         {
-            pfc::string8 path_canonical;
-            filesystem::g_get_canonical_path (p_archive, path_canonical);
+            file_path_canonical path (p_archive);
+
+            archive::file_list files;
+            m_archive_info_cache.get_file_list (path, files, p_out);
 
             if (p_want_readers) {
-                archive::file_list files;
-                bool files_valid = m_archive_info_cache.query_file_list (path_canonical, files);
-                
-                unpack_7z::archive a;
-                a.open (path_canonical, p_reader, p_out, !files_valid);
-
-                if (!files_valid) {
-                    files = a.get_list ();
-                    m_archive_info_cache.add_entry (a);
-                }
-
+                unpack_7z::archive a (path, p_reader, p_out, false);
                 for (t_size i = 0, max = files.get_size (); i < max; i++) {
                     file_ptr temp;
                     extract_internal (temp, a, files, i, p_out);
@@ -74,9 +49,6 @@ namespace unpack_7z
                 }
             }
             else { // special case for fast listing
-                pfc::list_t<archive::file_info> files;
-                m_archive_info_cache.get_file_list (path_canonical, files, p_out);
-
                 file_ptr dummy;
                 for (t_size i = 0, max = files.get_size (); i < max; i++)
                     if (!p_out.on_entry (owner, files[i].m_unpack_path, files[i].m_stats, dummy))
@@ -94,7 +66,7 @@ namespace unpack_7z
             m_file_cache.set_max_size (new_size);
         }
 
-        void cache_free ()
+        void cache_free () override
         {
             m_file_cache.clear ();
         }

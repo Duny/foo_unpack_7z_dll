@@ -43,11 +43,11 @@ namespace unpack_7z
             insync (m_lock);
 
             stream_writer_formatter<> out (*p_stream, p_abort);
-            if (cfg::cache_clear_at_exit != true && cfg::use_sys_tmp_for_cache != true) {
+            if (cfg::keep_cache_at_exit && cfg::use_sys_tmp_for_cache != true) {
                 out << m_data.get_count ();
                 m_data.enumerate ([&](const t_key &key, const t_value &val) {
                     if (!val.m_path.is_empty ())
-                        out << key << val.m_stats.m_timestamp << val.m_stats.m_size << val.m_path;
+                        out << key << val.m_stats << val.m_path;
                 });
             }
             else
@@ -63,7 +63,7 @@ namespace unpack_7z
             while (count --> 0) {
                 t_key key;
                 t_value val;
-                in >> key >> val.m_stats.m_timestamp >> val.m_stats.m_size >> val.m_path;
+                in >> key >> val.m_stats >> val.m_path;
                 try {
                     filesystem::g_open (val.m_file, val.m_path, filesystem::open_mode_write_existing, p_abort);
                     if (val.m_file.is_valid ()) {
@@ -92,12 +92,12 @@ namespace unpack_7z
 
         inline void free_space (t_filesize size) // In bytes
         {
-            typedef boost::tuple<t_key, t_filesize> cache_file;
+            typedef tuple<t_key, t_filesize> cache_file;
             auto cache_file_comparator = [] (const cache_file &left, const cache_file &right) -> int { return pfc::compare_t (left.get<1>(), right.get<1>()); };
                 
             // Sort files by size (asc)
             pfc::list_t<cache_file> files;
-            m_data.enumerate ([&](const t_key &key, const t_value &value) { files.add_item (boost::make_tuple (key, value.m_stats.m_size)); });
+            m_data.enumerate ([&](const t_key &key, const t_value &value) { files.add_item (make_tuple (key, value.m_stats.m_size)); });
             files.sort_t (cache_file_comparator);
 
             t_size i = 0, n = files.get_size ();
@@ -127,7 +127,11 @@ namespace unpack_7z
 
     public:
         file_cache () : cfg_var (guid_inline<0x99e8aad3, 0xa107, 0x4495, 0x84, 0xf4, 0x08, 0x43, 0xc9, 0x88, 0x63, 0xa1>::guid) {}
-        ~file_cache () { m_data.enumerate ([&](const t_key &key, t_value &val) { if (!cfg::cache_clear_at_exit && !cfg::use_sys_tmp_for_cache) val.m_path.reset (); }); }
+        //  Hack to prevent files being deleted at entry::~entry ()
+        ~file_cache ()
+        {
+            m_data.enumerate ([&](const t_key&, t_value &val) { if (cfg::keep_cache_at_exit && !cfg::use_sys_tmp_for_cache) val.m_path.reset (); });
+        }
         
         bool fetch (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) const
         {

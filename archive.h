@@ -15,6 +15,7 @@ namespace unpack_7z
     public:
 	    archive () {}
 	    archive (const char *p_archive, abort_callback &p_abort, bool read_file_list = true) { open (p_archive, p_abort, read_file_list); }
+        archive (const char *p_archive, const file_ptr &p_file, abort_callback &p_abort, bool read_file_list = true) { open (p_archive, p_file, p_abort, read_file_list); }
 	    ~archive () { close (); }
 
         // If p_file is not valid, then p_archive is opened
@@ -22,7 +23,7 @@ namespace unpack_7z
         inline void open (const char *p_archive, abort_callback &p_abort, bool read_file_list = true) { open (p_archive, file_ptr (), p_abort, read_file_list); }
         void close ();
 
-        inline t_filetimestamp get_timestamp () const { return m_timestamp; }
+        inline t_filestats get_stats () const { return m_stats; }
         inline const char *get_path () const { return m_path.get_ptr (); }
 
 
@@ -56,7 +57,7 @@ namespace unpack_7z
 
         // for some reasons foobar uses timestamp of archive itself instead of timestamps of files from archive
         // each extracted file must have timestamp of m_timestamp
-	    t_filetimestamp m_timestamp;
+	    t_filestats m_stats;
 
         // archive files 
 	    file_list m_items;
