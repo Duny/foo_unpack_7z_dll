@@ -18,7 +18,8 @@
 // boost includes
 #include <boost/function.hpp>
 #include <boost/utility.hpp>
-#include "boost/tuple/tuple.hpp"
+#include <boost/tuple/tuple.hpp>
+#include <boost/scope_exit.hpp>
 
 // plugin includes
 #include "perf_timer.h"

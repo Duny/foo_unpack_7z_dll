@@ -55,7 +55,7 @@ namespace unpack_7z
 
         pfc::string8 m_path; // archive path
 
-        // for some reasons foobar uses timestamp of archive itself instead of timestamps of files from archive
+        // for some reason foobar uses timestamp of archive itself instead of timestamps of files from archive
         // each extracted file must have timestamp of m_timestamp
 	    t_filestats m_stats;
 

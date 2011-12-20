@@ -43,7 +43,9 @@ namespace unpack_7z
 
     void archive::extract_file (const file_ptr &p_out, t_size i, abort_callback &p_abort) const
     {
-        auto res = m_archive->Extract (&i, 1, FALSE, CMyComPtr<IArchiveExtractCallback> (new extract_callback (p_out, p_abort)));
+        extract_callback *extractCallbackSpec = new extract_callback (p_out, p_abort);
+        CMyComPtr<IArchiveExtractCallback> extract_callback (extractCallbackSpec);
+        auto res = m_archive->Extract (&i, 1, FALSE, extract_callback);
 	    if (res != S_OK) throw exception_arch_extract_error ();
         p_out->seek (0, p_abort);
     }

@@ -109,7 +109,7 @@ namespace unpack_7z
 	};
 
     // helper: wraps pfc::thread
-    /*typedef function<void ()> new_thread_callback;
+    typedef function<void ()> new_thread_callback;
     inline void run_in_separate_thread (const new_thread_callback &p_func)
     {
         class new_thread_t : pfc::thread
@@ -126,7 +126,7 @@ namespace unpack_7z
         };
 
         new new_thread_t (p_func);
-    }*/
+    }
 
     // wrapper of memory file with custom timestamp
     class tempmem_with_timestamp : public file
@@ -139,22 +139,22 @@ namespace unpack_7z
         { filesystem::g_open_tempmem (m_file_mem, abort_callback_dummy ()); }
 
         t_size read (void *p_buffer, t_size p_bytes, abort_callback &p_abort) override 
-        { return m_file_mem->read (p_buffer, p_bytes, p_abort); }
+        { p_abort.check (); return m_file_mem->read (p_buffer, p_bytes, p_abort); }
         void write (const void *p_buffer, t_size p_bytes, abort_callback &p_abort) override 
-        { m_file_mem->write (p_buffer, p_bytes, p_abort); }
+        { p_abort.check (); m_file_mem->write (p_buffer, p_bytes, p_abort); }
 
         t_filesize get_size (abort_callback &p_abort) override 
         { return m_stats.m_size; }
         t_filesize get_position (abort_callback &p_abort) override 
-        { return m_file_mem->get_position (p_abort); }
+        { p_abort.check (); return m_file_mem->get_position (p_abort); }
         void resize (t_filesize p_size, abort_callback &p_abort) override 
-        { m_file_mem->resize (p_size, p_abort); m_stats.m_size = p_size; }
+        { p_abort.check (); m_file_mem->resize (p_size, p_abort); m_stats.m_size = p_size; }
         void seek (t_filesize p_position, abort_callback &p_abort) override 
-        { m_file_mem->seek (p_position, p_abort); }
+        { p_abort.check (); m_file_mem->seek (p_position, p_abort); }
 
         void on_idle (abort_callback &) override {}
-        t_filetimestamp get_timestamp (abort_callback &) override { return m_stats.m_timestamp; }
-        void reopen (abort_callback &p_abort) override { m_file_mem->reopen (p_abort); }
+        t_filetimestamp get_timestamp (abort_callback &p_abort) override { p_abort.check (); return m_stats.m_timestamp; }
+        void reopen (abort_callback &p_abort) override { p_abort.check (); m_file_mem->reopen (p_abort); }
 
         bool is_in_memory () override { return true; }
         bool can_seek () override { return true; }

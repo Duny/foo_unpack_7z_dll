@@ -37,12 +37,15 @@ namespace unpack_7z
 
 	    create_object_func_t get_func ()
 	    {
+            static critical_section m_section;
             static library g_dll;
+            static create_object_func_t g_proc = nullptr;
 
+            insync (m_section);
             if (g_dll.is_loaded ()) {
-                create_object_func_t func = g_dll.get_proc ();
-                if (func) return func;
+                if (g_proc) return g_proc;
                 else if (!g_dll.free ()) throw exception_dll_unload ();
+                g_proc = nullptr;
             }
 
 		    pfc::string8 path, triedPaths;
@@ -77,11 +80,11 @@ namespace unpack_7z
             
 		    if (g_dll.is_loaded ()) {
 			    debug_log () << "Loaded \"" << path << "\"";
-			    create_object_func_t func = g_dll.get_proc ();
-			    if (func == nullptr)
+			    g_proc = g_dll.get_proc ();
+			    if (g_proc == nullptr)
 				    throw exception_dll_func_not_found ();
                 else
-                    return func;
+                    return g_proc;
 		    }
             else {
                 error_log () << "Couldn't load 7z.dll. Tried:\n" << triedPaths;
@@ -89,13 +92,12 @@ namespace unpack_7z
             }
 	    }
 
-
         CMyComPtr<IInArchive> create_archive_object ()
         {
 	        create_object_func_t func = get_func ();
 
             CMyComPtr<IInArchive> out;
-	        if (func (&CLSID_CFormat7z, &IID_IInArchive, reinterpret_cast<void**>(&out)) != S_OK)
+	        if (func (&CLSID_CFormat7z, &IID_IInArchive, (void**)&out) != S_OK)
 		        throw exception_dll_create_class_object ();
             return out;
         }

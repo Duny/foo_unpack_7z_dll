@@ -10,7 +10,7 @@ namespace unpack_7z
     public:
         extract_callback (const file_ptr &p_stream, abort_callback &p_abort) : m_stream (new file_streams::out (p_stream, p_abort)) {}
 
-        MY_UNKNOWN_IMP1(IArchiveOpenCallback)
+        MY_UNKNOWN_IMP1(IArchiveExtractCallback)
 
         // IProgress
 	    STDMETHOD(SetTotal)(UInt64 size) override { return S_OK; }
@@ -19,7 +19,6 @@ namespace unpack_7z
         // IArchiveExtractCallback
         STDMETHOD(PrepareOperation)(Int32 askExtractMode) override { return S_OK; }
         STDMETHOD(SetOperationResult)(Int32 resultEOperationResult) override { return S_OK; };
-
         STDMETHOD(GetStream)(UInt32 index, ISequentialOutStream **outStream, Int32 askExtractMode) override
         {
             *outStream = (askExtractMode == NArchive::NExtract::NAskMode::kExtract ? m_stream.Detach () : 0);
