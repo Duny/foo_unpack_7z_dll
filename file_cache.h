@@ -63,16 +63,14 @@ namespace unpack_7z
             stream_reader_formatter<> in (*p_stream, p_abort);
             decltype(m_data.get_count ()) count; in >> count;
             while (count --> 0) {
-                t_key key;
-                t_value val;
-                in >> key >> val.m_archive >> val.m_stats >> val.m_path;
+                t_key key; in >> key;
+                t_value & val = m_data.find_or_add (key);
+                in >> val.m_archive >> val.m_stats >> val.m_path;
                 try {
                     filesystem::g_open (val.m_file, val.m_path, filesystem::open_mode_write_existing, p_abort);
-                    if (val.m_file.is_valid ()) {
-                        m_data.set (key, val);
-                        m_size += val.m_stats.m_size;
-                    }
-                } catch (...) {}
+                    if (!val.m_file.is_valid ()) throw 0; // Signalize that item must be deleted from data
+                    m_size += val.m_stats.m_size;
+                } catch (...) { m_data.remove (key); }
             }
 	    }
 
@@ -158,9 +156,9 @@ namespace unpack_7z
             insync (m_lock);            
 
             auto stats = p_in->get_stats (p_abort);
-            bool is_new;
-            t_value *e = alloc_entry (p_archive, p_file, stats.m_size, is_new);
-            if (e && is_new) {
+            bool new_item;
+            t_value *e = alloc_entry (p_archive, p_file, stats.m_size, new_item);
+            if (e && new_item) {
                 try {
                     e->init (p_archive, p_file, stats, p_abort);
                     file::g_transfer_file (p_in, e->m_file, p_abort);
@@ -187,13 +185,15 @@ namespace unpack_7z
         {
             t_hash_map new_data;
             insync (m_lock);
-
-            m_data.enumerate ([&](const t_key & key, t_value & val)
+            for (auto walk = m_data.first (); walk.is_valid (); ++walk)
+                if (walk->m_value.m_archive == p_archive)
+                    m_data.remove (walk);
+            /*m_data.enumerate ([&](const t_key & key, t_value & val)
             {
                 if (val.m_archive != p_archive)
                     new_data.set (key, val);
             });
-            m_data = new_data;
+            m_data = new_data;*/
         }
 
         inline void clear ()
