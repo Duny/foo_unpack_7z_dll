@@ -188,12 +188,6 @@ namespace unpack_7z
             for (auto walk = m_data.first (); walk.is_valid (); ++walk)
                 if (walk->m_value.m_archive == p_archive)
                     m_data.remove (walk);
-            /*m_data.enumerate ([&](const t_key & key, t_value & val)
-            {
-                if (val.m_archive != p_archive)
-                    new_data.set (key, val);
-            });
-            m_data = new_data;*/
         }
 
         inline void clear ()
