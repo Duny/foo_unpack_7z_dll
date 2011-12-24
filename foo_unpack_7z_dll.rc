@@ -50,7 +50,7 @@ BEGIN
     LTEXT           "cache directory path here",IDC_STATIC_CUSTOM_CACHE_LOCATION,83,137,168,8
     LTEXT           "Mb",IDC_STATIC,212,73,11,8
     GROUPBOX        "Remember opened archives",IDC_STATIC,59,190,215,57
-    LTEXT           "Firstly plugin tries to load 7z.dll from 7-Zip program installation folder. If 7-Zip is not installed or some error occured, than it tries components installation folder.",IDC_STATIC,16,30,299,16
+    LTEXT           "Firstly plugin tries to load 7z.dll from components installation folder. If dll does not exists or some error occured, than it tries to get 7-Zip program installation folder from system registry.",IDC_STATIC,16,30,299,16
 END
 
 

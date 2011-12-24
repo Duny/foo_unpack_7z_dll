@@ -60,7 +60,11 @@ namespace unpack_7z
                 g_dll.load (path);
             };
 
-            // 1. search for 7-zip installation folder
+            // 1. look in component's installation folder
+            if (!g_dll.is_loaded ()) 
+                try_folder (pfc::string_directory (core_api::get_my_full_path ()));
+
+            // 2. search for 7-zip installation folder
             HKEY key;
             if (RegOpenKeyEx (HKEY_CURRENT_USER, L"Software\\7-Zip", 0, KEY_READ, &key) == ERROR_SUCCESS) {
                 DWORD value_size = 0, dummy = 0;
@@ -73,10 +77,6 @@ namespace unpack_7z
                 }
                 RegCloseKey (key);
             }
-            // 2. look in component's installation folder
-            if (!g_dll.is_loaded ()) 
-                try_folder (pfc::string_directory (core_api::get_my_full_path ()));
-
             
 		    if (g_dll.is_loaded ()) {
 			    debug_log () << "Loaded \"" << path << "\"";

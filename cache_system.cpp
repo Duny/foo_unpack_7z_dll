@@ -7,12 +7,20 @@
 
 namespace unpack_7z
 {
-    class cache_system_impl : public cache_system
+    class cache_system_impl : public cache_system, archive_changed_callback
     {
         // member variables
         file_cache         m_file_cache;
         archive_info_cache m_archive_info_cache;
+        
 
+        // overrides
+        void on_changed (const pfc::string_base &p_archive) override
+        {
+            // If archive has been updated we need to free cached files from that archive
+            // So archive files will be reextracted on next demand
+            m_file_cache.clear_by_archive_name (p_archive);
+        }
 
         // cache_system overrides
         t_filestats get_stats_in_archive (const char *p_archive, const char *p_file, abort_callback &p_abort) override
@@ -99,7 +107,7 @@ namespace unpack_7z
                 m_file_cache.store (p_out, a.get_path (), p_info[index].m_path, p_abort);
             }
         }
-        
+
         // Multithreaded extract
         typedef function<DWORD (const char *p_archive, t_size p_file_index)> t_thread_func;
         struct t_thread_data
@@ -179,6 +187,9 @@ namespace unpack_7z
                     throw exception_win32 (GetLastError ());
             }
         }
+
+    public:
+        cache_system_impl () : m_archive_info_cache (*this) {}
     };
 
     namespace { service_factory_single_t<cache_system_impl> g_factory; }

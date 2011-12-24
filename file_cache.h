@@ -7,13 +7,14 @@ namespace unpack_7z
     {
         struct entry
         {
+            pfc::string8 m_archive;
             t_filestats  m_stats; // Stats of file from archive
             pfc::string8 m_path; // Physical path of cache entry file. Empty if default system temp folder was used
             file_ptr     m_file; // Cache entry file
 
             ~entry () { free (); }
 
-            inline void init (const char *p_file, const t_filestats &p_stats, abort_callback &p_abort)
+            inline void init (const char *p_archive, const char *p_file, const t_filestats &p_stats, abort_callback &p_abort)
             {
                 free ();
                 if (cfg::use_sys_tmp_for_cache)
@@ -22,6 +23,7 @@ namespace unpack_7z
                     generate_temp_location_for_file (m_path, cfg::custom_cache_path, "tmp", pfc::string_formatter () << ReadTimeStampCounter ());
                     filesystem::g_open_write_new (m_file, m_path, p_abort);
                 }
+                m_archive = p_archive;
                 m_stats = p_stats;
             }
 
@@ -47,7 +49,7 @@ namespace unpack_7z
                 out << m_data.get_count ();
                 m_data.enumerate ([&](const t_key &key, const t_value &val) {
                     if (!val.m_path.is_empty ())
-                        out << key << val.m_stats << val.m_path;
+                        out << key << val.m_archive << val.m_stats << val.m_path;
                 });
             }
             else
@@ -63,7 +65,7 @@ namespace unpack_7z
             while (count --> 0) {
                 t_key key;
                 t_value val;
-                in >> key >> val.m_stats >> val.m_path;
+                in >> key >> val.m_archive >> val.m_stats >> val.m_path;
                 try {
                     filesystem::g_open (val.m_file, val.m_path, filesystem::open_mode_write_existing, p_abort);
                     if (val.m_file.is_valid ()) {
@@ -127,10 +129,9 @@ namespace unpack_7z
 
     public:
         file_cache () : cfg_var (guid_inline<0x99e8aad3, 0xa107, 0x4495, 0x84, 0xf4, 0x08, 0x43, 0xc9, 0x88, 0x63, 0xa1>::guid) {}
-        //  Hack to prevent files being deleted at entry::~entry ()
         ~file_cache ()
-        {
-            m_data.enumerate ([&](const t_key&, t_value &val) { if (cfg::keep_cache_at_exit && !cfg::use_sys_tmp_for_cache) val.m_path.reset (); });
+        { //  Hack to prevent files from being deleted at entry::~entry ()
+            m_data.enumerate ([&](const t_key&, t_value & val) { if (cfg::keep_cache_at_exit && !cfg::use_sys_tmp_for_cache) val.m_path.reset (); });
         }
         
         bool fetch (file_ptr &p_out, const char *p_archive, const char *p_file, abort_callback &p_abort) const
@@ -151,7 +152,7 @@ namespace unpack_7z
             }
             return false;
         }
-
+        
         void store (const file_ptr &p_in, const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
             insync (m_lock);            
@@ -161,7 +162,7 @@ namespace unpack_7z
             t_value *e = alloc_entry (p_archive, p_file, stats.m_size, is_new);
             if (e && is_new) {
                 try {
-                    e->init (p_file, stats, p_abort);
+                    e->init (p_archive, p_file, stats, p_abort);
                     file::g_transfer_file (p_in, e->m_file, p_abort);
                     p_in->seek (0, p_abort);
                     m_size += stats.m_size;
@@ -181,6 +182,19 @@ namespace unpack_7z
             t_filesize new_sizeB = new_size; new_sizeB <<= 20;
             if (m_size > new_sizeB) free_space (m_size - new_sizeB);
         } 
+
+        inline void clear_by_archive_name (const pfc::string_base & p_archive)
+        {
+            t_hash_map new_data;
+            insync (m_lock);
+
+            m_data.enumerate ([&](const t_key & key, t_value & val)
+            {
+                if (val.m_archive != p_archive)
+                    new_data.set (key, val);
+            });
+            m_data = new_data;
+        }
 
         inline void clear ()
         {

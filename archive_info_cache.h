@@ -3,6 +3,12 @@
 
 namespace unpack_7z
 {
+    class archive_changed_callback
+    {
+    public:
+        virtual void on_changed (const pfc::string_base & p_archive) = 0;
+    };
+
     class archive_info_cache : public cfg_var
     {
         struct entry
@@ -57,6 +63,7 @@ namespace unpack_7z
                 bool dummy;
                 filesystem::g_get_stats (p_archive, stats, dummy, p_abort);
                 if (e->m_stats != stats) { // archive was updated, need to reload it
+                    m_callback.on_changed (e->m_path);
                     remove_one_item (key);
                     is_new = true;
                 }
@@ -98,9 +105,12 @@ namespace unpack_7z
         t_hash_map       m_data; // t_uint64 key is made of hash () from canonical path to archive
         t_size           m_size; // Item count
         critical_section m_lock; // Synchronization for accessing m_data
+        archive_changed_callback & m_callback; // For notifying about archive being updated
             
     public:
-        archive_info_cache () : cfg_var (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid) {}
+        archive_info_cache (archive_changed_callback & p_callback) 
+            : cfg_var (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid),
+              m_callback (p_callback) {}
 
         inline t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
