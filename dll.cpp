@@ -61,8 +61,7 @@ namespace unpack_7z
             };
 
             // 1. look in component's installation folder
-            if (!g_dll.is_loaded ()) 
-                try_folder (pfc::string_directory (core_api::get_my_full_path ()));
+            try_folder (pfc::string_directory (core_api::get_my_full_path ()));
 
             // 2. search for 7-zip installation folder
             HKEY key;

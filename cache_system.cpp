@@ -15,6 +15,7 @@ namespace unpack_7z
         
 
         // overrides
+        // Callback for archive info cache
         void on_changed (const pfc::string_base &p_archive) override
         {
             // If archive has been updated we need to free cached files from that archive
@@ -48,7 +49,6 @@ namespace unpack_7z
             m_archive_info_cache.get_file_list (path, files, p_out);
 
             if (p_want_readers) { 
-                // 6810162 6888128 6826243
                 unpack_7z::archive a (path, p_reader, p_out, false);
                 for (t_size i = 0, max = files.get_size (); i < max; i++) {
                     file_ptr temp;

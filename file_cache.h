@@ -10,7 +10,7 @@ namespace unpack_7z
             pfc::string8 m_archive;
             t_filestats  m_stats; // Stats of file from archive
             pfc::string8 m_path; // Physical path of cache entry file. Empty if default system temp folder was used
-            file_ptr     m_file; // Cache entry file
+            file_ptr     m_file; // Cache entry file handle
 
             ~entry () { free (); }
 
