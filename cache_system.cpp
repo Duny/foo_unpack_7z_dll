@@ -50,7 +50,7 @@ namespace unpack_7z
 
             if (p_want_readers) { 
                 unpack_7z::archive a (path, p_reader, p_out, false);
-                for (t_size i = 0, max = files.get_size (); i < max; i++) {
+                for (t_size i = 0, max = files.get_size (); i < max; ++i) {
                     file_ptr temp;
                     extract_internal (temp, a, files, i, p_out);
                     if (!p_out.on_entry (owner, files[i].m_unpack_path, files[i].m_stats, temp))
@@ -61,7 +61,7 @@ namespace unpack_7z
             }
             else { // special case for fast listing
                 file_ptr dummy;
-                for (t_size i = 0, max = files.get_size (); i < max; i++)
+                for (t_size i = 0, max = files.get_size (); i < max; ++i)
                     if (!p_out.on_entry (owner, files[i].m_unpack_path, files[i].m_stats, dummy))
                         return;
             }
