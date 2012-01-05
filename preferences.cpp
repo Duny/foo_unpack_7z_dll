@@ -68,7 +68,7 @@ namespace unpack_7z
                 return FALSE;
             }
 
-            inline void on_state_changed ()
+            void on_state_changed ()
             { 
                 GetDlgItem (IDC_BUTTON_BROWSE_FOR_CACHE_LOCATION).EnableWindow (!is_default_cache_mode ());
                 GetDlgItem (IDC_CHECK_CACHE_DONT_EMPTY).EnableWindow (!is_default_cache_mode ());
@@ -76,7 +76,7 @@ namespace unpack_7z
                 m_callback->on_state_changed ();
             }
 
-            inline void on_browse_for_cache_location ()
+            void on_browse_for_cache_location ()
             {
                 if (auto result = uBrowseForFolderEx (*this, "Select cache location", cfg::custom_cache_path)) {
                     pfc::string8_fast tmp = result->GetFileName (0);
@@ -86,34 +86,37 @@ namespace unpack_7z
                 }
             }
 
-            inline void on_remove_dead_items () { static_api_ptr_t<cache_system>()->remove_dead_history_items (); }
+            void on_remove_dead_items ()
+            {
+                run_in_separate_thread ([] () { static_api_ptr_t<cache_system>()->remove_dead_history_items (); });
+            }
 
-            inline void on_cache_clear ()
+            void on_cache_clear ()
             {
                 auto res = uMessageBox (*this, "Clear disk cache?", COMPONENT_NAME, MB_YESNO | MB_ICONQUESTION);
                 if (res == IDYES) static_api_ptr_t<cache_system>()->cache_free ();
             }
 
-            inline void on_history_clear ()
+            void on_history_clear ()
             {
                 auto res = uMessageBox (*this, "Clear archive history?", COMPONENT_NAME, MB_YESNO | MB_ICONQUESTION);
                 if (res == IDYES) static_api_ptr_t<cache_system>()->history_clear ();
             }
 
-            inline void on_print_cache_stats () { static_api_ptr_t<cache_system>()->print_stats (); }
+            void on_print_cache_stats () { static_api_ptr_t<cache_system>()->print_stats (); }
 
             // helpers
 
-            inline bool is_default_cache_mode () const { return uButton_GetCheck (*this, IDC_RADIO_USE_DEFAULT_CACHE_LOCATION); }
+            bool is_default_cache_mode () const { return uButton_GetCheck (*this, IDC_RADIO_USE_DEFAULT_CACHE_LOCATION); }
 
-            inline void set_cache_mode (bool mode_default, const pfc::string8 &custom_path)
+            void set_cache_mode (bool mode_default, const pfc::string8 &custom_path)
             {
                 uButton_SetCheck (*this, mode_default ? IDC_RADIO_USE_DEFAULT_CACHE_LOCATION : IDC_RADIO_USE_CUSTOM_CACHE_LOCATION, true);
                 uButton_SetCheck (*this, !mode_default ? IDC_RADIO_USE_DEFAULT_CACHE_LOCATION : IDC_RADIO_USE_CUSTOM_CACHE_LOCATION, false);
                 uSetDlgItemText (*this, IDC_STATIC_CUSTOM_CACHE_LOCATION, custom_path);
             }
 
-            inline void init_archive_history_sizes (t_uint32 history_max)
+            void init_archive_history_sizes (t_uint32 history_max)
             {
                 uSendDlgItemMessage (IDC_COMBO_ARCHIVE_HISTORY_SIZE, CB_RESETCONTENT);
                 int selected = CB_ERR;
@@ -126,7 +129,7 @@ namespace unpack_7z
                 uSendDlgItemMessage (IDC_COMBO_ARCHIVE_HISTORY_SIZE, CB_SETCURSEL, selected);
             }
 
-            inline t_uint32 get_sel_archive_history_size ()
+            t_uint32 get_sel_archive_history_size ()
             {
                 int i = uSendDlgItemMessage (IDC_COMBO_ARCHIVE_HISTORY_SIZE, CB_GETCURSEL);
                 return i == CB_ERR ? 0 : archive_history_sizes[i];
@@ -199,7 +202,7 @@ namespace unpack_7z
         class preferences_page_unpack_7z : public preferences_page_impl<page>
         {
 	        const char * get_name () { return "7z.dll Unpacker"; }
-	        GUID get_guid () { return guid_inline<0xc25cb13f, 0x2a77, 0x451d, 0xb5, 0xa5, 0x1c, 0x29, 0x5d, 0x67, 0x2c, 0xe6>::guid; }
+	        GUID get_guid () { return create_guid (0xc25cb13f, 0x2a77, 0x451d, 0xb5, 0xa5, 0x1c, 0x29, 0x5d, 0x67, 0x2c, 0xe6); }
 	        GUID get_parent_guid () { return guid_tools; }
         };
 

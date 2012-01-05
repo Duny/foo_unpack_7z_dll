@@ -9,7 +9,7 @@ namespace unpack_7z
 
         bool supports_content_types () override { return false; }
 
-        inline void check_is_our_type (const char *path) {
+        void check_is_our_type (const char *path) {
             if (pfc::stricmp_ascii (pfc::string_extension (path), _7Z_EXT) != 0)
                 throw exception_io_data ();
         }

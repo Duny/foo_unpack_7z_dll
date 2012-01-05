@@ -20,11 +20,11 @@ namespace unpack_7z
 
         // If p_file is not valid, then p_archive is opened
         void open (const char *p_archive, const file_ptr &p_file, abort_callback &p_abort, bool read_file_list = true);
-        inline void open (const char *p_archive, abort_callback &p_abort, bool read_file_list = true) { open (p_archive, file_ptr (), p_abort, read_file_list); }
+        void open (const char *p_archive, abort_callback &p_abort, bool read_file_list = true) { open (p_archive, file_ptr (), p_abort, read_file_list); }
         void close ();
 
-        inline t_filestats get_stats () const { return m_stats; }
-        inline const char *get_path () const { return m_path.get_ptr (); }
+        t_filestats get_stats () const { return m_stats; }
+        const char *get_path () const { return m_path.get_ptr (); }
 
 
         struct file_info
@@ -37,12 +37,12 @@ namespace unpack_7z
             // constructor used for compare when searching by the list_t::find () function
             file_info (const char *p_path) : m_path (p_path) {}
 
-            inline bool operator== (const file_info &other) const { return stricmp_utf8 (other.m_path, m_path) == 0; }
+            bool operator== (const file_info &other) const { return stricmp_utf8 (other.m_path, m_path) == 0; }
         };
         typedef pfc::list_t<archive::file_info> file_list;
         typedef file_list const & file_list_cref;
 
-        inline file_list_cref get_list () const { return m_items; }
+        file_list_cref get_list () const { return m_items; }
 
         void get_file_list ();
 

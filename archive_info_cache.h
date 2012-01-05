@@ -17,7 +17,7 @@ namespace unpack_7z
             t_filestats        m_stats; // Archive stats
             archive::file_list m_files; // Archive contents
             
-            inline void init (const unpack_7z::archive &p_archive)
+            void init (const unpack_7z::archive &p_archive)
             {
                 tie (m_path, m_stats, m_files) = make_tuple (p_archive.get_path (), p_archive.get_stats (), p_archive.get_list ());
             }
@@ -52,7 +52,7 @@ namespace unpack_7z
 	    }
 
         // helpers
-        inline t_value * find_or_add (const char *p_archive, abort_callback &p_abort)
+        t_value * find_or_add (const char *p_archive, abort_callback &p_abort)
         {
             t_key key = hash (p_archive);
             t_value * e;
@@ -80,14 +80,14 @@ namespace unpack_7z
             return e;
         }
 
-        inline void check_size_overflow ()
+        void check_size_overflow ()
         {
             if (cfg::archive_history_max != pfc_infinite)
                 if (m_size > 0 && m_size + 1 > cfg::archive_history_max)
-                    remove_random_items ();
+                    remove_random_items (1);
         }
 
-        inline void remove_random_items (t_uint32 count = 1)
+        void remove_random_items (t_uint32 count)
         {
             auto r = genrand_service::g_create ();
             r->seed (static_cast<unsigned>(ReadTimeStampCounter ()));
@@ -99,7 +99,7 @@ namespace unpack_7z
             }
         }
 
-        template <class T> inline void remove_one_item (const T & were) { m_data.remove (were); m_size--; }
+        template <class T> void remove_one_item (const T & were) { m_data.remove (were); m_size--; }
 
         // Member variables
         t_hash_map       m_data; // t_uint64 key is made of hash () from canonical path to archive
@@ -109,10 +109,10 @@ namespace unpack_7z
             
     public:
         archive_info_cache (archive_changed_callback & p_callback) 
-            : cfg_var (guid_inline<0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA>::guid),
+            : cfg_var (create_guid (0x8D96A7C4, 0x9855, 0x4076, 0xB9, 0xD7, 0x88, 0x82, 0x23, 0x50, 0xBF, 0xCA)),
               m_callback (p_callback) {}
 
-        inline t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
+        t_filestats get_file_stats (const char *p_archive, const char *p_file, abort_callback &p_abort)
         {
             insync (m_lock);
             t_value *e = find_or_add (p_archive, p_abort);
@@ -121,20 +121,20 @@ namespace unpack_7z
             return e->m_files[n].m_stats;    
         }
 
-        inline void get_file_list (const char *p_archive, archive::file_list &p_out, abort_callback &p_abort)
+        void get_file_list (const char *p_archive, archive::file_list &p_out, abort_callback &p_abort)
         {
             insync (m_lock);
             p_out = find_or_add (p_archive, p_abort)->m_files;
         }
 
-        inline void set_max_size (t_uint32 new_size)
+        void set_max_size (t_uint32 new_size)
         {
             insync (m_lock);
             if (m_size > new_size) remove_random_items (m_size - new_size);
             cfg::archive_history_max = new_size;
         }
 
-        inline void remove_dead_items ()
+        void remove_dead_items ()
         {
             insync (m_lock);
             abort_callback_dummy p_abort;
@@ -150,14 +150,14 @@ namespace unpack_7z
             debug_log () << "Removed " << init_size - m_size << " dead archives from history";
         }
 
-        inline void clear ()
+        void clear ()
         {
             insync (m_lock);
             m_data.remove_all ();
             m_size = 0;
         }
 
-        inline void print_stats ()
+        void print_stats ()
         {
             insync (m_lock);
             console::formatter f;

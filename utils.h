@@ -57,12 +57,23 @@ namespace unpack_7z
 
     // helper to get "inline" GUID definitions
     // some_func (guid_inline<0xbfeaa7ea, 0x6810, 0x41c6, 0x82, 0x6, 0x12, 0x95, 0x5a, 0x89, 0xdf, 0x49>::guid);
-    template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
-    struct guid_inline { static const GUID guid; };
-
-    template <t_uint32 d1, t_uint16 d2, t_uint16 d3, t_uint8 d4, t_uint8 d5, t_uint8 d6, t_uint8 d7, t_uint8 d8, t_uint8 d9, t_uint8 d10, t_uint8 d11>
-    __declspec (selectany) const GUID guid_inline<d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11>::guid = { d1, d2, d3, { d4, d5, d6, d7, d8, d9, d10, d11 } };
-
+    struct create_guid : public GUID
+	{
+		create_guid (t_uint32 p_data1, t_uint16 p_data2, t_uint16 p_data3, t_uint8 p_data41, t_uint8 p_data42, t_uint8 p_data43, t_uint8 p_data44, t_uint8 p_data45, t_uint8 p_data46, t_uint8 p_data47, t_uint8 p_data48) 
+		{
+			Data1 = p_data1;
+			Data2 = p_data2;
+			Data3 = p_data3;
+			Data4[0] = p_data41;
+			Data4[1] = p_data42;
+			Data4[2] = p_data43;
+			Data4[3] = p_data44;
+			Data4[4] = p_data45;
+			Data4[5] = p_data46;
+			Data4[6] = p_data47;
+			Data4[7] = p_data48;
+		}
+	};
 
     inline t_uint64 hash (const char *str, t_uint64 h = 0)
     {
@@ -91,41 +102,41 @@ namespace unpack_7z
         ~operation_timer () { m_timer.Stop (); debug_log () << m_message << " took " << (int)m_timer.Elapsedus () << " microseconds\n"; }
     };
 
-    // helper for creating GUID from any text using md5
-    class GUID_from_text_md5 : public GUID
-	{
-	public:
-		GUID_from_text_md5 (const char * text)
-        {
-            stream_writer_hasher_md5 hasher_md5;
-            hasher_md5.write_string_raw (text, abort_callback_dummy ());
-            GUID g = hasher_md5.resultGuid ();
-            this->Data1 = g.Data1;
-            this->Data2 = g.Data2;
-            this->Data3 = g.Data3;
-            t_size n = 8;
-            while (n --> 0) this->Data4[n] = g.Data4[n];
-        }
-	};
-
-    // helper: wraps pfc::thread
     typedef function<void ()> new_thread_callback;
     inline void run_in_separate_thread (const new_thread_callback &p_func)
     {
-        class new_thread_t : pfc::thread
-        {
-            new_thread_callback m_func;
-            void threadProc () override
-            {
-                m_func ();
-                delete this;
-            }
-            ~new_thread_t () { waitTillDone (); }
+        class thread_dynamic {
         public:
-            new_thread_t (const new_thread_callback &p_func) : m_func (p_func) { startWithPriority (THREAD_PRIORITY_BELOW_NORMAL); }
+            PFC_DECLARE_EXCEPTION (exception_creation, pfc::exception, "Could not create thread");
+
+            thread_dynamic (const new_thread_callback &p_func, int priority) : m_func (p_func), m_thread (INVALID_HANDLE_VALUE)
+            {
+                m_thread = CreateThread (NULL, 0, g_entry, reinterpret_cast<void*>(this), CREATE_SUSPENDED, NULL);
+                if (m_thread== NULL) throw exception_creation ();
+                SetThreadPriority (m_thread, priority);
+                ResumeThread (m_thread);
+            }
+
+        private:
+            // Must be instantiated with operator new
+            ~thread_dynamic () { CloseHandle (m_thread); }
+
+            void threadProc () { m_func (); delete this; }
+
+            static DWORD CALLBACK g_entry (void* p_instance) { return reinterpret_cast<thread_dynamic*>(p_instance)->entry (); }
+            unsigned entry () {
+                try { threadProc (); }
+                catch (...) {}
+                return 0;
+            }
+
+            new_thread_callback m_func;
+            HANDLE m_thread;
+
+            PFC_CLASS_NOT_COPYABLE_EX (thread_dynamic)
         };
 
-        new new_thread_t (p_func);
+        new thread_dynamic (p_func, THREAD_PRIORITY_BELOW_NORMAL);
     }
 
     // wrapper of memory file with custom timestamp

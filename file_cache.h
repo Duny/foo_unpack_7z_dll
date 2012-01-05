@@ -14,7 +14,7 @@ namespace unpack_7z
 
             ~entry () { free (); }
 
-            inline void init (const char *p_archive, const char *p_file, const t_filestats &p_stats, abort_callback &p_abort)
+            void init (const char *p_archive, const char *p_file, const t_filestats &p_stats, abort_callback &p_abort)
             {
                 free ();
                 if (cfg::use_sys_tmp_for_cache)
@@ -27,7 +27,7 @@ namespace unpack_7z
                 m_stats = p_stats;
             }
 
-            inline void free ()
+            void free ()
             {
                 if (m_file.is_valid ()) m_file.release ();
                 // Delete file if not system temp (tmp files are deleted by OS)
@@ -75,12 +75,12 @@ namespace unpack_7z
 	    }
 
         // Helpers
-        inline t_key make_key (const char *p_archive, const char *p_file) const 
+        t_key make_key (const char *p_archive, const char *p_file) const 
         { 
             return hash (p_archive, hash (p_file));
         }
 
-        inline t_value * alloc_entry (const char *p_archive, const char *p_file, t_filesize file_size, bool & is_new)
+        t_value * alloc_entry (const char *p_archive, const char *p_file, t_filesize file_size, bool & is_new)
         {
             t_filesize max_size = cfg::file_cache_max; max_size <<= 20;
             if (file_size > max_size) return nullptr;
@@ -90,7 +90,7 @@ namespace unpack_7z
             return &m_data.find_or_add_ex (make_key (p_archive, p_file), is_new);
         }
 
-        inline void free_space (t_filesize size) // In bytes
+        void free_space (t_filesize size) // In bytes
         {
             typedef tuple<t_key, t_filesize> cache_file;
             auto cache_file_comparator = [] (const cache_file &left, const cache_file &right) -> int { return pfc::compare_t (left.get<1>(), right.get<1>()); };
@@ -126,9 +126,9 @@ namespace unpack_7z
         mutable critical_section m_lock;
 
     public:
-        file_cache () : cfg_var (guid_inline<0x99e8aad3, 0xa107, 0x4495, 0x84, 0xf4, 0x08, 0x43, 0xc9, 0x88, 0x63, 0xa1>::guid) {}
+        file_cache () : cfg_var (create_guid (0x99e8aad3, 0xa107, 0x4495, 0x84, 0xf4, 0x08, 0x43, 0xc9, 0x88, 0x63, 0xa1)) {}
         ~file_cache ()
-        { //  Hack to prevent files from being deleted at entry::~entry ()
+        { //  Hack to prevent files from being deleted during entry::~entry ()
             m_data.enumerate ([&](const t_key&, t_value & val) { if (cfg::keep_cache_at_exit && !cfg::use_sys_tmp_for_cache) val.m_path.reset (); });
         }
         
@@ -171,7 +171,7 @@ namespace unpack_7z
             }
         }
 
-        inline void set_max_size (t_uint32 new_size) // In Mb
+        void set_max_size (t_uint32 new_size) // In Mb
         {
             insync (m_lock);
 
@@ -181,7 +181,7 @@ namespace unpack_7z
             if (m_size > new_sizeB) free_space (m_size - new_sizeB);
         } 
 
-        inline void clear_by_archive_name (const pfc::string_base & p_archive)
+        void clear_by_archive_name (const pfc::string_base & p_archive)
         {
             t_hash_map new_data;
             insync (m_lock);
@@ -190,14 +190,14 @@ namespace unpack_7z
                     m_data.remove (walk);
         }
 
-        inline void clear ()
+        void clear ()
         {
             insync (m_lock);
             m_data.remove_all ();
             m_size = 0;
         }
 
-        inline void print_stats () const
+        void print_stats () const
         {
             t_filesize max_size = cfg::file_cache_max; max_size <<= 20;
             console::formatter () << "File cache disk usage: " << pfc::format_file_size_short (m_size)

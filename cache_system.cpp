@@ -115,7 +115,7 @@ namespace unpack_7z
             const char *m_archive;
             t_size m_file_index;
             t_thread_func m_callback;
-            inline void set (const char *p_archive, t_size p_index, const t_thread_func &p_func)
+            void set (const char *p_archive, t_size p_index, const t_thread_func &p_func)
             {
                 m_archive = p_archive, m_file_index = p_index, m_callback = p_func;
             }
