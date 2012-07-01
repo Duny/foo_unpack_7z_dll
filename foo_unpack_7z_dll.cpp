@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-DECLARE_COMPONENT_VERSION ("7z Archive Unpacker", "3.2",
+DECLARE_COMPONENT_VERSION ("7z Archive Unpacker", "3.2.1",
 "Unpacker for 7-Zip archives.\n"
 "Requires 7z.dll (32 bit) to work.\n"
 "Get it here http://7-zip.org/download.html\n\n"

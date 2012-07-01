@@ -185,9 +185,12 @@ namespace unpack_7z
         {
             t_hash_map new_data;
             insync (m_lock);
-            for (auto walk = m_data.first (); walk.is_valid (); ++walk)
-                if (walk->m_value.m_archive == p_archive)
-                    m_data.remove (walk);
+            for (auto walk = m_data.first (); walk.is_valid ();)
+            {
+                auto prev = walk++;
+                if (prev->m_value.m_archive == p_archive)
+                    m_data.remove (prev);
+            }
         }
 
         void clear ()
