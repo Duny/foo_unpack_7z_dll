@@ -56,7 +56,7 @@ namespace unpack_7z
         {
             t_key key = hash (p_archive);
             t_value * e;
-            
+
             bool is_new = m_data.query_ptr (key, e) == false;
             if (!is_new) {
                 t_filestats stats;

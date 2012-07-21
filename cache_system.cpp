@@ -45,7 +45,7 @@ namespace unpack_7z
         {
             file_path_canonical path (p_archive);
 
-            archive::file_list files;
+            archive::file_list files;      
             m_archive_info_cache.get_file_list (path, files, p_out);
 
             if (p_want_readers) { 

@@ -93,35 +93,37 @@ namespace unpack_7z
     };
 
     // timer class
-    class operation_timer
+    class operation_timing_timer
     {
-        pfc::string8_fast m_message;
-        CPerfTimer m_timer;
+        pfc::string8_fast operation;
+        CPerfTimer timer;
+        pfc::string8 out_time_smart (double t);
     public:
-        operation_timer (const char *p_message) : m_message (p_message), m_timer (TRUE) {}
-        ~operation_timer () { m_timer.Stop (); debug_log () << m_message << " took " << (int)m_timer.Elapsedus () << " microseconds\n"; }
+        operation_timing_timer (const char * p_operation, BOOL start = TRUE);
+        ~operation_timing_timer ();
+        void stop ();
     };
 
-    typedef function<void ()> new_thread_callback;
-    inline void run_in_separate_thread (const new_thread_callback &p_func)
+    template<class T>
+    inline void run_in_separate_thread (const T & func)
     {
         class thread_dynamic {
         public:
             PFC_DECLARE_EXCEPTION (exception_creation, pfc::exception, "Could not create thread");
 
-            thread_dynamic (const new_thread_callback &p_func, int priority) : m_func (p_func), m_thread (INVALID_HANDLE_VALUE)
+            thread_dynamic (const T & func, int priority) : func (func), thread (INVALID_HANDLE_VALUE)
             {
-                m_thread = CreateThread (NULL, 0, g_entry, reinterpret_cast<void*>(this), CREATE_SUSPENDED, NULL);
-                if (m_thread== NULL) throw exception_creation ();
-                SetThreadPriority (m_thread, priority);
-                ResumeThread (m_thread);
+                thread = CreateThread (NULL, 0, g_entry, reinterpret_cast<void*>(this), CREATE_SUSPENDED, NULL);
+                if (thread == NULL) throw exception_creation ();
+                SetThreadPriority (thread, priority);
+                ResumeThread (thread);
             }
 
         private:
             // Must be instantiated with operator new
-            ~thread_dynamic () { CloseHandle (m_thread); }
+            ~thread_dynamic () { CloseHandle (thread); }
 
-            void threadProc () { m_func (); delete this; }
+            void threadProc () { func (); delete this; }
 
             static DWORD CALLBACK g_entry (void* p_instance) { return reinterpret_cast<thread_dynamic*>(p_instance)->entry (); }
             unsigned entry () {
@@ -130,13 +132,13 @@ namespace unpack_7z
                 return 0;
             }
 
-            new_thread_callback m_func;
-            HANDLE m_thread;
+            T func;
+            HANDLE thread;
 
             PFC_CLASS_NOT_COPYABLE_EX (thread_dynamic)
         };
 
-        new thread_dynamic (p_func, THREAD_PRIORITY_BELOW_NORMAL);
+        new thread_dynamic (func, THREAD_PRIORITY_BELOW_NORMAL);
     }
 
     // wrapper of memory file with custom timestamp
